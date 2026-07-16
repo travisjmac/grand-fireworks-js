@@ -1,11 +1,35 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.3.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.3.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+
+## Version 1.3.1
+
+This maintenance release collects all improvements made after the original 1.3.0 publication: the staged ten-trail Super Grand Finale, standalone manual effects while the continuous show is stopped, corrected contained-mode layering, complete creator and social metadata, GitHub Pages/source/download navigation, and the interactive Configuration Builder. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
 Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-style bloom, star cores, rocket exhaust, explosion flashes, secondary crackles, specialized shell geometry, grouped salvos, and a Canvas 2D fallback. The class also includes graceful stopping, an optional finale, fullscreen or contained placement, timed shows, performance presets, and synchronized multi-line hybrid text fireworks.
 
 Open `index.html` for complete documentation and links to working examples.
+
+## Live documentation and examples
+
+After GitHub Pages is enabled for the repository, the complete interactive documentation will be available at:
+
+**[Open the Grand Fireworks JS live documentation](https://travisjmac.github.io/grand-fireworks-js/)**
+
+**[View the source repository](https://github.com/travisjmac/grand-fireworks-js)** · **[Download the latest source ZIP](https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip)**
+
+- [Default show](https://travisjmac.github.io/grand-fireworks-js/examples/default.html)
+- [Background overlay](https://travisjmac.github.io/grand-fireworks-js/examples/background.html)
+- [Contained celebration](https://travisjmac.github.io/grand-fireworks-js/examples/contained.html)
+- [Manual controls](https://travisjmac.github.io/grand-fireworks-js/examples/manual.html)
+- [Super Grand Finale](https://travisjmac.github.io/grand-fireworks-js/examples/timed-finale.html)
+- [Love text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-love.html)
+- [Multiline text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-multiline.html)
+- [Custom text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-custom.html)
+- [Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/configuration-builder.html)
+
+The same files can be browsed directly inside the repository through the relative links in [`index.html`](index.html), but GitHub Pages is required to run the interactive JavaScript examples as a website.
 
 ```html
 <script src="GrandFireworks.js"></script>
