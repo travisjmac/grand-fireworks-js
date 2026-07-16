@@ -1,0 +1,93 @@
+<!doctype html><!--
+  Grand Fireworks JS v1.3.0
+  Created by Travis MacDonald
+  Created: July 15, 2026
+  Website: http://travisandjoelyweareaperfect.fit/
+  Repository: https://github.com/travisjmac/grand-fireworks-js
+-->
+<html lang="en">
+<head><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="A configurable JavaScript fireworks engine with realistic WebGL effects, Canvas fallback, text fireworks, contained displays, and staged grand finales."><meta name="version" content="1.3.0"><meta name="date" content="2026-07-15"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS"><meta property="og:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><meta property="og:url" content="https://github.com/travisjmac/grand-fireworks-js"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Grand Fireworks JS"><meta name="twitter:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contained Fireworks and Layer Inspector</title>
+  <link rel="stylesheet" href="example.css">
+</head>
+<body>
+  <a class="back" href="../index.html">← Documentation</a>
+  <div class="scene" id="scene">
+    <section id="hero" class="contained">
+      <div class="grand-fireworks-content">
+        <div><h1>Contained Celebration</h1><p>Fireworks stay clipped inside this container.</p></div>
+      </div>
+    </section>
+  </div>
+  <aside class="panel layer-panel">
+    <h2>Configuration and Layer Inspector</h2>
+    <div class="controls">
+      <button type="button" id="start">Start</button>
+      <button type="button" id="stop">Stop</button>
+      <button type="button" id="remove-layer">Remove next background layer</button>
+      <button type="button" id="cycle-background">Cycle gradient</button>
+      <button type="button" id="restore-layers">Restore all layers</button>
+    </div>
+    <div id="layer-status" class="layer-status" aria-live="polite"></div>
+    <pre id="config"></pre>
+  </aside>
+  <script src="../GrandFireworks.js?v=1.3.0"></script>
+  <script>
+    const opts = {
+      container: '#hero',
+      mode: 'contained',
+      placement: 'background',
+      clip: true,
+      autoStart: true,
+      background: { value: 'linear-gradient(180deg, #101a4b, #040714)', opacity: 1 },
+      renderer: { preferred: 'auto', fallback: 'canvas2d' },
+      performance: { preset: 'medium', adaptive: true }
+    };
+    const fireworks = new GrandFireworks(opts);
+    const hero = document.querySelector('#hero');
+    const scene = document.querySelector('#scene');
+    const status = document.querySelector('#layer-status');
+    const gradients = [
+      { name: 'Midnight blue', value: 'linear-gradient(180deg, #101a4b, #040714)' },
+      { name: 'Royal violet', value: 'radial-gradient(circle at 50% 35%, #38175e, #080312 72%)' },
+      { name: 'Deep emerald', value: 'linear-gradient(145deg, #073b3a, #020909 75%)' },
+      { name: 'Ember dusk', value: 'radial-gradient(circle at 50% 20%, #54201d, #090305 68%)' },
+      { name: 'Transparent', value: 'transparent' }
+    ];
+    const removed = [];
+    let gradientIndex = 0;
+    const layers = [
+      { name: 'GrandFireworks backdrop gradient', remove() { fireworks.backdrop.style.display = 'none'; }, restore() { fireworks.backdrop.style.display = 'block'; } },
+      { name: 'Contained element CSS background', remove() { hero.classList.add('container-background-off'); }, restore() { hero.classList.remove('container-background-off'); } },
+      { name: 'Page darkening overlay', remove() { scene.classList.add('scene-overlay-off'); }, restore() { scene.classList.remove('scene-overlay-off'); } },
+      { name: 'Page scene gradient', remove() { scene.classList.add('scene-background-off'); }, restore() { scene.classList.remove('scene-background-off'); } }
+    ];
+    function renderStatus(message = '') {
+      const stats = fireworks.getStats();
+      const removedMarkup = removed.length ? `<ol>${removed.map(name => `<li>${name}</li>`).join('')}</ol>` : '<p>None</p>';
+      status.innerHTML = `${message ? `<p class="layer-message">${message}</p>` : ''}<dl><dt>Active renderer</dt><dd>${stats.renderer}</dd><dt>Current gradient</dt><dd>${gradients[gradientIndex].name}</dd><dt>Animation state</dt><dd>${stats.state}</dd></dl><strong>Background layers removed</strong>${removedMarkup}`;
+    }
+    document.querySelector('#start').addEventListener('click', () => { fireworks.start(); renderStatus('Animation started.'); });
+    document.querySelector('#stop').addEventListener('click', async () => { renderStatus('Finishing active fireworks gracefully…'); await fireworks.stop(); renderStatus('Animation stopped.'); });
+    document.querySelector('#remove-layer').addEventListener('click', () => {
+      const layer = layers[removed.length];
+      if (!layer) return renderStatus('Every background layer is already removed.');
+      layer.remove(); removed.push(layer.name); renderStatus(`Removed: ${layer.name}`);
+    });
+    document.querySelector('#restore-layers').addEventListener('click', () => { layers.forEach(layer => layer.restore()); removed.length = 0; renderStatus('All background layers restored.'); });
+    document.querySelector('#cycle-background').addEventListener('click', () => {
+      gradientIndex = (gradientIndex + 1) % gradients.length;
+      fireworks.backdrop.style.display = 'block';
+      fireworks.backdrop.style.background = gradients[gradientIndex].value;
+      const backdropIndex = removed.indexOf(layers[0].name);
+      if (backdropIndex !== -1) removed.splice(backdropIndex, 1);
+      renderStatus(`Selected: ${gradients[gradientIndex].name}`);
+    });
+    document.querySelector('#config').textContent = `const fireworks = new GrandFireworks(${JSON.stringify(opts, null, 2)});`;
+    renderStatus('Contained mode is ready.');
+    setInterval(() => renderStatus(), 1000);
+  </script>
+<footer class="grand-fireworks-creator-credit" aria-label="Grand Fireworks JS creator information" style="position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:2147483647;max-width:calc(100% - 24px);box-sizing:border-box;padding:8px 14px;border:1px solid rgba(255,215,0,.35);border-radius:999px;background:rgba(2,4,15,.82);color:#f5f5f5;font:500 12px/1.4 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:center;white-space:normal;pointer-events:auto;backdrop-filter:blur(8px)">Grand Fireworks JS v1.3.0 · Created by <strong>Travis MacDonald</strong> · July 15, 2026 · <a href="http://travisandjoelyweareaperfect.fit/" target="_blank" rel="author noopener" style="color:#ffdc68">Creator website</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" target="_blank" rel="noopener" style="color:#ffdc68">GitHub</a></footer></body>
+</html>
