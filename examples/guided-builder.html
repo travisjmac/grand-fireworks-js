@@ -515,11 +515,12 @@ const PREVIEW_EL = document.getElementById('preview-inner');
 
 function initFireworks(config) {
   if (fw) { try { fw.destroy(); } catch(e) {} fw = null; }
-  fw = new GrandFireworks(deepMerge({
+  const merged = deepMerge({
     container: PREVIEW_EL,
-    mode: 'contained',
-    autoStart: true
-  }, config));
+    mode: 'contained'
+  }, config);
+  merged.autoStart = true; // ensure autoStart survives deepMerge
+  fw = new GrandFireworks(merged);
   return fw;
 }
 
