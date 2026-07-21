@@ -1,0 +1,21 @@
+<!doctype html><!--
+  Grand Fireworks JS v1.3.1 — Sequential Text Messages
+  Created by Travis MacDonald
+  Created: July 15, 2026
+  Website: http://travisandjoelyweareaperfect.fit/
+  Repository: https://github.com/travisjmac/grand-fireworks-js
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="description" content="Launch a sequence of text fireworks one message at a time."><meta name="version" content="1.3.1"><title>Sequential Text Fireworks</title><link rel="stylesheet" href="example.css"><style>.sequence-panel{position:fixed;z-index:10001;left:50%;bottom:22px;transform:translateX(-50%);width:min(560px,calc(100% - 24px));padding:16px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(3,4,14,.9);backdrop-filter:blur(10px)}.sequence-panel h1{font-size:20px;margin:0 0 5px}.sequence-panel p{margin:0 0 10px;color:rgba(255,255,255,.68)}textarea{width:100%;min-height:90px;resize:vertical;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px;background:rgba(0,0,0,.35);color:#fff;font:14px/1.45 system-ui,sans-serif}.actions{display:flex;gap:8px;margin-top:9px}.actions button{flex:1;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:9px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}.actions .launch{border-color:rgba(255,215,0,.35);background:rgba(255,215,0,.14);color:#ffe171}.status{min-height:1.4em;margin-top:8px;font-size:12px;color:rgba(255,255,255,.58)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0;white-space:nowrap;border:0}</style></head><body><a class="back" href="../index.html">← Documentation</a><div class="scene"></div><section class="sequence-panel"><h1>Text Message Sequence</h1><p>Enter one message per line. Each appears like a new card in the sky.</p><label for="messages" class="sr-only">Messages</label><textarea id="messages">WISH BIG&#10;SHINE BRIGHT&#10;CELEBRATE!</textarea><div class="actions"><button class="launch" id="launch-sequence">Launch sequence</button><button id="cancel-sequence">Cancel</button></div><div class="status" id="status" aria-live="polite">Ready</div></section><script src="../GrandFireworks.js?v=1.3.1"></script><script>
+const fireworks=new GrandFireworks({autoStart:true,baseStyle:'bold',textFirework:{fontSize:82,maxLines:2,holdDuration:1200,dissolveDuration:700,exclusive:true}});
+const status=document.querySelector('#status');
+fireworks.addEventListener('textsequenceitem',event=>{status.textContent=`Showing ${event.detail.index+1} of ${event.detail.total}: ${event.detail.text}`;});
+fireworks.addEventListener('textsequenceend',()=>{status.textContent='Sequence complete';});
+fireworks.addEventListener('textsequencecancel',()=>{status.textContent='Sequence cancelled';});
+document.querySelector('#launch-sequence').addEventListener('click',()=>{
+  const messages=document.querySelector('#messages').value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
+  if(!messages.length){status.textContent='Enter at least one message';return;}
+  fireworks.launchTextSequence(messages,{gap:250,clearBetween:true});
+});
+document.querySelector('#cancel-sequence').addEventListener('click',()=>{
+  if(!fireworks.cancelTextSequence())status.textContent='No sequence is running';
+});
+</script><footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.3.1 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:inherit;text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:inherit;text-decoration:none">GitHub</a></footer></body></html>

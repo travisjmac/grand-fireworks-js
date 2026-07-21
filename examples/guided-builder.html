@@ -72,10 +72,14 @@
 .tab-text-input:focus{outline:none;border-color:rgba(255,215,0,.4)}
 
 /* Playback controls */
-.playback-group{display:flex;gap:2px;margin:0 4px}
+.playback-group{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:2px;align-items:center}
 .playback-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:.15s;line-height:1}
 .playback-btn:hover{background:rgba(255,255,255,.1)}
 .playback-btn.paused{color:#ffdc68}
+.controls-header{position:relative}
+
+/* Countdown timer */
+#countdown-timer{font:500 12px/1 ui-monospace,monospace;color:rgba(255,255,255,.5);margin-left:6px;white-space:nowrap;display:none;min-width:32px;text-align:center}
 
 /* Duration row */
 .duration-row{display:flex;align-items:center;gap:6px;padding:4px 0}
@@ -181,6 +185,7 @@
       <button class="playback-btn" id="play-btn" title="Start">▶</button>
       <button class="playback-btn" id="pause-btn" title="Pause">⏸</button>
       <button class="playback-btn" id="stop-btn" title="Stop">⏹</button>
+      <span id="countdown-timer"></span>
     </div>
     <nav>
       <a href="../index.html">Docs</a>
@@ -264,7 +269,7 @@
         <label for="wiz-dur-timed">⏳ End after a set time</label>
       </div>
       <div id="wiz-duration-ms" style="display:none;margin-top:8px">
-        <label style="font-size:13px;color:#fff">Duration (ms): <input type="number" id="wiz-dur-value" value="10000" min="2000" max="60000" step="1000" style="width:100px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:4px 8px"></label>
+        <label style="font-size:13px;color:#fff">Duration (seconds): <input type="number" id="wiz-dur-value" value="10" min="2" max="60" step="1" style="width:80px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:4px 8px"></label>
       </div>
       <div class="wizard-btns">
         <button class="secondary" id="wiz-back-3">← Back</button>
@@ -1408,6 +1413,8 @@ function init() {
   document.getElementById('reset-btn').onclick=resetToStart;
   document.getElementById('controls-toggle').onclick=toggleControlsPanel;
   initWizard();
+  // Countdown timer
+  setInterval(updateCountdown, 500);
   document.onkeydown=e=>{
     if(e.key==='Escape'){
       if(!document.getElementById('save-overlay').classList.contains('hidden')){document.getElementById('save-overlay').classList.add('hidden');return;}
@@ -1419,6 +1426,30 @@ function init() {
   renderSummary();
   refreshSavedConfigs();
 }
+
+function updateCountdown() {
+  const el = document.getElementById('countdown-timer');
+  if (!el) return;
+  if (!fw || !fw.getStats || !fw.options) { el.style.display = 'none'; return; }
+  try {
+    const s = fw.getStats();
+    let remaining = s.durationRemaining;
+    // If runtimeDuration not set but options.duration is, compute from elapsed
+    if (remaining == null && fw.options.duration > 0 && typeof fw.elapsed !== 'undefined') {
+      remaining = Math.max(0, fw.options.duration - fw.elapsed);
+    }
+    if (remaining != null && remaining > 0 && s.state === 'running') {
+      const sec = Math.ceil(remaining / 1000);
+      const m = Math.floor(sec / 60);
+      const secs = sec % 60;
+      el.textContent = `${m}:${String(secs).padStart(2, '0')}`;
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  } catch(e) { el.style.display = 'none'; }
+}
+
 let wizardData = { theme: 'default', style: 'medium', continuous: true, duration: 10000, finale: false, text: false, textMsg: '' };
 const WIZARD_THEMES = [
   { label: '🌈 Default', value: 'default' },
@@ -1477,6 +1508,8 @@ function initWizard() {
       themeBox.querySelectorAll('.wizard-option').forEach(el => el.classList.remove('selected'));
       div.classList.add('selected');
       div.querySelector('input').checked = true;
+      // Live preview the theme
+      if (fw) try { fw.setColorTheme(t.value); } catch(e) {}
     });
     themeBox.appendChild(div);
   });
@@ -1495,6 +1528,11 @@ function initWizard() {
       styleBox.querySelectorAll('.wizard-option').forEach(el => el.classList.remove('selected'));
       div.classList.add('selected');
       div.querySelector('input').checked = true;
+      // Live preview the style
+      if (fw) try {
+        const sid = s.value === 'mobile' ? 'medium' : s.value;
+        fw.setStyle(sid);
+      } catch(e) {}
     });
     styleBox.appendChild(div);
   });
@@ -1548,7 +1586,7 @@ function initWizard() {
     const sel = document.querySelector('input[name="wiz-duration"]:checked');
     if (sel) {
       wizardData.continuous = sel.closest('.wizard-option')?.dataset?.value === 'continuous';
-      wizardData.duration = parseInt(document.getElementById('wiz-dur-value')?.value) || 10000;
+      wizardData.duration = (parseInt(document.getElementById('wiz-dur-value')?.value) || 10) * 1000;
     }
     showStep(4);
   });

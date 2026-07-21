@@ -26,8 +26,10 @@ After GitHub Pages is enabled for the repository, the complete interactive docum
 - [Super Grand Finale](https://travisjmac.github.io/grand-fireworks-js/examples/timed-finale.html)
 - [Love text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-love.html)
 - [Multiline text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-multiline.html)
+- [Sequential text messages](https://travisjmac.github.io/grand-fireworks-js/examples/text-sequence.html)
 - [Custom text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-custom.html)
-- [Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/configuration-builder.html)
+- [Guided Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html)
+- [Advanced Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/configuration-builder.html)
 
 The same files can be browsed directly inside the repository through the relative links in [`index.html`](index.html), but GitHub Pages is required to run the interactive JavaScript examples as a website.
 
@@ -41,11 +43,32 @@ The same files can be browsed directly inside the repository through the relativ
 
 `duration: 0` runs indefinitely. `stop()` is graceful by default: it stops new launches, finishes active fireworks, optionally plays the configured finale, then fades out.
 
-The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchFinale`, `finalize`, `setOptions`, `getOptions`, and `getStats`.
+The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `finalize`, `setOptions`, `setOpacity`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, and `getStats`.
 
 `launch()`, `launchText()`, and `launchFinale()` are standalone-safe: they wake the renderer when the regular show is idle, stopped, paused, or fading, play only the requested effect, then fade away automatically. They do not restart automatic launches.
 
-The Super Grand Finale launches one central carrier, bursts it into ten independently glowing comet trails, sends those trails in different radial directions, and then detonates each into a large ringed, crackling secondary shell. Configure it with `finale.trails`, `finale.trailFlight`, and `finale.burstScale`.
+The Super Grand Finale launches one central carrier, bursts it into independently glowing comet trails, sends those trails in different radial directions, and then detonates each into a large ringed, crackling secondary shell. Configure it with `finale.trails`, `finale.trailFlight`, `finale.burstScale`, `finale.maxWaitBeforeLaunch`, `finale.particleScale`, `finale.finishDelay`, and `finale.maxDuration`.
+
+Launch text messages one at a time with a cancellable sequence:
+
+```js
+const result = await fireworks.launchTextSequence([
+  'WISH BIG',
+  { text: 'SHINE BRIGHT', overrides: { colors: ['#00BFFF', '#FFFFFF'] } },
+  'CELEBRATE!'
+], {
+  gap: 250,
+  clearBetween: true
+});
+
+fireworks.cancelTextSequence();
+```
+
+Sequence events are `textsequencestart`, `textsequenceitem`, `textsequenceend`, and `textsequencecancel`. Set `textFirework.synchronizeExplosions: false` to stagger multi-line arrivals instead of synchronizing them.
+
+Sound uses one lazily created `AudioContext` per fireworks instance. Enable it from a user interaction when possible, and set `sound.volume` from `0` to `1`; zero is a true mute.
+
+When enabled, `performance.pauseWhenHidden`, `performance.pauseWhenOffscreen`, and `performance.respectReducedMotion` pause invisible work and reduce animation density for visitors who request less motion. A manual `pause()` is kept separate from automatic pause reasons, so returning to a visible tab does not unexpectedly resume a user-paused show.
 
 Contained mode uses the reliable Canvas 2D renderer automatically, avoiding transparent WebGL compositor failures in nested browser layers. Fullscreen mode remains WebGL-first. To test WebGL inside a particular container, explicitly pass `renderer: { preferred: 'webgl2', preserveDrawingBuffer: true }`; Canvas 2D remains the fallback.
 
@@ -73,3 +96,5 @@ const fireworks = new GrandFireworks({
   }
 });
 ```
+
+Run the dependency-free regression suite with `npm test`.
