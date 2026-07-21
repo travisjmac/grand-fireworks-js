@@ -8,10 +8,10 @@
   'use strict';
   const definitions = [
     ['Core',[
-      ['autoStart','boolean',false,'Start automatically after construction.','Recommended off for user-controlled pages.'],['duration','number',0,'Show duration in milliseconds; 0 runs forever.','Default 0.'],['durationMode','select','graceful','How duration completion is handled.','Graceful lets active fireworks finish.',['graceful','strict']],['maxFinishTime','number',5000,'Maximum graceful-drain wait in milliseconds.','Default 5000.'],['mode','select','fullscreen','Fill the viewport or a specific container.','Use contained inside page components.',['fullscreen','contained']],['placement','select','overlay','Place fireworks above content or behind it.','Overlay is the most reliable default.',['overlay','background']],['clip','boolean',true,'Clip particles at the selected boundary.','Keep enabled for contained displays.'],['zIndex','number',9999,'Stacking order of the fireworks root.','Raise only when another overlay covers it.']
+      ['autoStart','boolean',false,'Start automatically after construction.','Recommended off for user-controlled pages.'],['baseStyle','select','classic','Visual theme that sets coordinated defaults for visuals and show.','Choose a base look, then override individual settings below.',['classic','spectacle','elegance','neon','ember']],['duration','number',0,'Show duration in milliseconds; 0 runs forever.','Default 0.'],['durationMode','select','graceful','How duration completion is handled.','Graceful lets active fireworks finish.',['graceful','strict']],['maxFinishTime','number',5000,'Maximum graceful-drain wait in milliseconds.','Default 5000.'],['mode','select','fullscreen','Fill the viewport or a specific container.','Use contained inside page components.',['fullscreen','contained']],['placement','select','overlay','Place fireworks above content or behind it.','Overlay is the most reliable default.',['overlay','background']],['clip','boolean',true,'Clip particles at the selected boundary.','Keep enabled for contained displays.'],['zIndex','number',9999,'Stacking order of the fireworks root.','Raise only when another overlay covers it.']
     ]],
     ['Renderer',[
-      ['renderer.preferred','select','auto','Select automatic, WebGL 2, or Canvas 2D rendering.','Auto is recommended; contained mode automatically favors Canvas 2D.',['auto','webgl2','canvas2d']],['renderer.fallback','select','canvas2d','Renderer used if WebGL is unavailable or its context is lost.','Canvas 2D is the supported fallback.',['canvas2d']],['renderer.preserveDrawingBuffer','select','auto','Preserves previous pixels for persistent trails.','Auto balances appearance and memory use.',['auto','true','false']]
+      ['renderer.preferred','select','auto','Select automatic, WebGL 2, or Canvas 2D rendering.','Auto is recommended — when mode is "contained" it falls back to Canvas 2D for reliable rendering inside nested containers. Setting to webgl2 forces WebGL in all modes, including contained.',['auto','webgl2','canvas2d']],['renderer.fallback','select','canvas2d','Renderer used if WebGL is unavailable or its context is lost.','Canvas 2D is the supported fallback.',['canvas2d']],['renderer.preserveDrawingBuffer','select','auto','Preserves previous pixels for persistent trails.','Auto balances appearance and memory use.',['auto','true','false']]
     ]],
     ['Performance',[
       ['performance.preset','select','medium','Applies coordinated quality and capacity limits.','Medium is the broad compatibility default.',['low','medium','high','ultra']],['performance.adaptive','boolean',true,'Adjusts quality when frame rate drops.','Recommended on.'],['performance.pauseWhenHidden','boolean',true,'Pauses when the browser tab is hidden.','Recommended on to save battery and CPU.'],['performance.pauseWhenOffscreen','boolean',true,'Allows contained effects to pause when not visible.','Recommended on.'],['performance.respectReducedMotion','boolean',true,'Honors the visitor’s reduced-motion preference.','Recommended for accessibility.']
@@ -41,11 +41,73 @@
   for(const [groupName,items] of definitions){const section=document.createElement('details');section.className='group';section.open=['Core','Renderer','Performance'].includes(groupName);const summary=document.createElement('summary');summary.textContent=groupName;const fields=document.createElement('div');fields.className='fields';for(const [path,kind,defaultValue,description,recommendation,choices] of items){const row=document.createElement('div');row.className='field';const label=document.createElement('label');label.textContent=path.split('.').pop();label.innerHTML+=`<span class="path">${path}</span>`;let input;if(kind==='select'||kind==='multiselect'){input=document.createElement('select');if(kind==='multiselect')input.multiple=true;for(const choice of choices){const option=document.createElement('option');option.value=choice;option.textContent=choice;option.selected=Array.isArray(defaultValue)?defaultValue.includes(choice):String(defaultValue)===choice;input.append(option);}}else{input=document.createElement('input');input.type=kind==='boolean'?'checkbox':(kind==='number'||kind==='optional-number')?'number':'text';if(kind==='boolean')input.checked=defaultValue;else input.value=defaultValue;if(kind==='number'||kind==='optional-number')input.step='any';}input.id=`option-${path.replaceAll('.','-')}`;label.htmlFor=input.id;const help=document.createElement('div');help.className='help';help.innerHTML=`${description} <strong>${recommendation}</strong> Default: <code>${Array.isArray(defaultValue)?defaultValue.join(', '):(defaultValue===''?'automatic':String(defaultValue))}</code>`;row.append(label,input,help);fields.append(row);controls.set(path,{el:input,kind,defaultValue});input.addEventListener('input',refresh);input.addEventListener('change',refresh);}section.append(summary,fields);root.append(section);}
   let fireworks=null;
   const parseOutput=()=>{const raw=output.value.trim().replace(/^const\s+fireworks\s*=\s*new\s+GrandFireworks\s*\(/,'').replace(/\);?\s*$/,'');return JSON.parse(raw);};
-  document.querySelector('#preview-button').addEventListener('click',()=>{try{if(fireworks)fireworks.destroy();const chosen=parseOutput();const previewOptions={...chosen,container:preview,mode:'contained',placement:'overlay',autoStart:false,zIndex:1,background:chosen.background||{value:'linear-gradient(#101a4b,#040714)',opacity:1}};fireworks=new GrandFireworks(previewOptions);fireworks.start({duration:6500});status.textContent='Preview started. The preview safely forces contained mode; your generated configuration remains unchanged.';}catch(error){status.textContent=`Configuration error: ${error.message}`;}});
-  document.querySelector('#text-button').addEventListener('click',()=>{if(!fireworks)document.querySelector('#preview-button').click();setTimeout(()=>fireworks&&fireworks.launchText('Grand Fireworks!'),80);});
-  document.querySelector('#finale-button').addEventListener('click',()=>{if(!fireworks)document.querySelector('#preview-button').click();setTimeout(()=>fireworks&&fireworks.launchFinale(),80);});
+
+  function startPreview(fullscreen){
+    try{
+      if(fireworks)fireworks.destroy();
+      const chosen=parseOutput();
+      const previewOptions={...chosen,container:preview,mode:'contained',placement:'overlay',autoStart:false,zIndex:1,background:chosen.background||{value:'linear-gradient(#101a4b,#040714)',opacity:1}};
+      fireworks=new GrandFireworks(previewOptions);
+      fireworks.start({duration:fullscreen?0:6500});
+      if(fullscreen){
+        preview.classList.add('preview-fullscreen');
+        document.body.classList.add('preview-active');
+        document.querySelector('#close-preview').style.display='block';
+        document.querySelector('#preview-button').textContent='🔄 Restart preview';
+        status.textContent='Preview is now fullscreen. Use Close to exit.';
+      } else {
+        status.textContent='Preview started. The preview safely forces contained mode; your generated configuration remains unchanged.';
+      }
+    }catch(error){status.textContent=`Configuration error: ${error.message}`;}
+  }
+
+  function exitPreview(){
+    if(fireworks)fireworks.destroy();
+    fireworks=null;
+    preview.classList.remove('preview-fullscreen');
+    document.body.classList.remove('preview-active');
+    document.querySelector('#close-preview').style.display='none';
+    document.querySelector('#preview-button').textContent='Preview show';
+    document.querySelector('#builder-preview').style.display='';
+    status.textContent='Preview closed.';
+  }
+
+  document.querySelector('#preview-button').addEventListener('click',()=>{
+    if(preview.classList.contains('preview-fullscreen')&&fireworks){
+      // Restart existing fullscreen preview
+      startPreview(true);
+    } else {
+      startPreview(true);
+    }
+  });
+
+  document.querySelector('#close-preview').addEventListener('click',exitPreview);
+
+  document.querySelector('#text-button').addEventListener('click',()=>{
+    if(!fireworks||!preview.classList.contains('preview-fullscreen')){
+      startPreview(true);
+    }
+    setTimeout(()=>fireworks&&fireworks.launchText('Grand Fireworks!'),80);
+  });
+
+  document.querySelector('#finale-button').addEventListener('click',()=>{
+    if(!fireworks||!preview.classList.contains('preview-fullscreen')){
+      startPreview(true);
+    }
+    setTimeout(()=>fireworks&&fireworks.launchFinale(),80);
+  });
+
   document.querySelector('#copy-button').addEventListener('click',async()=>{await navigator.clipboard.writeText(output.value);status.textContent='Configuration copied to the clipboard.';});
   document.querySelector('#reset-button').addEventListener('click',()=>{for(const [,data] of controls){if(data.kind==='boolean')data.el.checked=data.defaultValue;else if(data.kind==='multiselect')[...data.el.options].forEach(o=>o.selected=data.defaultValue.includes(o.value));else data.el.value=data.defaultValue;}refresh();status.textContent='All settings restored to their documented defaults.';});
   output.addEventListener('input',()=>status.textContent='The configuration text was edited. Preview will validate it when run.');
   refresh();
+
+  // Mobile toggle for config panel
+  const toggleBtn=document.querySelector('#toggle-builder');
+  const builderSection=document.querySelector('.builder');
+  toggleBtn.addEventListener('click',()=>{
+    const collapsed=builderSection.classList.toggle('collapsed');
+    toggleBtn.textContent=collapsed?'▼ Show settings':'▲ Hide settings';
+    toggleBtn.setAttribute('aria-expanded',String(!collapsed));
+  });
 })();
