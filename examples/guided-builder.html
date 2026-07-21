@@ -1408,6 +1408,29 @@ const WIZARD_STYLES = [
 ];
 
 function initWizard() {
+  // Delegated click handler for all wizard-option divs
+  document.querySelectorAll('.wizard-option').forEach(div => {
+    // Only add if not already handled (check if it has a dynamic click)
+    if (div._wizHandled) return;
+    div._wizHandled = true;
+    div.addEventListener('click', function(e) {
+      const input = this.querySelector('input[type="radio"]');
+      if (input) {
+        const name = input.name;
+        // Uncheck all radios with this name within this wizard step
+        const step = this.closest('.wizard-step') || this.closest('.wizard-box');
+        if (step) {
+          step.querySelectorAll(`input[name="${name}"]`).forEach(r => { r.checked = false; });
+          step.querySelectorAll('.wizard-option').forEach(el => el.classList.remove('selected'));
+        }
+        input.checked = true;
+        this.classList.add('selected');
+        // Trigger change event for radio toggles that depend on data-value
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+
   // Populate theme options
   const themeBox = document.getElementById('wiz-theme-options');
   WIZARD_THEMES.forEach(t => {
