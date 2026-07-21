@@ -10,10 +10,10 @@
 .controls-header{display:flex;align-items:center;gap:8px;padding:8px 10px;flex-shrink:0}
 .controls-header h1{margin:0;font-size:14px;font-weight:700;color:#ffd65a;white-space:nowrap}
 .controls-header nav{margin-left:auto;display:flex;gap:4px}
-.controls-header nav a{color:rgba(255,255,255,.4);text-decoration:none;font-size:11px;padding:3px 6px;border-radius:4px;transition:.15s}
-.controls-header nav a:hover{color:#fff;background:rgba(255,255,255,.08)}
-#restart-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:5px;padding:3px 8px;cursor:pointer;font:600 11px/1 system-ui,sans-serif;white-space:nowrap;transition:.15s}
-#restart-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+.controls-header nav a{color:#fff;text-decoration:none;font-size:11px;padding:3px 6px;border-radius:4px;transition:.15s}
+.controls-header nav a:hover{background:rgba(255,255,255,.08)}
+#restart-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:5px;padding:3px 8px;cursor:pointer;font:600 11px/1 system-ui,sans-serif;white-space:nowrap;transition:.15s}
+#restart-btn:hover{background:rgba(255,255,255,.14)}
 
 /* Preview */
 #preview{position:relative;min-height:45svh;min-height:45vh;flex:1;background:radial-gradient(ellipse at 50% 20%,#0e1535,#02030a 70%);overflow:hidden;flex-shrink:0}
@@ -21,21 +21,20 @@
 .preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.1);font:400 10px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
 
 /* Controls panel */
-#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:#03040e;display:flex;flex-direction:column;overflow:hidden}
-@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{width:500px;max-height:100vh;border-top:none;border-right:none;order:1;border-left:none;box-shadow:2px 0 12px rgba(0,0,0,.5)}}
+#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:#03040e;display:flex;flex-direction:column;overflow:hidden;z-index:10000;opacity:.8;backdrop-filter:blur(8px)}
+@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{min-width:620px;max-width:620px;max-height:100vh;border-top:none;border-right:none;order:1;border-left:none;box-shadow:2px 0 12px rgba(0,0,0,.5)}}
 
 /* Preset bar */
 #preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
 #preset-bar::-webkit-scrollbar{display:none}
-.preset-btn{flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);border-radius:999px;padding:6px 14px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;white-space:nowrap}
-.preset-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.preset-btn.active{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.3);color:#ffdc68}
+.preset-btn{flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;white-space:nowrap}
+.preset-btn:hover{background:rgba(255,255,255,.1)}
 
 /* Tab bar */
 #tab-bar{display:flex;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)}
 #tab-bar::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;border:none;background:transparent;color:rgba(255,255,255,.4);padding:8px 12px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap}
-.tab-btn:hover{color:rgba(255,255,255,.7)}
+.tab-btn{flex-shrink:0;border:none;background:transparent;color:rgba(255,255,255,.5);padding:8px 12px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn:hover{color:#fff}
 .tab-btn.active{color:#ffd65a;border-bottom-color:#ffd65a}
 .tab-btn .tab-icon{margin-right:4px}
 
@@ -43,11 +42,11 @@
 #tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 8px}
 .tab-panel{display:none;flex-direction:column;gap:8px}
 .tab-panel.active{display:flex}
-.tab-desc{font-size:12px;color:rgba(255,255,255,.4);margin:0 0 4px;line-height:1.4}
+.tab-desc{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 4px;line-height:1.4}
 
 /* Form controls */
 .option-row{display:flex;align-items:center;gap:8px;min-height:36px}
-.option-row label{flex-shrink:0;font-size:13px;color:rgba(255,255,255,.75);min-width:90px;cursor:help;border-bottom:1px dotted transparent}
+.option-row label{flex-shrink:0;font-size:13px;color:#fff;min-width:90px;cursor:help;border-bottom:1px dotted transparent}
 .option-row label:hover{border-bottom-color:rgba(255,255,255,.2)}
 .option-row .opt-control{flex:1;min-width:0}
 .option-row select,.option-row input[type=number],.option-row input[type=text]{width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e8ecff;border-radius:6px;padding:5px 8px;font:13px/1 system-ui,sans-serif;transition:.15s}
@@ -58,8 +57,67 @@
 .option-row input[type=number]::-webkit-inner-spin-button,.option-row input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .option-row input[type=checkbox]{width:18px;height:18px;accent-color:#ffd65a;cursor:pointer;flex-shrink:0}
 
+/* Action buttons inside tabs */
+.tab-action-row{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.tab-action-btn{border:1px solid rgba(255,255,255,.12);background:rgba(255,215,0,.1);color:#ffdc68;border-radius:8px;padding:7px 14px;cursor:pointer;font:600 12px/1 system-ui,sans-serif;transition:.15s;min-height:34px}
+.tab-action-btn:hover{background:rgba(255,215,0,.2)}
+.tab-action-btn.secondary{background:rgba(100,200,255,.08);border-color:rgba(100,200,255,.15);color:#8fd4ff}
+.tab-action-btn.secondary:hover{background:rgba(100,200,255,.16)}
+.tab-text-input{flex:1;min-width:120px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:6px 10px;font:13px/1 system-ui,sans-serif}
+.tab-text-input:focus{outline:none;border-color:rgba(255,215,0,.4)}
+
+/* Playback controls */
+.playback-group{display:flex;gap:2px;margin:0 4px}
+.playback-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:.15s;line-height:1}
+.playback-btn:hover{background:rgba(255,255,255,.1)}
+.playback-btn.paused{color:#ffdc68}
+
+/* Duration row */
+.duration-row{display:flex;align-items:center;gap:6px;padding:4px 0}
+.duration-row label{font-size:12px;color:#fff;white-space:nowrap}
+.duration-row input[type=number]{width:90px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:4px 8px;font:12px/1 system-ui,sans-serif}
+.duration-row input[type=number]:focus{outline:none;border-color:rgba(255,215,0,.4)}
+
+/* Wizard overlay */
+#wizard-overlay{position:fixed;inset:0;z-index:2147483646;background:rgba(2,3,10,.95);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s}
+#wizard-overlay.hidden{opacity:0;pointer-events:none}
+.wizard-box{background:#0b0e22;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px 24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.wizard-box h2{margin:0 0 4px;font-size:18px;color:#ffd65a}
+.wizard-box p{color:rgba(255,255,255,.6);font-size:13px;margin:0 0 16px}
+.wizard-step{display:none}
+.wizard-step.active{display:block}
+.wizard-step h3{margin:0 0 10px;font-size:15px;color:#fff}
+.wizard-option{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin:4px 0;cursor:pointer;transition:.15s}
+.wizard-option:hover{border-color:rgba(255,215,0,.2);background:rgba(255,215,0,.04)}
+.wizard-option.selected{border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.08)}
+.wizard-option input{margin:0}
+.wizard-option label{flex:1;font-size:13px;color:#fff;cursor:pointer}
+.wizard-btns{display:flex;gap:8px;margin-top:16px}
+.wizard-btns button{flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;cursor:pointer;font:600 13px/1 system-ui,sans-serif;transition:.15s}
+.wizard-btns .primary{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.25);color:#ffdc68}
+.wizard-btns .primary:hover{background:rgba(255,215,0,.2)}
+.wizard-btns .secondary{background:rgba(255,255,255,.06);color:#fff}
+.wizard-btns .secondary:hover{background:rgba(255,255,255,.12)}
+.wizard-btns .secondary:disabled{opacity:.3}
+
+/* Load config overlay */
+#load-overlay{position:fixed;inset:0;z-index:2147483645;background:rgba(2,3,10,.9);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+#load-overlay.hidden{opacity:0;pointer-events:none}
+.load-box{background:#0b0e22;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;max-width:520px;width:100%}
+.load-box h3{margin:0 0 4px;color:#ffd65a;font-size:16px}
+.load-box p{color:rgba(255,255,255,.5);font-size:12px;margin:0 0 10px}
+.load-box textarea{width:100%;height:160px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:8px;padding:10px;font:12px/1.4 ui-monospace,monospace;resize:vertical}
+.load-box textarea:focus{outline:none;border-color:rgba(255,215,0,.4)}
+.load-btns{display:flex;gap:8px;margin-top:10px}
+.load-btns button{flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;cursor:pointer;font:600 12px/1 system-ui,sans-serif;transition:.15s}
+.load-btns .primary{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.2);color:#ffdc68}
+.load-btns .primary:hover{background:rgba(255,215,0,.18)}
+.load-btns .secondary{background:rgba(255,255,255,.06);color:#fff}
+.load-btns .secondary:hover{background:rgba(255,255,255,.12)}
+.load-error{color:#ff7a7a;font-size:11px;margin:4px 0 0;display:none}
+
 /* Guided tab */
-.guided-prompt{font-size:13px;color:rgba(255,255,255,.5);margin:0 0 6px}
+.guided-prompt{font-size:13px;color:#fff;margin:0 0 6px}
 .guided-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .guided-row select{flex:1;min-width:120px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e8ecff;border-radius:6px;padding:6px 8px;font:13px/1 system-ui,sans-serif;transition:.15s}
 .guided-row select:hover{border-color:rgba(255,255,255,.2)}
@@ -73,17 +131,17 @@
 .guided-btn.revert:hover{background:rgba(255,60,60,.2)}
 .guided-btn:disabled{opacity:.3;pointer-events:none}
 .guided-btn .btn-icon{font-size:15px;vertical-align:middle;margin-right:3px}
-.guided-hint{font-size:11px;color:rgba(255,255,255,.35);margin:4px 0 0;font-style:italic;min-height:16px}
+.guided-hint{font-size:11px;color:rgba(255,255,255,.6);margin:4px 0 0;font-style:italic;min-height:16px}
 
 /* Config summary */
 #config-summary{display:flex;flex-wrap:wrap;gap:4px;padding:6px 0 0;min-height:28px;flex-shrink:0}
-.summary-chip{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px 10px;font:500 11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.7)}
+.summary-chip{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px 10px;font:500 11px/1.4 system-ui,sans-serif;color:#fff}
 .summary-chip.preset-chip{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.15);color:#ffdc68}
 
 /* Bottom actions */
 #bottom-actions{display:flex;gap:6px;padding:6px 0 0;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04)}
-.bottom-btn{flex:1;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;min-height:36px;text-align:center}
-.bottom-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.bottom-btn{flex:1;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;min-height:36px;text-align-center}
+.bottom-btn:hover{background:rgba(255,255,255,.1)}
 .bottom-btn.primary{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.2);color:#ffdc68}
 .bottom-btn.primary:hover{background:rgba(255,215,0,.16)}
 .bottom-btn:disabled{opacity:.3;pointer-events:none}
@@ -112,10 +170,15 @@
 <div id="controls">
   <div class="controls-header">
     <h1>🎆 Grand Fireworks</h1>
+    <div class="playback-group">
+      <button class="playback-btn" id="play-btn" title="Start">▶</button>
+      <button class="playback-btn" id="pause-btn" title="Pause">⏸</button>
+      <button class="playback-btn" id="stop-btn" title="Stop">⏹</button>
+    </div>
     <nav>
       <a href="../index.html">Docs</a>
       <a href="configuration-builder.html">Advanced</a>
-      <button id="restart-btn">↻ Restart</button>
+      <button id="restart-btn">↻</button>
     </nav>
   </div>
   <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
@@ -127,7 +190,8 @@
   <div id="config-summary" aria-live="polite" aria-atomic="false"></div>
 
   <div id="bottom-actions">
-    <button class="bottom-btn primary" id="copy-btn" title="Copy configuration code">📋 Copy Config</button>
+    <button class="bottom-btn primary" id="copy-btn" title="Copy configuration code">📋 Copy</button>
+    <button class="bottom-btn" id="load-btn" title="Load a configuration">📂 Load</button>
     <button class="bottom-btn" id="undo-btn" title="Undo last change">↩ Undo</button>
     <button class="bottom-btn" id="reset-btn" title="Reset to starting preset">⟲ Reset</button>
   </div>
@@ -135,6 +199,119 @@
 
 <div id="toast"></div>
 <div id="live-announcer" class="sr-only" aria-live="polite"></div>
+
+<!-- Wizard overlay -->
+<div id="wizard-overlay">
+  <div class="wizard-box">
+    <h2>✨ Welcome!</h2>
+    <p>Let's set up your fireworks show in a few quick steps — or skip straight to the controls.</p>
+    <div id="wizard-step-0" class="wizard-step active">
+      <h3>How would you like to start?</h3>
+      <div class="wizard-option" data-action="walk">
+        <input type="radio" name="wiz-start" id="wiz-walk" checked>
+        <label for="wiz-walk">🎯 Walk me through the options — quick setup</label>
+      </div>
+      <div class="wizard-option" data-action="skip">
+        <input type="radio" name="wiz-start" id="wiz-skip">
+        <label for="wiz-skip">⚡ Take me straight to the controls — I know what I want</label>
+      </div>
+      <div class="wizard-option" data-action="load">
+        <input type="radio" name="wiz-start" id="wiz-load">
+        <label for="wiz-load">📂 Load a saved configuration</label>
+      </div>
+      <div class="wizard-btns">
+        <button class="primary" id="wiz-start-btn">Next →</button>
+        <button class="secondary" id="wiz-skip-all">Skip all</button>
+      </div>
+    </div>
+    <div id="wizard-step-1" class="wizard-step">
+      <h3>🎨 Choose a color theme</h3>
+      <p>Pick a palette that sets the mood for your show.</p>
+      <div id="wiz-theme-options"></div>
+      <div class="wizard-btns">
+        <button class="secondary" id="wiz-back-1">← Back</button>
+        <button class="primary" id="wiz-next-1">Next →</button>
+      </div>
+    </div>
+    <div id="wizard-step-2" class="wizard-step">
+      <h3>💥 Pick a style</h3>
+      <p>Choose the overall feel — from subtle to spectacular.</p>
+      <div id="wiz-style-options"></div>
+      <div class="wizard-btns">
+        <button class="secondary" id="wiz-back-2">← Back</button>
+        <button class="primary" id="wiz-next-2">Next →</button>
+      </div>
+    </div>
+    <div id="wizard-step-3" class="wizard-step">
+      <h3>⏱️ Duration</h3>
+      <p>Should the show run forever or end after a while?</p>
+      <div class="wizard-option" data-value="continuous">
+        <input type="radio" name="wiz-duration" id="wiz-dur-cont" checked>
+        <label for="wiz-dur-cont">♾️ Run continuously — no end</label>
+      </div>
+      <div class="wizard-option" data-value="timed">
+        <input type="radio" name="wiz-duration" id="wiz-dur-timed">
+        <label for="wiz-dur-timed">⏳ End after a set time</label>
+      </div>
+      <div id="wiz-duration-ms" style="display:none;margin-top:8px">
+        <label style="font-size:13px;color:#fff">Duration (ms): <input type="number" id="wiz-dur-value" value="10000" min="2000" max="60000" step="1000" style="width:100px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:4px 8px"></label>
+      </div>
+      <div class="wizard-btns">
+        <button class="secondary" id="wiz-back-3">← Back</button>
+        <button class="primary" id="wiz-next-3">Next →</button>
+      </div>
+    </div>
+    <div id="wizard-step-4" class="wizard-step">
+      <h3>🏆 Grand finale</h3>
+      <p>Add a choreographed grand finale at the end of the show?</p>
+      <div class="wizard-option" data-value="true">
+        <input type="radio" name="wiz-finale" id="wiz-fin-yes">
+        <label for="wiz-fin-yes">🎆 Yes, add a grand finale!</label>
+      </div>
+      <div class="wizard-option" data-value="false">
+        <input type="radio" name="wiz-finale" id="wiz-fin-no" checked>
+        <label for="wiz-fin-no">❌ No finale, just the show</label>
+      </div>
+      <div class="wizard-btns">
+        <button class="secondary" id="wiz-back-4">← Back</button>
+        <button class="primary" id="wiz-next-4">Next →</button>
+      </div>
+    </div>
+    <div id="wizard-step-5" class="wizard-step">
+      <h3>📝 Text firework</h3>
+      <p>Show a special message at the end?</p>
+      <div class="wizard-option" data-value="true">
+        <input type="radio" name="wiz-text" id="wiz-txt-yes">
+        <label for="wiz-txt-yes">✏️ Yes, display a message</label>
+      </div>
+      <div id="wiz-text-msg" style="display:none;margin-top:8px">
+        <input type="text" id="wiz-text-value" value="✨ Grand Fireworks!" placeholder="Your message..." style="width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:6px 10px;font:13px/1 system-ui,sans-serif">
+      </div>
+      <div class="wizard-option" data-value="false">
+        <input type="radio" name="wiz-text" id="wiz-txt-no" checked>
+        <label for="wiz-txt-no">🚫 No text firework</label>
+      </div>
+      <div class="wizard-btns">
+        <button class="secondary" id="wiz-back-5">← Back</button>
+        <button class="primary" id="wiz-finish">🎉 Finish setup!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load config overlay -->
+<div id="load-overlay" class="hidden">
+  <div class="load-box">
+    <h3>📂 Load Configuration</h3>
+    <p>Paste a GrandFireworks configuration object to replace the current show.</p>
+    <textarea id="load-textarea" placeholder='{&#10;  "baseStyle": "spectacle",&#10;  "colorTheme": "festival",&#10;  ...&#10;}' spellcheck="false"></textarea>
+    <div class="load-error" id="load-error">⚠️ Invalid configuration — please check your JSON.</div>
+    <div class="load-btns">
+      <button class="primary" id="load-apply">Apply</button>
+      <button class="secondary" id="load-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script src="../GrandFireworks.js"></script>
 <script>
@@ -689,6 +866,49 @@ function buildGuidedTab(sec) {
 }
 
 /* ---------- guided value controls ---------- */
+function getCurrentGuidedValue(opt) {
+  // Read current committed value for the option to pre-select it
+  if (opt.id === 'style') return state.committedConfig.baseStyle || 'medium';
+  if (opt.id === 'colorTheme') return state.committedConfig.colorTheme || 'default';
+  if (opt.id === 'fireworks') {
+    const r = getDeep(state.committedConfig, 'show.maxRockets');
+    const i = getDeep(state.committedConfig, 'show.launchInterval');
+    const pairs = { 2:1200, 4:900, 6:750, 10:550, 14:350 };
+    // find matching pair
+    const found = Object.entries(pairs).find(([rockets, interval]) =>
+      Number(rockets) === r && interval === i);
+    return found ? JSON.stringify({maxRockets:Number(found[0]),launchInterval:found[1]}) : null;
+  }
+  if (opt.id === 'density') {
+    const v = getDeep(state.committedConfig, 'show.maxParticles');
+    return v != null ? String(v) : null;
+  }
+  if (opt.id === 'launchSpeed') {
+    const v = getDeep(state.committedConfig, 'show.launchInterval');
+    return v != null ? String(v) : null;
+  }
+  if (opt.id === 'trails') {
+    const v = getDeep(state.committedConfig, 'visuals.trails');
+    return v != null ? JSON.stringify(v) : null;
+  }
+  if (opt.id === 'glow') {
+    const v = getDeep(state.committedConfig, 'visuals.bloom');
+    return v != null ? String(v) : null;
+  }
+  if (opt.id === 'stars') {
+    const v = getDeep(state.committedConfig, 'visuals.starChance');
+    return v != null ? String(v) : null;
+  }
+  if (opt.id === 'performance') {
+    const v = getDeep(state.committedConfig, 'performance.preset');
+    return v || null;
+  }
+  if (opt.id === 'finale') {
+    const v = getDeep(state.committedConfig, 'finale.enabled');
+    return v != null ? JSON.stringify(v) : null;
+  }
+  return null;
+}
 function buildGuidedValueControl(optionId) {
   const opt = OPTION_MAP[optionId];
   if (!opt) return null;
@@ -696,12 +916,15 @@ function buildGuidedValueControl(optionId) {
   wrap.innerHTML = '';
   wrap.style.display = '';
 
+  const currentVal = getCurrentGuidedValue(opt);
+
   if (opt.type === 'toggle') {
     const sel = document.createElement('select');
     sel.id = 'guided-value';
     const on = document.createElement('option'); on.value = 'true'; on.textContent = '✅ On';
     const off = document.createElement('option'); off.value = 'false'; off.textContent = '❌ Off';
     sel.appendChild(on); sel.appendChild(off);
+    sel.value = currentVal === 'true' ? 'true' : 'false';
     sel.addEventListener('change', () => onGuidedValue(optionId, sel.value === 'true'));
     wrap.appendChild(sel);
   } else if (opt.type === 'select') {
@@ -712,6 +935,11 @@ function buildGuidedValueControl(optionId) {
       o.value = c.value;
       o.textContent = c.label;
       sel.appendChild(o);
+    }
+    if (currentVal != null) {
+      // Try exact match first, then try to find choice where the value matches
+      const match = opt.choices.find(c => c.value === currentVal);
+      if (match) sel.value = currentVal;
     }
     sel.addEventListener('change', () => onGuidedValue(optionId, sel.value));
     wrap.appendChild(sel);
@@ -778,6 +1006,39 @@ function buildCategoryTab(sec) {
 
     row.appendChild(ctrl);
     frag.appendChild(row);
+  }
+  // Tab-specific action buttons
+  if (sec.icon === '🏆') {
+    // Finale tab: preview button
+    const act = document.createElement('div');
+    act.className = 'tab-action-row';
+    const btn = document.createElement('button');
+    btn.className = 'tab-action-btn';
+    btn.textContent = '🎬 Preview Grand Finale';
+    btn.addEventListener('click', () => { if (fw) try { fw.launchFinale(); } catch(e) {} });
+    act.appendChild(btn);
+    frag.appendChild(act);
+  }
+  if (sec.icon === '📝') {
+    // Text tab: input + launch button
+    const act = document.createElement('div');
+    act.className = 'tab-action-row';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'tab-text-input';
+    inp.id = 'text-launch-input';
+    inp.placeholder = 'Type your message here…';
+    inp.value = '✨ Grand Fireworks!';
+    const btn = document.createElement('button');
+    btn.className = 'tab-action-btn secondary';
+    btn.textContent = '🚀 Launch Text';
+    btn.addEventListener('click', () => {
+      const txt = document.getElementById('text-launch-input')?.value;
+      if (txt && fw) try { fw.launchText(txt); } catch(e) {}
+    });
+    act.appendChild(inp);
+    act.appendChild(btn);
+    frag.appendChild(act);
   }
   return frag;
 }
@@ -1065,6 +1326,17 @@ function init() {
   // Start fireworks with default preset
   restartFireworks(state.committedConfig);
 
+  // Wire playback controls
+  document.getElementById('play-btn').addEventListener('click', () => {
+    if (fw) { try { fw.start(); document.getElementById('play-btn').classList.remove('paused'); } catch(e) {} }
+  });
+  document.getElementById('pause-btn').addEventListener('click', () => {
+    if (fw) { try { fw.pause(); document.getElementById('play-btn').classList.add('paused'); } catch(e) {} }
+  });
+  document.getElementById('stop-btn').addEventListener('click', () => {
+    if (fw) { try { fw.stop(); document.getElementById('play-btn').classList.remove('paused'); } catch(e) {} }
+  });
+
   // Wire header buttons
   document.getElementById('restart-btn').addEventListener('click', () => {
     restartFireworks(effectiveConfig());
@@ -1073,14 +1345,38 @@ function init() {
 
   // Wire bottom actions
   document.getElementById('copy-btn').addEventListener('click', copyConfig);
+  document.getElementById('load-btn').addEventListener('click', () => {
+    document.getElementById('load-overlay').classList.remove('hidden');
+  });
   document.getElementById('undo-btn').addEventListener('click', undo);
   document.getElementById('reset-btn').addEventListener('click', resetToStart);
 
-  // Keyboard: Escape reverts guided change
+  // Wire load config
+  document.getElementById('load-apply').addEventListener('click', applyLoadedConfig);
+  document.getElementById('load-cancel').addEventListener('click', () => {
+    document.getElementById('load-overlay').classList.add('hidden');
+    document.getElementById('load-error').style.display = 'none';
+  });
+
+  // Wire wizard
+  initWizard();
+
+  // Keyboard: Escape reverts guided change or closes overlays
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && state.isPreviewing) {
-      revertGuidedChange();
-      e.preventDefault();
+    if (e.key === 'Escape') {
+      if (!document.getElementById('load-overlay').classList.contains('hidden')) {
+        document.getElementById('load-overlay').classList.add('hidden');
+        document.getElementById('load-error').style.display = 'none';
+        return;
+      }
+      if (!document.getElementById('wizard-overlay').classList.contains('hidden')) {
+        document.getElementById('wizard-overlay').classList.add('hidden');
+        return;
+      }
+      if (state.isPreviewing) {
+        revertGuidedChange();
+        e.preventDefault();
+      }
     }
   });
 
@@ -1088,6 +1384,212 @@ function init() {
   renderSummary();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+/* ===========================================================
+   Wizard
+   =========================================================== */
+let wizardData = { theme: 'default', style: 'medium', continuous: true, duration: 10000, finale: false, text: false, textMsg: '' };
+const WIZARD_THEMES = [
+  { label: '🌈 Default', value: 'default' },
+  { label: '❄️ Ice Blue', value: 'iceBlue' },
+  { label: '🔥 Ember Red', value: 'emberRed' },
+  { label: '💚 Neon Green', value: 'neonGreen' },
+  { label: '☀️ Golden Sun', value: 'goldenSun' },
+  { label: '👑 Royal Purple', value: 'royalPurple' },
+  { label: '🎉 Festival', value: 'festival' }
+];
+const WIZARD_STYLES = [
+  { label: '⚖️ Balanced', value: 'medium' },
+  { label: '🌙 Subtle', value: 'thin' },
+  { label: '🕰️ Classic', value: 'classic' },
+  { label: '💪 Bold', value: 'bold' },
+  { label: '🎆 Spectacle', value: 'spectacle' },
+  { label: '📱 Mobile Friendly', value: 'mobile' }
+];
+
+function initWizard() {
+  // Populate theme options
+  const themeBox = document.getElementById('wiz-theme-options');
+  WIZARD_THEMES.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'wizard-option' + (t.value === 'default' ? ' selected' : '');
+    const input = document.createElement('input');
+    input.type = 'radio'; input.name = 'wiz-theme'; input.value = t.value;
+    if (t.value === 'default') input.checked = true;
+    const label = document.createElement('label');
+    label.textContent = t.label;
+    div.prepend(input); div.append(label);
+    div.addEventListener('click', () => {
+      themeBox.querySelectorAll('.wizard-option').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      div.querySelector('input').checked = true;
+    });
+    themeBox.appendChild(div);
+  });
+  // Populate style options
+  const styleBox = document.getElementById('wiz-style-options');
+  WIZARD_STYLES.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'wizard-option' + (s.value === 'medium' ? ' selected' : '');
+    const input = document.createElement('input');
+    input.type = 'radio'; input.name = 'wiz-style'; input.value = s.value;
+    if (s.value === 'medium') input.checked = true;
+    const label = document.createElement('label');
+    label.textContent = s.label;
+    div.prepend(input); div.append(label);
+    div.addEventListener('click', () => {
+      styleBox.querySelectorAll('.wizard-option').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      div.querySelector('input').checked = true;
+    });
+    styleBox.appendChild(div);
+  });
+
+  // Wire wizard navigation
+  function showStep(n) {
+    document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+    document.getElementById(`wizard-step-${n}`).classList.add('active');
+  }
+
+  document.getElementById('wiz-start-btn').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-start"]:checked');
+    if (!sel) return;
+    const action = sel.closest('.wizard-option')?.dataset?.action;
+    if (action === 'skip' || action === 'walk') {
+      showStep(1);
+    } else if (action === 'load') {
+      document.getElementById('wizard-overlay').classList.add('hidden');
+      document.getElementById('load-overlay').classList.remove('hidden');
+    }
+  });
+  document.getElementById('wiz-skip-all').addEventListener('click', () => {
+    document.getElementById('wizard-overlay').classList.add('hidden');
+  });
+
+  // Step 1: Theme
+  document.getElementById('wiz-back-1').addEventListener('click', () => showStep(0));
+  document.getElementById('wiz-next-1').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-theme"]:checked');
+    if (sel) wizardData.theme = sel.value;
+    showStep(2);
+  });
+
+  // Step 2: Style
+  document.getElementById('wiz-back-2').addEventListener('click', () => showStep(1));
+  document.getElementById('wiz-next-2').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-style"]:checked');
+    if (sel) wizardData.style = sel.value;
+    showStep(3);
+  });
+
+  // Step 3: Duration
+  document.getElementById('wiz-back-3').addEventListener('click', () => showStep(2));
+  document.querySelectorAll('input[name="wiz-duration"]').forEach(el => {
+    el.addEventListener('change', () => {
+      document.getElementById('wiz-duration-ms').style.display =
+        document.querySelector('input[name="wiz-duration"]:checked')?.closest('.wizard-option')?.dataset?.value === 'timed' ? 'block' : 'none';
+    });
+  });
+  document.getElementById('wiz-next-3').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-duration"]:checked');
+    if (sel) {
+      wizardData.continuous = sel.closest('.wizard-option')?.dataset?.value === 'continuous';
+      wizardData.duration = parseInt(document.getElementById('wiz-dur-value')?.value) || 10000;
+    }
+    showStep(4);
+  });
+
+  // Step 4: Finale
+  document.getElementById('wiz-back-4').addEventListener('click', () => showStep(3));
+  document.getElementById('wiz-next-4').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-finale"]:checked');
+    if (sel) wizardData.finale = sel.closest('.wizard-option')?.dataset?.value === 'true';
+    showStep(5);
+  });
+
+  // Step 5: Text
+  document.getElementById('wiz-back-5').addEventListener('click', () => showStep(4));
+  document.querySelectorAll('input[name="wiz-text"]').forEach(el => {
+    el.addEventListener('change', () => {
+      document.getElementById('wiz-text-msg').style.display =
+        document.querySelector('input[name="wiz-text"]:checked')?.closest('.wizard-option')?.dataset?.value === 'true' ? 'block' : 'none';
+    });
+  });
+  document.getElementById('wiz-finish').addEventListener('click', () => {
+    const sel = document.querySelector('input[name="wiz-text"]:checked');
+    if (sel) {
+      wizardData.text = sel.closest('.wizard-option')?.dataset?.value === 'true';
+      wizardData.textMsg = document.getElementById('wiz-text-value')?.value || '';
+    }
+    // Apply wizard config
+    const presetObj = PRESET_MAP[wizardData.style] || PRESET_MAP.medium;
+    const cfg = deepMerge(deepMerge({}, CORE_CONFIG), presetObj.config);
+    cfg.colorTheme = wizardData.theme;
+    if (!wizardData.continuous) cfg.duration = wizardData.duration;
+    if (wizardData.finale) cfg.finale = { enabled: true, triggers: ['stop', 'duration'] };
+    state.currentPreset = wizardData.style;
+    state.startingPreset = wizardData.style;
+    state.committedConfig = cfg;
+    state.history = []; state.historyIndex = -1; state.changes.clear();
+    state.isPreviewing = false; state.guidedOption = null; state.guidedValue = null;
+    restartFireworks(state.committedConfig);
+    renderPresets();
+    renderSummary();
+    switchTab('guided');
+    document.getElementById('wizard-overlay').classList.add('hidden');
+    announce('Wizard setup complete');
+    showToast('✨ Setup complete!');
+    // Launch text if requested
+    if (wizardData.text && wizardData.textMsg && fw) {
+      setTimeout(() => { try { fw.launchText(wizardData.textMsg); } catch(e) {} }, 3000);
+    }
+  });
+}
+
+/* ===========================================================
+   Load Config
+   =========================================================== */
+function applyLoadedConfig() {
+  const ta = document.getElementById('load-textarea');
+  const err = document.getElementById('load-error');
+  err.style.display = 'none';
+  let parsed;
+  try {
+    parsed = JSON.parse(ta.value);
+  } catch(e) {
+    err.textContent = '⚠️ Invalid JSON — ' + e.message;
+    err.style.display = 'block';
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    err.textContent = '⚠️ Please provide a valid configuration object.';
+    err.style.display = 'block';
+    return;
+  }
+  // Basic validation: check for known keys
+  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime'];
+  const keys = Object.keys(parsed);
+  const unknown = keys.filter(k => !known.includes(k) && k !== 'container');
+  if (unknown.length > 0 && keys.length > 5) {
+    err.textContent = `⚠️ Unknown keys: ${unknown.join(', ')}`;
+    err.style.display = 'block';
+    return;
+  }
+  // Apply the loaded config
+  const merged = deepMerge(deepMerge({}, CORE_CONFIG), parsed);
+  state.currentPreset = 'custom';
+  state.startingPreset = 'custom';
+  state.committedConfig = merged;
+  state.history = []; state.historyIndex = -1; state.changes.clear();
+  state.isPreviewing = false; state.guidedOption = null; state.guidedValue = null;
+  restartFireworks(state.committedConfig);
+  renderPresets();
+  renderSummary();
+  rebuildCategoryTabs();
+  switchTab('guided');
+  document.getElementById('load-overlay').classList.add('hidden');
+  ta.value = '';
+  announce('Configuration loaded');
+  showToast('📂 Configuration loaded!');
+}
 </script>
 </body></html>

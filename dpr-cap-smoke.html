@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>DPR cap smoke test</title>
+<script src="GrandFireworks.js"></script>
+<script>
+  window.results = {};
+  const preset = new GrandFireworks({ performance: { preset: 'low' } });
+  results.preset = preset.getOptions().performance.dprCap;
+
+  const custom = new GrandFireworks({ performance: { preset: 'low', dprCap: 1.75 } });
+  results.custom = custom.getOptions().performance.dprCap;
+  custom.setOptions({ performance: { dprCap: 1.25 } });
+  results.updated = custom.getOptions().performance.dprCap;
+
+  const invalid = new GrandFireworks({ performance: { preset: 'medium', dprCap: 0 } });
+  results.invalidFallback = invalid.getOptions().performance.dprCap;
+  results.pass = results.preset === 1 && results.custom === 1.75 &&
+    results.updated === 1.25 && results.invalidFallback === 1.25;
+</script>
