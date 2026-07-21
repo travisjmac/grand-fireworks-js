@@ -1,6 +1,6 @@
 /**
  * Grand Fireworks JS Configuration Builder
- * Creator: Travis MacDonald · Version: 1.3.1 · July 15, 2026
+ * Creator: Travis MacDonald · Version: 1.4.0 · July 15, 2026
  * http://travisandjoelyweareaperfect.fit/
  * https://github.com/travisjmac/grand-fireworks-js
  */

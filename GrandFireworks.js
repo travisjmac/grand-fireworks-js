@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.3.1
+ * Version: 1.4.0
  *
  * @author Travis MacDonald
- * @version 1.3.1
+ * @version 1.4.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -327,5 +327,5 @@
     getStats(){return{renderer:this.rendererType,fallbackActive:this.rendererType==='canvas2d'&&this.options.renderer.preferred!=='canvas2d',contextLossCount:this.contextLossCount,state:this.state,particles:this.particles.length,rockets:this.rockets.length,fps:Math.round(this.fps),durationRemaining:this.runtimeDuration?Math.max(0,Math.round(this.runtimeDuration-this.elapsed)):null,quality:this.quality};}
   }
 
-  GrandFireworks.VERSION='1.3.1';GrandFireworks.DEFAULTS=DEFAULTS;GrandFireworks.PRESETS=PRESETS;GrandFireworks.TYPES=TYPES;GrandFireworks.STYLES=STYLES;GrandFireworks.COLOR_THEMES=COLOR_THEMES;global.GrandFireworks=GrandFireworks;
+  GrandFireworks.VERSION='1.4.0';GrandFireworks.DEFAULTS=DEFAULTS;GrandFireworks.PRESETS=PRESETS;GrandFireworks.TYPES=TYPES;GrandFireworks.STYLES=STYLES;GrandFireworks.COLOR_THEMES=COLOR_THEMES;global.GrandFireworks=GrandFireworks;
 })(window);

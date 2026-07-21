@@ -1,9 +1,9 @@
 <!doctype html><!--
-  Grand Fireworks JS Guided Configuration Builder v1.3.1
+  Grand Fireworks JS Guided Configuration Builder v1.4.0
   Created by Travis MacDonald · July 21, 2026
   http://travisandjoelyweareaperfect.fit/
   https://github.com/travisjmac/grand-fireworks-js
---><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="Design your fireworks show step by step — pick presets, tweak visuals or performance, and copy the final configuration."><meta name="version" content="1.3.1"><meta name="date" content="2026-07-21"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS — Guided Builder"><meta property="og:description" content="Design your fireworks show step by step with live preview."><meta property="og:url" content="https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html"><meta name="twitter:card" content="summary_large_image"><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>Guided Builder — Grand Fireworks</title>
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="Design your fireworks show step by step — pick presets, tweak visuals or performance, and copy the final configuration."><meta name="version" content="1.4.0"><meta name="date" content="2026-07-21"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS — Guided Builder"><meta property="og:description" content="Design your fireworks show step by step with live preview."><meta property="og:url" content="https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html"><meta name="twitter:card" content="summary_large_image"><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>Guided Builder — Grand Fireworks</title>
 <style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#02030a;color:#f0f2ff;font:15px/1.5 system-ui,sans-serif;overflow:hidden}body{display:flex;flex-direction:column;height:100dvh;height:100vh}
 
 /* Controls header */
@@ -20,18 +20,23 @@
 #preview-inner{position:absolute;inset:0}
 .preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.1);font:400 10px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
 
-/* Controls panel */
-/* Left header bar */
-#controls{flex-shrink:0;background:#03040e;z-index:10000;opacity:.85;backdrop-filter:blur(8px);display:flex;flex-direction:column}
-@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{width:auto;max-height:100vh;border-right:1px solid rgba(255,255,255,.06);order:1}}
-
 /* Builder drawer overlay */
+#controls{display:none}
 #builder-drawer{position:fixed;top:0;left:0;bottom:0;z-index:2147483644;width:620px;max-width:90vw;background:#03040e;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.5)}
 #builder-drawer.open{transform:translateX(0)}
 #builder-drawer .drawer-header{display:flex;align-items:center;gap:8px;padding:10px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06)}
-#builder-drawer .drawer-header h2{margin:0;font-size:14px;font-weight:700;color:#ffd65a;flex:1}
+#builder-drawer .drawer-header h1{margin:0;font-size:14px;font-weight:700;color:#ffd65a;flex:1;white-space:nowrap}
+#builder-drawer .playback-group{display:flex;gap:2px;align-items:center;margin:0 4px}
+#builder-drawer .playback-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:.15s;line-height:1}
+#builder-drawer .playback-btn:hover{background:rgba(255,255,255,.1)}
+#builder-drawer .playback-btn.paused{color:#ffdc68}
 .drawer-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px}
 .drawer-close:hover{color:#fff;background:rgba(255,255,255,.1)}
+.drawer-subhead{display:flex;align-items:center;gap:6px;padding:6px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.drawer-subhead a{color:rgba(255,255,255,.4);text-decoration:none;padding:2px 6px;border-radius:4px}
+.drawer-subhead a:hover{color:#fff;background:rgba(255,255,255,.08)}
+#restart-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:5px;padding:3px 8px;cursor:pointer;font:600 11px/1 system-ui,sans-serif;white-space:nowrap;transition:.15s;margin-left:auto}
+#restart-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* Toggle tab */
 #controls-toggle{display:none}
@@ -183,11 +188,15 @@
 
 <section id="preview" role="img" aria-label="Live fireworks preview">
   <div id="preview-inner"></div>
-  <div class="preview-watermark">Grand Fireworks v1.3.1</div>
+  <div class="preview-watermark">Grand Fireworks v1.4.0</div>
 </section>
 
 <div id="controls">
-  <div class="controls-header">
+</div>
+
+<!-- Builder drawer overlay (everything) -->
+<div id="builder-drawer">
+  <div class="drawer-header">
     <h1>🎆 Grand Fireworks</h1>
     <div class="playback-group">
       <button class="playback-btn" id="play-btn" title="Start">▶</button>
@@ -195,20 +204,12 @@
       <button class="playback-btn" id="stop-btn" title="Stop">⏹</button>
       <span id="countdown-timer"></span>
     </div>
-    <nav>
-      <button id="configure-btn" title="Open settings">⚙️</button>
-      <a href="../index.html">Docs</a>
-      <a href="configuration-builder.html">Advanced</a>
-      <button id="restart-btn">↻</button>
-    </nav>
-  </div>
-</div>
-
-<!-- Builder drawer overlay -->
-<div id="builder-drawer">
-  <div class="drawer-header">
-    <h2>🎆 Configuration</h2>
     <button class="drawer-close" id="drawer-close" title="Close">✕</button>
+  </div>
+  <div class="drawer-subhead">
+    <a href="../index.html">📄 Docs</a>
+    <a href="configuration-builder.html">⚙️ Advanced</a>
+    <button id="restart-btn">↻ Restart</button>
   </div>
   <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
   <nav id="tab-bar" role="tablist" aria-label="Configuration sections"></nav>
@@ -1406,7 +1407,7 @@ function init() {
   document.getElementById('pause-btn').onclick=()=>{if(fw)try{fw.pause();document.getElementById('play-btn').classList.add('paused')}catch(e){}};
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
-  document.getElementById('configure-btn').onclick=()=>{document.getElementById('builder-drawer').classList.add('open');document.getElementById('controls-toggle').textContent='◀';};
+  document.getElementById('controls-toggle').onclick=toggleControlsPanel;
   document.getElementById('drawer-close').onclick=()=>{document.getElementById('builder-drawer').classList.remove('open');document.getElementById('controls-toggle').textContent='▶';setTimeout(()=>{if(fw)try{fw.resizePending=true}catch(e){}},500);};
   document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
   document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};

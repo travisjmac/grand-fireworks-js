@@ -2,6 +2,33 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.4.0] — July 21, 2026
+
+### Added
+
+- Added the Guided Configuration Builder with presets, a first-run wizard, live preview, playback controls, named local saves, raw JSON loading, and focused option tabs.
+- Added curated color themes, style switching, the optional FPS overlay, and synthesized launch/explosion sound effects.
+- Added cancellable sequential text messages through `launchTextSequence()` and `cancelTextSequence()`, including lifecycle events and per-message overrides.
+- Added dependency-free automated regression tests and a reproducible Terser-based distribution build.
+
+### Changed
+
+- Performance presets now support explicit `fps`, `dprCap`, `particleScale`, and `secondary` overrides.
+- Live option changes now preserve opacity, resize immediately for DPR changes, and keep `setOpacity()` values across later updates.
+- Sound now reuses one lazily created `AudioContext`, preserves true zero volume, and closes resources during destruction.
+- Reduced-motion visitors receive smaller salvos, lower particle limits, and slower automatic launch frequency.
+- Finale timing and density now honor `maxWaitBeforeLaunch`, `particleScale`, `finishDelay`, and `maxDuration`.
+- Updated all examples, metadata, documentation, cache-busting references, and distribution filenames to 1.4.0.
+
+### Fixed
+
+- Fixed standalone effects launching before renderer dimensions were initialized.
+- Fixed configured opacity being replaced when regular or manual effects started.
+- Fixed user-paused shows resuming when tab visibility or intersection state changed.
+- Fixed offscreen contained shows continuing to animate when automatic pausing was enabled.
+- Fixed Lucky mode generating twice per click and returning palettes that were overridden by an active color theme.
+- Fixed default-theme selection failing to restore the active style palette.
+
 ## [1.3.1] — July 15, 2026
 
 ### Added
@@ -34,5 +61,6 @@ All notable changes to Grand Fireworks JS are documented here.
 
 - Original 1.3.0 publication.
 
+[1.4.0]: https://github.com/travisjmac/grand-fireworks-js/releases/tag/v1.4.0
 [1.3.1]: https://github.com/travisjmac/grand-fireworks-js/releases/tag/v1.3.1
 [1.3.0]: https://github.com/travisjmac/grand-fireworks-js/releases/tag/v1.3.0
