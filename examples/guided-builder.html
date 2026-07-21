@@ -115,6 +115,8 @@
 .load-btns .secondary{background:rgba(255,255,255,.06);color:#fff}
 .load-btns .secondary:hover{background:rgba(255,255,255,.12)}
 .load-error{color:#ff7a7a;font-size:11px;margin:4px 0 0;display:none}
+.load-select{width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:6px;padding:8px;font:13px/1 system-ui,sans-serif;margin:0 0 8px}
+.load-select option{background:#0b0e22;color:#e8ecff}
 
 /* Guided tab */
 .guided-prompt{font-size:13px;color:#fff;margin:0 0 6px}
@@ -191,7 +193,8 @@
 
   <div id="bottom-actions">
     <button class="bottom-btn primary" id="copy-btn" title="Copy configuration code">📋 Copy</button>
-    <button class="bottom-btn" id="load-btn" title="Load a configuration">📂 Load</button>
+    <button class="bottom-btn" id="save-btn" title="Save current configuration">💾 Save</button>
+    <button class="bottom-btn" id="load-btn" title="Load a saved configuration">📂 Load</button>
     <button class="bottom-btn" id="undo-btn" title="Undo last change">↩ Undo</button>
     <button class="bottom-btn" id="reset-btn" title="Reset to starting preset">⟲ Reset</button>
   </div>
@@ -299,12 +302,41 @@
   </div>
 </div>
 
+<!-- Save config prompt -->
+<div id="save-overlay" class="hidden">
+  <div class="load-box" style="max-width:380px">
+    <h3>💾 Save Configuration</h3>
+    <p>Name your configuration so you can load it later.</p>
+    <input type="text" id="save-name-input" placeholder="My awesome show" style="width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:8px;padding:10px;font:13px/1 system-ui,sans-serif">
+    <div class="load-error" id="save-error" style="display:none">⚠️ Please enter a name.</div>
+    <div class="load-btns">
+      <button class="primary" id="save-confirm">Save</button>
+      <button class="secondary" id="save-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Load config overlay -->
 <div id="load-overlay" class="hidden">
   <div class="load-box">
     <h3>📂 Load Configuration</h3>
-    <p>Paste a GrandFireworks configuration object to replace the current show.</p>
-    <textarea id="load-textarea" placeholder='{&#10;  "baseStyle": "spectacle",&#10;  "colorTheme": "festival",&#10;  ...&#10;}' spellcheck="false"></textarea>
+
+    <div id="load-saved-section">
+      <p style="font-size:12px;color:rgba(255,255,255,.5);margin:0 0 6px">Saved configurations</p>
+      <div style="display:flex;gap:6px">
+        <select id="load-saved-select" style="flex:1;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:6px;padding:8px;font:13px/1 system-ui,sans-serif">
+          <option value="">— No saved configs —</option>
+        </select>
+        <button class="bottom-btn" id="load-saved-apply" disabled style="flex:0 0 auto;padding:8px 14px">Load</button>
+        <button class="bottom-btn" id="load-saved-del" disabled style="flex:0 0 auto;padding:8px 14px" title="Delete this saved config">🗑️</button>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,.06);margin:10px 0;padding-top:10px">
+      <p style="font-size:12px;color:rgba(255,255,255,.5);margin:0 0 6px">Or paste a configuration object</p>
+      <textarea id="load-textarea" placeholder='{&#10;  "baseStyle": "spectacle",&#10;  "colorTheme": "festival",&#10;  ...&#10;}' spellcheck="false"></textarea>
+    </div>
+
     <div class="load-error" id="load-error">⚠️ Invalid configuration — please check your JSON.</div>
     <div class="load-btns">
       <button class="primary" id="load-apply">Apply</button>
@@ -1317,76 +1349,45 @@ function copyConfig() {
 /* ===========================================================
    Initialization
    =========================================================== */
+const STORAGE_KEY='gf_saved_configs';
+function getSavedConfigs(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}}catch(e){return{}}}
+function saveConfig(nm){const t=nm.trim();if(!t)return false;const s=getSavedConfigs();s[t]=deepMerge({},state.committedConfig);localStorage.setItem(STORAGE_KEY,JSON.stringify(s));refreshSavedConfigs();return true;}
+function loadSavedConfig(nm){const s=getSavedConfigs();if(!s[nm])return false;const c=deepMerge(deepMerge({},CORE_CONFIG),s[nm]);state.currentPreset='custom';state.startingPreset='custom';state.committedConfig=c;state.history=[];state.historyIndex=-1;state.changes.clear();state.isPreviewing=false;state.guidedOption=null;state.guidedValue=null;restartFireworks(state.committedConfig);renderPresets();renderSummary();rebuildCategoryTabs();switchTab('guided');document.getElementById('load-overlay').classList.add('hidden');announce('Loaded: '+nm);showToast('📂 Loaded "'+nm+'"');return true;}
+function deleteSavedConfig(nm){const s=getSavedConfigs();delete s[nm];localStorage.setItem(STORAGE_KEY,JSON.stringify(s));refreshSavedConfigs();}
+function refreshSavedConfigs(){const sel=document.getElementById('load-saved-select');if(!sel)return;const s=getSavedConfigs();const names=Object.keys(s).sort();sel.innerHTML='';if(names.length===0){sel.add(new Option('— No saved configs —',''));document.getElementById('load-saved-apply').disabled=true;document.getElementById('load-saved-del').disabled=true;}else{sel.add(new Option('— Select a config —',''));names.forEach(n=>sel.add(new Option(n,n)));document.getElementById('load-saved-apply').disabled=false;document.getElementById('load-saved-del').disabled=false;}sel.value='';}
 
 function init() {
-  renderPresets();
-  renderTabs();
-  renderTabContent();
-
-  // Start fireworks with default preset
+  renderPresets();renderTabs();renderTabContent();
   restartFireworks(state.committedConfig);
-
-  // Wire playback controls
-  document.getElementById('play-btn').addEventListener('click', () => {
-    if (fw) { try { fw.start(); document.getElementById('play-btn').classList.remove('paused'); } catch(e) {} }
-  });
-  document.getElementById('pause-btn').addEventListener('click', () => {
-    if (fw) { try { fw.pause(); document.getElementById('play-btn').classList.add('paused'); } catch(e) {} }
-  });
-  document.getElementById('stop-btn').addEventListener('click', () => {
-    if (fw) { try { fw.stop(); document.getElementById('play-btn').classList.remove('paused'); } catch(e) {} }
-  });
-
-  // Wire header buttons
-  document.getElementById('restart-btn').addEventListener('click', () => {
-    restartFireworks(effectiveConfig());
-    showToast('↻ Restarted preview');
-  });
-
-  // Wire bottom actions
-  document.getElementById('copy-btn').addEventListener('click', copyConfig);
-  document.getElementById('load-btn').addEventListener('click', () => {
-    document.getElementById('load-overlay').classList.remove('hidden');
-  });
-  document.getElementById('undo-btn').addEventListener('click', undo);
-  document.getElementById('reset-btn').addEventListener('click', resetToStart);
-
-  // Wire load config
-  document.getElementById('load-apply').addEventListener('click', applyLoadedConfig);
-  document.getElementById('load-cancel').addEventListener('click', () => {
-    document.getElementById('load-overlay').classList.add('hidden');
-    document.getElementById('load-error').style.display = 'none';
-  });
-
-  // Wire wizard
+  document.getElementById('play-btn').onclick=()=>{if(fw)try{fw.start();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
+  document.getElementById('pause-btn').onclick=()=>{if(fw)try{fw.pause();document.getElementById('play-btn').classList.add('paused')}catch(e){}};
+  document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
+  document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
+  document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
+  document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};
+  document.getElementById('save-cancel').onclick=()=>document.getElementById('save-overlay').classList.add('hidden');
+  document.getElementById('save-name-input').onkeydown=e=>{if(e.key==='Enter')document.getElementById('save-confirm').click();if(e.key==='Escape')document.getElementById('save-cancel').click();};
+  document.getElementById('load-btn').onclick=()=>{refreshSavedConfigs();document.getElementById('load-overlay').classList.remove('hidden');};
+  document.getElementById('load-saved-apply').onclick=()=>{const n=document.getElementById('load-saved-select').value;if(n)loadSavedConfig(n);};
+  document.getElementById('load-saved-del').onclick=()=>{const n=document.getElementById('load-saved-select').value;if(n&&confirm('Delete "'+n+'"?')){deleteSavedConfig(n);showToast('🗑️ Deleted "'+n+'"');}};
+  document.getElementById('load-saved-select').onchange=function(){document.getElementById('load-saved-apply').disabled=!this.value;document.getElementById('load-saved-del').disabled=!this.value;};
+  document.getElementById('copy-btn').onclick=copyConfig;
+  document.getElementById('load-apply').onclick=applyLoadedConfig;
+  document.getElementById('load-cancel').onclick=()=>{document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';};
+  document.getElementById('undo-btn').onclick=undo;
+  document.getElementById('reset-btn').onclick=resetToStart;
   initWizard();
-
-  // Keyboard: Escape reverts guided change or closes overlays
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (!document.getElementById('load-overlay').classList.contains('hidden')) {
-        document.getElementById('load-overlay').classList.add('hidden');
-        document.getElementById('load-error').style.display = 'none';
-        return;
-      }
-      if (!document.getElementById('wizard-overlay').classList.contains('hidden')) {
-        document.getElementById('wizard-overlay').classList.add('hidden');
-        return;
-      }
-      if (state.isPreviewing) {
-        revertGuidedChange();
-        e.preventDefault();
-      }
+  document.onkeydown=e=>{
+    if(e.key==='Escape'){
+      if(!document.getElementById('save-overlay').classList.contains('hidden')){document.getElementById('save-overlay').classList.add('hidden');return;}
+      if(!document.getElementById('load-overlay').classList.contains('hidden')){document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';return;}
+      if(!document.getElementById('wizard-overlay').classList.contains('hidden')){document.getElementById('wizard-overlay').classList.add('hidden');return;}
+      if(state.isPreviewing){revertGuidedChange();e.preventDefault();}
     }
-  });
-
-  // Render summary
+  };
   renderSummary();
+  refreshSavedConfigs();
 }
-
-/* ===========================================================
-   Wizard
-   =========================================================== */
 let wizardData = { theme: 'default', style: 'medium', continuous: true, duration: 10000, finale: false, text: false, textMsg: '' };
 const WIZARD_THEMES = [
   { label: '🌈 Default', value: 'default' },
@@ -1591,5 +1592,6 @@ function applyLoadedConfig() {
   announce('Configuration loaded');
   showToast('📂 Configuration loaded!');
 }
+init();
 </script>
 </body></html>
