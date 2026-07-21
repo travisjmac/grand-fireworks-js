@@ -21,8 +21,13 @@
 .preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.1);font:400 10px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
 
 /* Controls panel */
-#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:#03040e;display:flex;flex-direction:column;overflow:hidden;z-index:10000;opacity:.8;backdrop-filter:blur(8px)}
-@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{min-width:620px;max-width:620px;max-height:100vh;border-top:none;border-right:none;order:1;border-left:none;box-shadow:2px 0 12px rgba(0,0,0,.5)}}
+#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:#03040e;display:flex;flex-direction:column;overflow:hidden;z-index:10000;opacity:.8;backdrop-filter:blur(8px);transform:translateX(0);transition:transform .45s cubic-bezier(.4,0,.2,1)}
+#controls.panel-hidden{transform:translateX(-100%)}
+@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{min-width:620px;max-width:620px;max-height:100vh;border-top:none;border-right:none;order:1;border-left:none;box-shadow:2px 0 12px rgba(0,0,0,.5)}#controls.panel-hidden{transform:translateX(-100%)}}
+
+/* Toggle tab */
+#controls-toggle{display:none}
+@media(min-width:768px){#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3)}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}#controls-toggle{left:620px}#controls-toggle.panel-hidden{left:0}}
 
 /* Preset bar */
 #preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
@@ -79,9 +84,9 @@
 .duration-row input[type=number]:focus{outline:none;border-color:rgba(255,215,0,.4)}
 
 /* Wizard overlay */
-#wizard-overlay{position:fixed;inset:0;z-index:2147483646;background:rgba(2,3,10,.95);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s}
+#wizard-overlay{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s}
 #wizard-overlay.hidden{opacity:0;pointer-events:none}
-.wizard-box{background:#0b0e22;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px 24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.wizard-box{background:rgba(11,14,34,.92);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px 24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
 .wizard-box h2{margin:0 0 4px;font-size:18px;color:#ffd65a}
 .wizard-box p{color:rgba(255,255,255,.6);font-size:13px;margin:0 0 16px}
 .wizard-step{display:none}
@@ -199,6 +204,8 @@
     <button class="bottom-btn" id="reset-btn" title="Reset to starting preset">⟲ Reset</button>
   </div>
 </div>
+
+<div id="controls-toggle" class="visible" title="Toggle controls panel">◀</div>
 
 <div id="toast"></div>
 <div id="live-announcer" class="sr-only" aria-live="polite"></div>
@@ -1356,9 +1363,32 @@ function loadSavedConfig(nm){const s=getSavedConfigs();if(!s[nm])return false;co
 function deleteSavedConfig(nm){const s=getSavedConfigs();delete s[nm];localStorage.setItem(STORAGE_KEY,JSON.stringify(s));refreshSavedConfigs();}
 function refreshSavedConfigs(){const sel=document.getElementById('load-saved-select');if(!sel)return;const s=getSavedConfigs();const names=Object.keys(s).sort();sel.innerHTML='';if(names.length===0){sel.add(new Option('— No saved configs —',''));document.getElementById('load-saved-apply').disabled=true;document.getElementById('load-saved-del').disabled=true;}else{sel.add(new Option('— Select a config —',''));names.forEach(n=>sel.add(new Option(n,n)));document.getElementById('load-saved-apply').disabled=false;document.getElementById('load-saved-del').disabled=false;}sel.value='';}
 
+/* ===== Panel slide-in & toggle ===== */
+function dismissWizard() {
+  document.getElementById('wizard-overlay').classList.add('hidden');
+  // Slide controls in from the left
+  document.getElementById('controls').classList.remove('panel-hidden');
+  document.getElementById('controls-toggle').classList.add('visible');
+  document.getElementById('controls-toggle').textContent = '◀';
+}
+
+function toggleControlsPanel() {
+  const ctrl = document.getElementById('controls');
+  const tog = document.getElementById('controls-toggle');
+  const hidden = ctrl.classList.toggle('panel-hidden');
+  tog.textContent = hidden ? '▶' : '◀';
+  setTimeout(() => {
+    if (fw) try { fw.resizePending = true; } catch(e) {}
+  }, 500);
+}
+
 function init() {
   renderPresets();renderTabs();renderTabContent();
   restartFireworks(state.committedConfig);
+
+  // Initially hide controls (wizard is showing)
+  document.getElementById('controls').classList.add('panel-hidden');
+
   document.getElementById('play-btn').onclick=()=>{if(fw)try{fw.start();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('pause-btn').onclick=()=>{if(fw)try{fw.pause();document.getElementById('play-btn').classList.add('paused')}catch(e){}};
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
@@ -1376,12 +1406,13 @@ function init() {
   document.getElementById('load-cancel').onclick=()=>{document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';};
   document.getElementById('undo-btn').onclick=undo;
   document.getElementById('reset-btn').onclick=resetToStart;
+  document.getElementById('controls-toggle').onclick=toggleControlsPanel;
   initWizard();
   document.onkeydown=e=>{
     if(e.key==='Escape'){
       if(!document.getElementById('save-overlay').classList.contains('hidden')){document.getElementById('save-overlay').classList.add('hidden');return;}
       if(!document.getElementById('load-overlay').classList.contains('hidden')){document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';return;}
-      if(!document.getElementById('wizard-overlay').classList.contains('hidden')){document.getElementById('wizard-overlay').classList.add('hidden');return;}
+      if(!document.getElementById('wizard-overlay').classList.contains('hidden')){dismissWizard();return;}
       if(state.isPreviewing){revertGuidedChange();e.preventDefault();}
     }
   };
@@ -1481,12 +1512,12 @@ function initWizard() {
     if (action === 'skip' || action === 'walk') {
       showStep(1);
     } else if (action === 'load') {
-      document.getElementById('wizard-overlay').classList.add('hidden');
+      dismissWizard();
       document.getElementById('load-overlay').classList.remove('hidden');
     }
   });
   document.getElementById('wiz-skip-all').addEventListener('click', () => {
-    document.getElementById('wizard-overlay').classList.add('hidden');
+    dismissWizard();
   });
 
   // Step 1: Theme
@@ -1559,7 +1590,7 @@ function initWizard() {
     renderPresets();
     renderSummary();
     switchTab('guided');
-    document.getElementById('wizard-overlay').classList.add('hidden');
+    dismissWizard();
     announce('Wizard setup complete');
     showToast('✨ Setup complete!');
     // Launch text if requested
