@@ -301,11 +301,11 @@
         show:{
           intensity:rand(0.4,2),openingSalvo:Math.floor(rand(2,10)),launchInterval:Math.floor(rand(300,1400)),
           launchSpread:unit(rand(0.2,0.9)),angleRange:rand(2,30),angleStrength:rand(0.2,2.5),
-          enabledTypes:Math.random()<.7?pick([['grand_peony','imperial_chrysanthemum','starburst','glitter_nova'],['weeping_willow','cascading_horsetail','royal_palm','golden_brocade'],['crossette_supreme','diamond_ring','crown_jewel','thunder_clap'],['dragon_fish','majestic_comet','galactic_spiral']]):'all',
-          palettes:[pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL)]
+          enabledTypes:Math.random()<.7?pick([['grand_peony','imperial_chrysanthemum','starburst','glitter_nova'],['weeping_willow','cascading_horsetail','royal_palm','golden_brocade'],['crossette_supreme','diamond_ring','crown_jewel','thunder_clap'],['dragon_fish','majestic_comet','galactic_spiral']]):'all'
         },
         transition:{fadeIn:Math.floor(rand(200,1200)),fadeOut:Math.floor(rand(200,1000)),easing:pick(['ease-out','ease','linear','ease-in-out']),clearOnHide:true}
       };
+      if(currentTheme==='default')cfg.show.palettes=[pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL)];
       if(Math.random()<.35)cfg.background={value:pick(['radial-gradient(circle at center, rgba(8,12,40,.65), #000 82%)','linear-gradient(135deg, #1a0a2e, #040714)','linear-gradient(180deg, #101a4b, #040714)','radial-gradient(circle at 50% 35%, #38175e, #080312 72%)']),opacity:unit(rand(0.6,1))};
       this.setOptions(cfg);
       if(this.root)this.root.style.opacity=String(clamp(Number(cfg.visuals.opacity??1),0,1));

@@ -23,7 +23,7 @@
     document.querySelector('#next-btn').disabled=cursor>=history.length-1;
   }
 
-  function applyConfig(cfg, isRandom){
+  function applyConfig(cfg){
     if(!fireworks){
       const config=JSON.parse(JSON.stringify(cfg));
       config.container='#stage';
@@ -31,13 +31,6 @@
       config.autoStart=true;
       fireworks=new GrandFireworks(config);
       displayConfig(cfg);
-    } else if(isRandom){
-      // Generate a fresh random look (library handles setOptions + opacity + recolor)
-      const result=fireworks.feelingLucky();
-      displayConfig(result);
-      // Sync dropdowns
-      document.querySelector('#lucky-style').value=fireworks.options.baseStyle||'medium';
-      document.querySelector('#lucky-theme').value=fireworks.options.colorTheme||'default';
     } else {
       // Restore a specific config from history
       const updated=JSON.parse(JSON.stringify(cfg));
@@ -63,15 +56,17 @@
     if(cursor<history.length-1)history.splice(cursor+1);
     history.push(JSON.parse(JSON.stringify(cfg)));
     cursor=history.length-1;
-    applyConfig(cfg, true);
+    displayConfig(cfg);
+    document.querySelector('#lucky-style').value=fireworks.options.baseStyle||'medium';
+    document.querySelector('#lucky-theme').value=fireworks.options.colorTheme||'default';
   }
 
   function goBack(){
-    if(cursor>0){cursor--;applyConfig(history[cursor], false);}
+    if(cursor>0){cursor--;applyConfig(history[cursor]);}
   }
 
   function goForward(){
-    if(cursor<history.length-1){cursor++;applyConfig(history[cursor], false);}
+    if(cursor<history.length-1){cursor++;applyConfig(history[cursor]);}
   }
 
   // Initial: create fireworks, then generate first random look
@@ -80,6 +75,8 @@
   history.push(JSON.parse(JSON.stringify(firstCfg)));
   cursor=0;
   displayConfig(firstCfg);
+  document.querySelector('#lucky-style').value=fireworks.options.baseStyle||'medium';
+  document.querySelector('#lucky-theme').value=fireworks.options.colorTheme||'default';
 
   document.querySelector('#lucky-btn').addEventListener('click',()=>{
     const btn=document.querySelector('#lucky-btn');
