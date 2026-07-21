@@ -284,25 +284,25 @@
       const PRESETS=['low','medium','high','ultra'];
       const rand=(min,max)=>min+Math.random()*(max-min);
       const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
-      const clamp=n=>Math.max(0,Math.min(1,n));
+      const unit=n=>Math.max(0,Math.min(1,n));
       const currentTheme=this.options.colorTheme||'default';
       const cfg={
         colorTheme:currentTheme,
         visuals:{
-          opacity:clamp(rand(0.15,0.6)),trails:Math.random()<.85,trailFade:clamp(rand(0.06,0.2)),
-          bloom:clamp(rand(0.7,1.8)),rocketExhaust:Math.random()<.8,explosionFlashes:Math.random()<.85,
-          starChance:clamp(rand(0.02,0.2)),groupedSalvos:Math.random()<.7,secondaryCrackle:Math.random()<.65
+          opacity:unit(rand(0.15,0.6)),trails:Math.random()<.85,trailFade:rand(0.06,0.2),
+          bloom:rand(0.7,1.8),rocketExhaust:Math.random()<.8,explosionFlashes:Math.random()<.85,
+          starChance:rand(0.02,0.2),groupedSalvos:Math.random()<.7,secondaryCrackle:Math.random()<.65
         },
         performance:{preset:pick(PRESETS),adaptive:true,pauseWhenHidden:true,pauseWhenOffscreen:true,respectReducedMotion:true},
         show:{
-          intensity:clamp(rand(0.4,2)),openingSalvo:Math.floor(rand(2,10)),launchInterval:Math.floor(rand(300,1400)),
-          launchSpread:clamp(rand(0.2,0.9)),angleRange:clamp(rand(2,30)),angleStrength:clamp(rand(0.2,2.5)),
+          intensity:rand(0.4,2),openingSalvo:Math.floor(rand(2,10)),launchInterval:Math.floor(rand(300,1400)),
+          launchSpread:unit(rand(0.2,0.9)),angleRange:rand(2,30),angleStrength:rand(0.2,2.5),
           enabledTypes:Math.random()<.7?pick([['grand_peony','imperial_chrysanthemum','starburst','glitter_nova'],['weeping_willow','cascading_horsetail','royal_palm','golden_brocade'],['crossette_supreme','diamond_ring','crown_jewel','thunder_clap'],['dragon_fish','majestic_comet','galactic_spiral']]):'all',
           palettes:[pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL),pick(PALETTE_POOL)]
         },
         transition:{fadeIn:Math.floor(rand(200,1200)),fadeOut:Math.floor(rand(200,1000)),easing:pick(['ease-out','ease','linear','ease-in-out']),clearOnHide:true}
       };
-      if(Math.random()<.35)cfg.background={value:pick(['radial-gradient(circle at center, rgba(8,12,40,.65), #000 82%)','linear-gradient(135deg, #1a0a2e, #040714)','linear-gradient(180deg, #101a4b, #040714)','radial-gradient(circle at 50% 35%, #38175e, #080312 72%)']),opacity:clamp(rand(0.6,1))};
+      if(Math.random()<.35)cfg.background={value:pick(['radial-gradient(circle at center, rgba(8,12,40,.65), #000 82%)','linear-gradient(135deg, #1a0a2e, #040714)','linear-gradient(180deg, #101a4b, #040714)','radial-gradient(circle at 50% 35%, #38175e, #080312 72%)']),opacity:unit(rand(0.6,1))};
       this.setOptions(cfg);
       if(this.root)this.root.style.opacity=String(clamp(Number(cfg.visuals.opacity??1),0,1));
       // Recolor existing mid-air particles
