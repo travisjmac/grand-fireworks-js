@@ -1,0 +1,1093 @@
+<!doctype html><!--
+  Grand Fireworks JS Guided Configuration Builder v1.3.1
+  Created by Travis MacDonald · July 21, 2026
+  http://travisandjoelyweareaperfect.fit/
+  https://github.com/travisjmac/grand-fireworks-js
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="Design your fireworks show step by step — pick presets, tweak visuals or performance, and copy the final configuration."><meta name="version" content="1.3.1"><meta name="date" content="2026-07-21"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS — Guided Builder"><meta property="og:description" content="Design your fireworks show step by step with live preview."><meta property="og:url" content="https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html"><meta name="twitter:card" content="summary_large_image"><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>Guided Builder — Grand Fireworks</title>
+<style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#02030a;color:#f0f2ff;font:15px/1.5 system-ui,sans-serif;overflow:hidden}body{display:flex;flex-direction:column;height:100dvh;height:100vh}
+
+/* Header */
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(3,4,14,.95);border-bottom:1px solid rgba(255,255,255,.06);z-index:10;flex-shrink:0}
+header h1{margin:0;font-size:15px;font-weight:700;color:#ffd65a;white-space:nowrap}
+header nav{margin-left:auto;display:flex;gap:6px}
+header nav a{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;padding:4px 8px;border-radius:6px;transition:.15s}
+header nav a:hover{color:#fff;background:rgba(255,255,255,.08)}
+#restart-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-radius:6px;padding:4px 10px;cursor:pointer;font:600 12px/1 system-ui,sans-serif;white-space:nowrap;transition:.15s}
+#restart-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+
+/* Preview */
+#preview{position:relative;min-height:45svh;min-height:45vh;flex:1;background:radial-gradient(ellipse at 50% 20%,#0e1535,#02030a 70%);overflow:hidden;flex-shrink:0}
+#preview-inner{position:absolute;inset:0}
+.preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.12);font:400 11px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
+
+/* Controls panel */
+#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:rgba(3,4,14,.95);border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;width:55%;flex:none}#controls{width:45%;max-height:100vh;border-top:none;border-left:1px solid rgba(255,255,255,.06)}}
+
+/* Preset bar */
+#preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
+#preset-bar::-webkit-scrollbar{display:none}
+.preset-btn{flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);border-radius:999px;padding:6px 14px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;white-space:nowrap}
+.preset-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.preset-btn.active{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.3);color:#ffdc68}
+
+/* Tab bar */
+#tab-bar{display:flex;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)}
+#tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;border:none;background:transparent;color:rgba(255,255,255,.4);padding:8px 12px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn:hover{color:rgba(255,255,255,.7)}
+.tab-btn.active{color:#ffd65a;border-bottom-color:#ffd65a}
+.tab-btn .tab-icon{margin-right:4px}
+
+/* Tab content */
+#tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 8px}
+.tab-panel{display:none;flex-direction:column;gap:8px}
+.tab-panel.active{display:flex}
+.tab-desc{font-size:12px;color:rgba(255,255,255,.4);margin:0 0 4px;line-height:1.4}
+
+/* Form controls */
+.option-row{display:flex;align-items:center;gap:8px;min-height:36px}
+.option-row label{flex-shrink:0;font-size:13px;color:rgba(255,255,255,.75);min-width:90px;cursor:help;border-bottom:1px dotted transparent}
+.option-row label:hover{border-bottom-color:rgba(255,255,255,.2)}
+.option-row .opt-control{flex:1;min-width:0}
+.option-row select,.option-row input[type=number],.option-row input[type=text]{width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e8ecff;border-radius:6px;padding:5px 8px;font:13px/1 system-ui,sans-serif;transition:.15s}
+.option-row select:hover,.option-row input:hover{border-color:rgba(255,255,255,.2)}
+.option-row select:focus,.option-row input:focus{outline:none;border-color:rgba(255,215,0,.4);box-shadow:0 0 0 2px rgba(255,215,0,.1)}
+.option-row select option{background:#0b0e22;color:#e8ecff}
+.option-row input[type=number]{-moz-appearance:textfield}
+.option-row input[type=number]::-webkit-inner-spin-button,.option-row input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.option-row input[type=checkbox]{width:18px;height:18px;accent-color:#ffd65a;cursor:pointer;flex-shrink:0}
+
+/* Guided tab */
+.guided-prompt{font-size:13px;color:rgba(255,255,255,.5);margin:0 0 6px}
+.guided-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.guided-row select{flex:1;min-width:120px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e8ecff;border-radius:6px;padding:6px 8px;font:13px/1 system-ui,sans-serif;transition:.15s}
+.guided-row select:hover{border-color:rgba(255,255,255,.2)}
+.guided-row select:focus{outline:none;border-color:rgba(255,215,0,.4);box-shadow:0 0 0 2px rgba(255,215,0,.1)}
+.guided-row select option{background:#0b0e22;color:#e8ecff}
+.guided-actions{display:flex;gap:6px;flex-shrink:0}
+.guided-btn{border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 14px;cursor:pointer;font:600 13px/1 system-ui,sans-serif;transition:.15s;white-space:nowrap;min-height:36px}
+.guided-btn.keep{background:rgba(0,200,80,.12);border-color:rgba(0,200,80,.25);color:#5cf09e}
+.guided-btn.keep:hover{background:rgba(0,200,80,.2)}
+.guided-btn.revert{background:rgba(255,60,60,.1);border-color:rgba(255,60,60,.2);color:#ff7a7a}
+.guided-btn.revert:hover{background:rgba(255,60,60,.2)}
+.guided-btn:disabled{opacity:.3;pointer-events:none}
+.guided-btn .btn-icon{font-size:15px;vertical-align:middle;margin-right:3px}
+.guided-hint{font-size:11px;color:rgba(255,255,255,.35);margin:4px 0 0;font-style:italic;min-height:16px}
+
+/* Config summary */
+#config-summary{display:flex;flex-wrap:wrap;gap:4px;padding:6px 0 0;min-height:28px;flex-shrink:0}
+.summary-chip{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px 10px;font:500 11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.7)}
+.summary-chip.preset-chip{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.15);color:#ffdc68}
+
+/* Bottom actions */
+#bottom-actions{display:flex;gap:6px;padding:6px 0 0;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04)}
+.bottom-btn{flex:1;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;min-height:36px;text-align:center}
+.bottom-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.bottom-btn.primary{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.2);color:#ffdc68}
+.bottom-btn.primary:hover{background:rgba(255,215,0,.16)}
+.bottom-btn:disabled{opacity:.3;pointer-events:none}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,200,80,.9);color:#fff;padding:8px 18px;border-radius:10px;font:500 13px/1 system-ui,sans-serif;z-index:2147483647;pointer-events:none;opacity:0;transition:opacity .25s}
+#toast.show{opacity:1}
+
+/* Screen reader only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Landscape phone adjustment */
+@media(max-height:500px) and (orientation:landscape){#preview{min-height:70vh}header{padding:4px 10px}header h1{font-size:13px}#controls{max-height:30vh}#tab-content{padding:6px 10px}.option-row{min-height:30px}.option-row label{min-width:70px;font-size:12px}.bottom-btn,.guided-btn{min-height:30px;padding:5px 8px;font-size:11px}}
+
+/* Scrollbar styling */
+#tab-content::-webkit-scrollbar{width:4px}
+#tab-content::-webkit-scrollbar-track{background:transparent}
+#tab-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}
+</style></head><body>
+
+<header>
+  <h1>🎆 Grand Fireworks</h1>
+  <nav>
+    <a href="../index.html">Docs</a>
+    <a href="configuration-builder.html">Advanced</a>
+    <button id="restart-btn">↻ Restart</button>
+  </nav>
+</header>
+
+<section id="preview" role="img" aria-label="Live fireworks preview">
+  <div id="preview-inner"></div>
+  <div class="preview-watermark">Grand Fireworks v1.3.1</div>
+</section>
+
+<div id="controls">
+  <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
+
+  <nav id="tab-bar" role="tablist" aria-label="Configuration sections"></nav>
+
+  <div id="tab-content"></div>
+
+  <div id="config-summary" aria-live="polite" aria-atomic="false"></div>
+
+  <div id="bottom-actions">
+    <button class="bottom-btn primary" id="copy-btn" title="Copy configuration code">📋 Copy Config</button>
+    <button class="bottom-btn" id="undo-btn" title="Undo last change">↩ Undo</button>
+    <button class="bottom-btn" id="reset-btn" title="Reset to starting preset">⟲ Reset</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="live-announcer" class="sr-only" aria-live="polite"></div>
+
+<script src="../GrandFireworks.js"></script>
+<script>
+/* ===========================================================
+   Grand Fireworks JS — Guided Builder
+   =========================================================== */
+'use strict';
+
+/* ---------- utilities ---------- */
+const $ = (s, p) => (p || document).querySelector(s);
+const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function deepMerge(a, b) {
+  const o = { ...a };
+  for (const k of Object.keys(b || {})) {
+    o[k] = a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])
+        && b[k] && typeof b[k] === 'object' && !Array.isArray(b[k])
+      ? deepMerge(a[k], b[k])
+      : b[k];
+  }
+  return o;
+}
+
+function setDeep(obj, path, val) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = val;
+}
+
+function getDeep(obj, path) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (const p of parts) { if (cur == null || typeof cur !== 'object') return undefined; cur = cur[p]; }
+  return cur;
+}
+
+function shallowEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every(k => a[k] === b[k]);
+}
+
+/* ---------- presets ---------- */
+const PRESET_DEFS = [
+  { id: 'balanced',    label: 'Balanced',       icon: '⚖️',  config: { baseStyle: 'medium',   performance: { preset: 'high' } } },
+  { id: 'subtle',      label: 'Subtle',         icon: '🌙',  config: { baseStyle: 'thin',     performance: { preset: 'low' }, visuals: { opacity: .6 } } },
+  { id: 'classic',     label: 'Classic',        icon: '🕰️', config: { baseStyle: 'classic',  performance: { preset: 'medium' } } },
+  { id: 'bold',        label: 'Bold',           icon: '💪',  config: { baseStyle: 'bold',     performance: { preset: 'high' } } },
+  { id: 'spectacle',   label: 'Spectacle',      icon: '🎆',  config: { baseStyle: 'spectacle', performance: { preset: 'ultra' } } },
+  { id: 'mobile',      label: 'Mobile Friendly', icon: '📱', config: { baseStyle: 'medium',   performance: { preset: 'low' }, show: { maxParticles: 1000, maxRockets: 3 } } }
+];
+const PRESET_MAP = Object.fromEntries(PRESET_DEFS.map(p => [p.id, p]));
+
+/* ---------- section definitions ---------- */
+const SECTIONS = {
+  guided: {
+    icon: '✨', label: 'Guided',
+    desc: 'Pick one thing to change, preview it, then keep or revert.',
+    options: [
+      { id: 'style',       label: 'Style',           type: 'select', updateMode: 'live',
+        choices: ['Classic','Old School','Thin','Medium','Bold','Spectacle'].map(v => ({ label: v, value: v.toLowerCase().replace(/\s+/g,'') })),
+        apply: (c, v, fw) => { fw.setStyle(v); c.baseStyle = v; },
+        summary: v => `${PRESET_MAP[v] ? PRESET_MAP[v].icon + ' ' : ''}${v.charAt(0).toUpperCase()+v.slice(1)} style`,
+        tooltip: 'Overall look and feel — changes visuals and show behavior together' },
+      { id: 'colorTheme',  label: 'Color theme',     type: 'select', updateMode: 'live',
+        choices: [
+          { label: '🌈 Default', value: 'default' }, { label: '❄️ Ice Blue', value: 'iceBlue' },
+          { label: '🔥 Ember Red', value: 'emberRed' }, { label: '💚 Neon Green', value: 'neonGreen' },
+          { label: '☀️ Golden Sun', value: 'goldenSun' }, { label: '👑 Royal Purple', value: 'royalPurple' },
+          { label: '🎉 Festival', value: 'festival' }
+        ],
+        apply: (c, v, fw) => { fw.setColorTheme(v); c.colorTheme = v; },
+        summary: v => { const m = { default:'🌈 Default', iceBlue:'❄️ Ice Blue', emberRed:'🔥 Ember Red', neonGreen:'💚 Neon Green', goldenSun:'☀️ Golden Sun', royalPurple:'👑 Royal Purple', festival:'🎉 Festival' }; return m[v] || v; },
+        tooltip: 'Color palette for all fireworks bursts' },
+      { id: 'fireworks',   label: 'Firework amount', type: 'select', updateMode: 'live',
+        choices: [
+          { label: '🙈 Minimal', value: JSON.stringify({maxRockets:2, launchInterval:1200}) },
+          { label: '🌱 Fewer',   value: JSON.stringify({maxRockets:4, launchInterval:900}) },
+          { label: '⚖️ Balanced', value: JSON.stringify({maxRockets:6, launchInterval:750}) },
+          { label: '🚀 More',    value: JSON.stringify({maxRockets:10, launchInterval:550}) },
+          { label: '🤯 Maximum', value: JSON.stringify({maxRockets:14, launchInterval:350}) }
+        ],
+        apply: (c, v, fw) => { const o = JSON.parse(v); c.show = deepMerge(c.show || {}, o); fw.setOptions({ show: o }); },
+        summary: v => { const o = JSON.parse(v); return `Fireworks: ${o.maxRockets} rockets`; },
+        tooltip: 'How many rockets launch at once and how often' },
+      { id: 'density',     label: 'Particle density',  type: 'select', updateMode: 'live',
+        choices: [
+          { label: '🌬️ Light', value: '1500' }, { label: '⚖️ Balanced', value: '3000' },
+          { label: '💥 Dense', value: '5000' }, { label: '✨ Spectacular', value: '8000' }
+        ],
+        apply: (c, v, fw) => { const n = Number(v); c.show = deepMerge(c.show||{}, {maxParticles:n}); fw.setOptions({show:{maxParticles:n}}); },
+        summary: v => `Particles: ${v}`,
+        tooltip: 'Number of particles per explosion' },
+      { id: 'launchSpeed', label: 'Launch speed',   type: 'select', updateMode: 'live',
+        choices: [
+          { label: '😌 Relaxed', value: '1200' }, { label: '⚖️ Normal', value: '750' },
+          { label: '⚡ Fast',     value: '550' }, { label: '🔥 Intense',  value: '350' }
+        ],
+        apply: (c, v, fw) => { const n = Number(v); c.show = deepMerge(c.show||{}, {launchInterval:n}); fw.setOptions({show:{launchInterval:n}}); },
+        summary: v => `Speed: ${v}ms interval`,
+        tooltip: 'How fast rockets launch — lower = faster' },
+      { id: 'trails',      label: 'Trails',         type: 'toggle', updateMode: 'live',
+        apply: (c, v, fw) => { c.visuals = deepMerge(c.visuals||{}, {trails:v}); fw.setOptions({visuals:{trails:v}}); },
+        summary: v => v ? 'Trails on' : 'Trails off',
+        tooltip: 'Luminous motion trails behind particles' },
+      { id: 'glow',        label: 'Glow',           type: 'select', updateMode: 'live',
+        choices: [
+          { label: '🌫️ Low', value: '.7' }, { label: '⚖️ Medium', value: '1.25' },
+          { label: '💡 High', value: '1.9' }
+        ],
+        apply: (c, v, fw) => { const n = Number(v); c.visuals = deepMerge(c.visuals||{}, {bloom:n}); fw.setOptions({visuals:{bloom:n}}); },
+        summary: v => `Glow: ${v}`,
+        tooltip: 'Brightness of the glow around explosions' },
+      { id: 'stars',       label: 'Stars',          type: 'select', updateMode: 'live',
+        choices: [
+          { label: '❌ Off', value: '0' }, { label: '⭐ Few', value: '.05' },
+          { label: '🌟🌟 Some', value: '.12' }, { label: '🌟🌟🌟 Many', value: '.2' }
+        ],
+        apply: (c, v, fw) => { const n = Number(v); c.visuals = deepMerge(c.visuals||{}, {starChance:n}); fw.setOptions({visuals:{starChance:n}}); },
+        summary: v => v === '0' ? 'Stars off' : `Stars: ${v}`,
+        tooltip: 'Chance each particle gets a sharp star core' },
+      { id: 'performance', label: 'Performance',    type: 'select', updateMode: 'restart',
+        choices: [
+          { label: '📱 Mobile', value: 'low' }, { label: '⚖️ Balanced', value: 'medium' },
+          { label: '🎯 High Quality', value: 'high' }, { label: '🚀 Ultra', value: 'ultra' }
+        ],
+        apply: (c, v, fw) => { c.performance = deepMerge(c.performance||{}, {preset:v}); },
+        summary: v => { const m = { low:'📱 Mobile', medium:'⚖️ Balanced', high:'🎯 High Quality', ultra:'🚀 Ultra' }; return `Perf: ${m[v]||v}`; },
+        tooltip: 'Quality/capacity preset — affects FPS, particles, and DPR cap' },
+      { id: 'finale',      label: 'Grand Finale',    type: 'toggle', updateMode: 'live',
+        apply: (c, v, fw) => { c.finale = deepMerge(c.finale||{}, {enabled:v}); fw.setOptions({finale:{enabled:v}}); },
+        summary: v => v ? 'Finale on' : 'Finale off',
+        tooltip: 'Trigger a choreographed grand finale on stop or duration end' }
+    ]
+  },
+  visuals: {
+    icon: '🎨', label: 'Visuals',
+    desc: 'Control how bursts look — trails, glow, stars, and flash effects.',
+    options: [
+      { id: 'visuals.opacity',          label: 'Opacity',           type: 'number', min: 0, max: 1, step: .05, def: 1, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {opacity:v}); fw.setOptions({visuals:{opacity:v}}); },
+        tooltip: 'Overall fireworks transparency' },
+      { id: 'visuals.trails',           label: 'Trails',            type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {trails:v}); fw.setOptions({visuals:{trails:v}}); },
+        tooltip: 'Luminous motion trails behind particles' },
+      { id: 'visuals.trailFade',        label: 'Trail fade',        type: 'number', min: .03, max: 1, step: .01, def: .115, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {trailFade:v}); fw.setOptions({visuals:{trailFade:v}}); },
+        tooltip: 'How quickly trails fade — lower = longer tails' },
+      { id: 'visuals.bloom',            label: 'Glow (bloom)',      type: 'number', min: .5, max: 2.5, step: .05, def: 1.25, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {bloom:v}); fw.setOptions({visuals:{bloom:v}}); },
+        tooltip: 'Glow intensity around explosions' },
+      { id: 'visuals.rocketExhaust',    label: 'Rocket exhaust',    type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {rocketExhaust:v}); fw.setOptions({visuals:{rocketExhaust:v}}); },
+        tooltip: 'Sparks trailing behind ascending rockets' },
+      { id: 'visuals.explosionFlashes', label: 'Explosion flashes', type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {explosionFlashes:v}); fw.setOptions({visuals:{explosionFlashes:v}}); },
+        tooltip: 'Bright flash at each burst point' },
+      { id: 'visuals.starChance',       label: 'Star chance',       type: 'number', min: 0, max: .3, step: .01, def: .08, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {starChance:v}); fw.setOptions({visuals:{starChance:v}}); },
+        tooltip: 'Probability each particle gets a sharp star core' },
+      { id: 'visuals.groupedSalvos',    label: 'Grouped salvos',    type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {groupedSalvos:v}); fw.setOptions({visuals:{groupedSalvos:v}}); },
+        tooltip: 'Occasional coordinated multi-rocket launches' },
+      { id: 'visuals.secondaryCrackle', label: 'Crackle',           type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {secondaryCrackle:v}); fw.setOptions({visuals:{secondaryCrackle:v}}); },
+        tooltip: 'Delayed micro-explosions inside certain shells' },
+      { id: 'bg',                       label: 'Background',        type: 'toggle', def: false, updateMode: 'restart',
+        apply: (c,v,fw) => { if(v) c.background = {value:'linear-gradient(#101a4b,#040714)',opacity:1}; else c.background = false; },
+        tooltip: 'Show a dark gradient background behind fireworks' }
+    ]
+  },
+  show: {
+    icon: '🚀', label: 'Show',
+    desc: 'Control which shell types launch and how they spread.',
+    options: [
+      { id: 'show.intensity',      label: 'Intensity',       type: 'number', min: .1, max: 3, step: .1, def: 1, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {intensity:v}); fw.setOptions({show:{intensity:v}}); },
+        tooltip: 'Multiplier for overall launch frequency' },
+      { id: 'show.openingSalvo',   label: 'Opening salvo',   type: 'number', min: 1, max: 20, step: 1, def: 6, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {openingSalvo:v}); fw.setOptions({show:{openingSalvo:v}}); },
+        tooltip: 'Rockets launched immediately when show starts' },
+      { id: 'show.maxRockets',     label: 'Max rockets',     type: 'number', min: 1, max: 25, step: 1, def: null, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {maxRockets:v}); fw.setOptions({show:{maxRockets:v}}); },
+        tooltip: 'Maximum simultaneous rockets (blank = preset)' },
+      { id: 'show.maxParticles',   label: 'Max particles',   type: 'number', min: 100, max: 10000, step: 100, def: null, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {maxParticles:v}); fw.setOptions({show:{maxParticles:v}}); },
+        tooltip: 'Maximum active particles (blank = preset)' },
+      { id: 'show.launchInterval', label: 'Launch interval', type: 'number', min: 100, max: 3000, step: 50, def: null, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchInterval:v}); fw.setOptions({show:{launchInterval:v}}); },
+        tooltip: 'ms between automatic launches (blank = preset)' },
+      { id: 'show.launchSpread',   label: 'Launch spread',   type: 'number', min: 0, max: 1, step: .05, def: .55, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchSpread:v}); fw.setOptions({show:{launchSpread:v}}); },
+        tooltip: 'Horizontal spread of launch positions' },
+      { id: 'show.angleRange',     label: 'Angle range',     type: 'number', min: 0, max: 45, step: 1, def: 14, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleRange:v}); fw.setOptions({show:{angleRange:v}}); },
+        tooltip: 'Max launch-angle variation in degrees' },
+      { id: 'show.angleStrength',  label: 'Angle strength',  type: 'number', min: 0, max: 3, step: .1, def: 1, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleStrength:v}); fw.setOptions({show:{angleStrength:v}}); },
+        tooltip: 'How strongly angle affects horizontal motion' },
+      { id: 'show.enabledTypes',   label: 'Shell types',     type: 'select', updateMode: 'live',
+        choices: [{label:'🎆 All 15 types',value:'all'},{label:'🌸 Classic only',value:'classic-only'}],
+        apply: (c,v,fw) => { const types = v === 'all' ? 'all' : ['grand_peony','starburst','imperial_chrysanthemum']; c.show = deepMerge(c.show||{}, {enabledTypes:types}); fw.setOptions({show:{enabledTypes:types}}); },
+        tooltip: 'Which shell varieties can launch' }
+    ]
+  },
+  performance: {
+    icon: '⚡', label: 'Perf',
+    desc: 'Quality and capacity settings — balance visuals with device performance.',
+    options: [
+      { id: 'performance.preset',              label: 'Preset',              type: 'select', updateMode: 'restart',
+        choices: [{label:'📱 Mobile',value:'low'},{label:'⚖️ Balanced',value:'medium'},{label:'🎯 High Quality',value:'high'},{label:'🚀 Ultra',value:'ultra'}],
+        apply: (c,v) => { c.performance = deepMerge(c.performance||{}, {preset:v}); },
+        tooltip: 'Coordinated quality/capacity tier' },
+      { id: 'performance.adaptive',            label: 'Adaptive',            type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.performance = deepMerge(c.performance||{}, {adaptive:v}); fw.setOptions({performance:{adaptive:v}}); },
+        tooltip: 'Automatically reduce quality when FPS drops' },
+      { id: 'performance.pauseWhenHidden',     label: 'Pause hidden',        type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.performance = deepMerge(c.performance||{}, {pauseWhenHidden:v}); fw.setOptions({performance:{pauseWhenHidden:v}}); },
+        tooltip: 'Pause when browser tab is hidden' },
+      { id: 'performance.pauseWhenOffscreen',  label: 'Pause offscreen',    type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.performance = deepMerge(c.performance||{}, {pauseWhenOffscreen:v}); fw.setOptions({performance:{pauseWhenOffscreen:v}}); },
+        tooltip: 'Pause when contained element is not visible' },
+      { id: 'performance.respectReducedMotion', label: 'Reduced motion',    type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.performance = deepMerge(c.performance||{}, {respectReducedMotion:v}); fw.setOptions({performance:{respectReducedMotion:v}}); },
+        tooltip: 'Honor the reduced-motion accessibility preference' }
+    ]
+  },
+  finale: {
+    icon: '🏆', label: 'Finale',
+    desc: 'Configure the choreographed grand finale sequence.',
+    options: [
+      { id: 'finale.enabled',          label: 'Enabled',          type: 'toggle', def: false, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {enabled:v}); fw.setOptions({finale:{enabled:v}}); },
+        tooltip: 'Trigger finale on stop or duration end' },
+      { id: 'finale.type',             label: 'Type',             type: 'select', updateMode: 'live',
+        choices: [{label:'Super Grand Finale',value:'super-grand-finale'}],
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {type:v}); fw.setOptions({finale:{type:v}}); },
+        tooltip: 'Finale choreography style' },
+      { id: 'finale.triggers',         label: 'Triggers',         type: 'select', updateMode: 'live',
+        choices: [{label:'Both (stop & duration)',value:'both'},{label:'Stop only',value:'stop-only'},{label:'Duration only',value:'duration-only'}],
+        apply: (c,v,fw) => { const arr = v === 'both' ? ['stop','duration'] : [v.replace('-only','')]; c.finale = deepMerge(c.finale||{}, {triggers:arr}); fw.setOptions({finale:{triggers:arr}}); },
+        tooltip: 'Events that can trigger the finale' },
+      { id: 'finale.trails',           label: 'Trail comets',     type: 'number', min: 3, max: 30, step: 1, def: 10, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {trails:v}); fw.setOptions({finale:{trails:v}}); },
+        tooltip: 'Number of outward-flying finale comets' },
+      { id: 'finale.trailFlight',      label: 'Trail flight',     type: 'number', min: 300, max: 3000, step: 50, def: 1100, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {trailFlight:v}); fw.setOptions({finale:{trailFlight:v}}); },
+        tooltip: 'Flight time before each comet explodes (ms)' },
+      { id: 'finale.burstScale',       label: 'Burst scale',      type: 'number', min: .4, max: 2, step: .1, def: 1, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {burstScale:v}); fw.setOptions({finale:{burstScale:v}}); },
+        tooltip: 'Density of secondary grand explosions' },
+      { id: 'finale.maxWaitBeforeLaunch', label: 'Max wait',      type: 'number', min: 500, max: 8000, step: 100, def: 3000, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {maxWaitBeforeLaunch:v}); fw.setOptions({finale:{maxWaitBeforeLaunch:v}}); },
+        tooltip: 'Max wait before finale carrier launches (ms)' },
+      { id: 'finale.finishDelay',      label: 'Finish delay',     type: 'number', min: 100, max: 3000, step: 50, def: 800, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {finishDelay:v}); fw.setOptions({finale:{finishDelay:v}}); },
+        tooltip: 'Extra finishing delay (ms)' },
+      { id: 'finale.maxDuration',      label: 'Max duration',     type: 'number', min: 2000, max: 20000, step: 500, def: 9000, updateMode: 'live',
+        apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {maxDuration:v}); fw.setOptions({finale:{maxDuration:v}}); },
+        tooltip: 'Safety limit for complete finale (ms)' }
+    ]
+  },
+  text: {
+    icon: '📝', label: 'Text',
+    desc: 'Configure text fireworks — messages rendered as dissolving particles.',
+    options: [
+      { id: 'textFirework.enabled',         label: 'Enabled',           type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {enabled:v}); fw.setOptions({textFirework:{enabled:v}}); },
+        tooltip: 'Enable or disable text firework capability' },
+      { id: 'textFirework.renderMode',      label: 'Render mode',       type: 'select', updateMode: 'live',
+        choices: [{label:'Hybrid (best)',value:'hybrid'},{label:'Crisp text',value:'crisp'},{label:'Particles only',value:'particles'}],
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {renderMode:v}); fw.setOptions({textFirework:{renderMode:v}}); },
+        tooltip: 'Text rendering: hybrid blends crisp + particle dissolve' },
+      { id: 'textFirework.maxCharacters',   label: 'Max chars',         type: 'number', min: 10, max: 200, step: 1, def: 72, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {maxCharacters:v}); fw.setOptions({textFirework:{maxCharacters:v}}); },
+        tooltip: 'Maximum accepted message length' },
+      { id: 'textFirework.maxLines',        label: 'Lines',             type: 'number', min: 1, max: 5, step: 1, def: 3, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {maxLines:v}); fw.setOptions({textFirework:{maxLines:v}}); },
+        tooltip: 'Maximum number of text lines' },
+      { id: 'textFirework.fontSize',        label: 'Font size',         type: 'number', min: 24, max: 200, step: 4, def: 92, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {fontSize:v}); fw.setOptions({textFirework:{fontSize:v}}); },
+        tooltip: 'Text size in CSS pixels' },
+      { id: 'textFirework.particleSpacing', label: 'Particle spacing',  type: 'number', min: 1, max: 8, step: 1, def: 4, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {particleSpacing:v}); fw.setOptions({textFirework:{particleSpacing:v}}); },
+        tooltip: 'Higher = fewer particles (better performance)' },
+      { id: 'textFirework.holdDuration',    label: 'Hold duration',     type: 'number', min: 200, max: 5000, step: 100, def: 1400, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {holdDuration:v}); fw.setOptions({textFirework:{holdDuration:v}}); },
+        tooltip: 'How long text stays readable before dissolving (ms)' },
+      { id: 'textFirework.dissolveStyle',   label: 'Dissolve style',    type: 'select', updateMode: 'live',
+        choices: [{label:'✨ Sparkle',value:'sparkle'},{label:'🎲 Random',value:'random'},{label:'⬅ Left to right',value:'left-to-right'},{label:'⬇ Top down',value:'top-down'}],
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {dissolveStyle:v}); fw.setOptions({textFirework:{dissolveStyle:v}}); },
+        tooltip: 'Order in which text particles release' },
+      { id: 'textFirework.colors',          label: 'Colors',            type: 'text', def: '#FFFFFF, #FFD700, #FF69B4', updateMode: 'live',
+        apply: (c,v,fw) => { const arr = v.split(',').map(s=>s.trim()).filter(Boolean); c.textFirework = deepMerge(c.textFirework||{}, {colors:arr}); fw.setOptions({textFirework:{colors:arr}}); },
+        tooltip: 'Comma-separated hex colors for text particles' },
+      { id: 'textFirework.shimmer',         label: 'Shimmer',           type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {shimmer:v}); fw.setOptions({textFirework:{shimmer:v}}); },
+        tooltip: 'Make text particles twinkle' },
+      { id: 'textFirework.exclusive',       label: 'Exclusive mode',    type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {exclusive:v}); fw.setOptions({textFirework:{exclusive:v}}); },
+        tooltip: 'Suppress regular launches while text is visible' }
+    ]
+  },
+  bg: {
+    icon: '🌙', label: 'BG',
+    desc: 'Fade transitions, background appearance, and overlay behavior.',
+    options: [
+      { id: 'transition.fadeIn',         label: 'Fade in',         type: 'number', min: 0, max: 3000, step: 50, def: 500, updateMode: 'live',
+        apply: (c,v,fw) => { c.transition = deepMerge(c.transition||{}, {fadeIn:v}); fw.setOptions({transition:{fadeIn:v}}); },
+        tooltip: 'Background fade-in time (ms)' },
+      { id: 'transition.fadeOut',        label: 'Fade out',        type: 'number', min: 0, max: 3000, step: 50, def: 400, updateMode: 'live',
+        apply: (c,v,fw) => { c.transition = deepMerge(c.transition||{}, {fadeOut:v}); fw.setOptions({transition:{fadeOut:v}}); },
+        tooltip: 'Effect fade-out time (ms)' },
+      { id: 'transition.easing',         label: 'Easing',          type: 'select', updateMode: 'live',
+        choices: [{label:'Ease out',value:'ease-out'},{label:'Ease',value:'ease'},{label:'Linear',value:'linear'},{label:'Ease in-out',value:'ease-in-out'}],
+        apply: (c,v,fw) => { c.transition = deepMerge(c.transition||{}, {easing:v}); fw.setOptions({transition:{easing:v}}); },
+        tooltip: 'CSS easing function for transitions' },
+      { id: 'transition.clearOnHide',    label: 'Clear on hide',   type: 'toggle', def: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.transition = deepMerge(c.transition||{}, {clearOnHide:v}); fw.setOptions({transition:{clearOnHide:v}}); },
+        tooltip: 'Clear particles when effect hides' },
+      { id: 'background_',               label: 'BG enabled',      type: 'toggle', def: false, updateMode: 'restart',
+        apply: (c,v,fw) => { if(v) c.background = {value:'linear-gradient(#101a4b,#040714)',opacity:1}; else c.background = false; },
+        tooltip: 'Show a dark gradient background' },
+      { id: 'background.value',          label: 'BG value',        type: 'text', def: 'linear-gradient(#101a4b, #040714)', updateMode: 'restart',
+        apply: (c,v,fw) => { c.background = c.background && typeof c.background === 'object' ? deepMerge(c.background,{value:v}) : {value:v}; },
+        tooltip: 'CSS background value (gradient, color, or image)' },
+      { id: 'background.opacity',        label: 'BG opacity',      type: 'number', min: 0, max: 1, step: .05, def: 1, updateMode: 'restart',
+        apply: (c,v,fw) => { c.background = c.background && typeof c.background === 'object' ? deepMerge(c.background,{opacity:v}) : {opacity:v}; },
+        tooltip: 'Background layer opacity' }
+    ]
+  }
+};
+const SECTION_KEYS = Object.keys(SECTIONS);
+
+/* ---------- build quick-lookup maps ---------- */
+const OPTION_MAP = {};
+for (const sk of SECTION_KEYS) {
+  for (const o of SECTIONS[sk].options) {
+    o.section = sk;
+    OPTION_MAP[o.id] = o;
+  }
+}
+
+/* ---------- state ---------- */
+const CORE_CONFIG = {
+  autoStart: false, mode: 'fullscreen', placement: 'overlay',
+  clip: true, zIndex: 9999, duration: 0, durationMode: 'graceful', maxFinishTime: 5000,
+  sound: { enabled: false, volume: .3 }
+};
+
+const DEFAULT_CONFIG = deepMerge(deepMerge({}, CORE_CONFIG), PRESET_MAP.balanced.config);
+
+const state = {
+  committedConfig: deepMerge({}, DEFAULT_CONFIG),
+  history: [],
+  historyIndex: -1,
+  startingPreset: 'balanced',
+  currentPreset: 'balanced',
+  activeTab: 'guided',
+  guidedOption: null,
+  guidedValue: null,
+  isPreviewing: false,
+  // track which non-default options have been changed (for summary chips)
+  changes: new Map() // key -> {label, summary}
+};
+
+/* ---------- fireworks instance ---------- */
+let fw = null;
+const PREVIEW_EL = document.getElementById('preview-inner');
+
+function initFireworks(config) {
+  if (fw) { try { fw.destroy(); } catch(e) {} fw = null; }
+  fw = new GrandFireworks(deepMerge({
+    container: PREVIEW_EL,
+    mode: 'contained',
+    autoStart: true
+  }, config));
+  return fw;
+}
+
+function restartFireworks(config) {
+  initFireworks(config);
+}
+
+function liveUpdate(partial) {
+  if (!fw) return;
+  try { fw.setOptions(partial); } catch(e) { /* ignore */ }
+}
+
+/* ---------- guided tab: get full config for a preset ---------- */
+function resolvePresetConfig(presetId) {
+  const p = PRESET_MAP[presetId];
+  if (!p) return deepMerge({}, DEFAULT_CONFIG);
+  return deepMerge(deepMerge({}, CORE_CONFIG), p.config);
+}
+
+/* ---------- get current effective config ---------- */
+function effectiveConfig() {
+  return state.isPreviewing ? state.draftConfig : state.committedConfig;
+}
+
+/* ---------- update preview from a config ---------- */
+function applyConfigToPreview(config, isRestart) {
+  const sectionId = state.activeTab === 'guided' && state.guidedOption
+    ? OPTION_MAP[state.guidedOption]?.section : null;
+  const opt = state.guidedOption ? OPTION_MAP[state.guidedOption] : null;
+  const mode = opt ? opt.updateMode : (isRestart ? 'restart' : 'live');
+
+  if (mode === 'restart') {
+    restartFireworks(config);
+  } else {
+    // For live updates, we need to be smarter
+    // Apply base config first, then selective updates
+    // Actually, setOptions() merges, so passing the whole config is fine
+    liveUpdate(config);
+  }
+}
+
+/* ===========================================================
+   UI Rendering
+   =========================================================== */
+
+/* ---------- preset bar ---------- */
+function renderPresets() {
+  const bar = document.getElementById('preset-bar');
+  bar.innerHTML = '';
+  for (const p of PRESET_DEFS) {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn' + (p.id === state.currentPreset ? ' active' : '');
+    btn.dataset.preset = p.id;
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', p.id === state.currentPreset ? 'true' : 'false');
+    btn.textContent = `${p.icon} ${p.label}`;
+    btn.addEventListener('click', () => selectPreset(p.id));
+    bar.appendChild(btn);
+  }
+}
+
+/* ---------- tab bar ---------- */
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  for (const sk of SECTION_KEYS) {
+    const sec = SECTIONS[sk];
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (sk === state.activeTab ? ' active' : '');
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', sk === state.activeTab ? 'true' : 'false');
+    btn.dataset.tab = sk;
+    btn.innerHTML = `<span class="tab-icon">${sec.icon}</span>${sec.label}`;
+    btn.addEventListener('click', () => switchTab(sk));
+    bar.appendChild(btn);
+  }
+}
+
+/* ---------- tab content ---------- */
+function renderTabContent() {
+  const pane = document.getElementById('tab-content');
+  pane.innerHTML = '';
+  for (const sk of SECTION_KEYS) {
+    const sec = SECTIONS[sk];
+    const panel = document.createElement('section');
+    panel.className = 'tab-panel' + (sk === state.activeTab ? ' active' : '');
+    panel.id = `panel-${sk}`;
+    panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-label', sec.label);
+
+    if (sk === 'guided') {
+      panel.appendChild(buildGuidedTab(sec));
+    } else {
+      panel.appendChild(buildCategoryTab(sec));
+    }
+    pane.appendChild(panel);
+  }
+}
+
+/* ---------- guided tab ---------- */
+function buildGuidedTab(sec) {
+  const frag = document.createDocumentFragment();
+  const desc = document.createElement('p');
+  desc.className = 'tab-desc';
+  desc.textContent = sec.desc;
+  frag.appendChild(desc);
+
+  const prompt = document.createElement('p');
+  prompt.className = 'guided-prompt';
+  prompt.textContent = 'What would you like to change?';
+  frag.appendChild(prompt);
+
+  const row = document.createElement('div');
+  row.className = 'guided-row';
+
+  // First dropdown: option select
+  const sel1 = document.createElement('select');
+  sel1.id = 'guided-select';
+  const blank = document.createElement('option');
+  blank.value = ''; blank.textContent = '— select —';
+  sel1.appendChild(blank);
+  for (const o of sec.options) {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = o.label;
+    sel1.appendChild(opt);
+  }
+  sel1.addEventListener('change', () => onGuidedSelect(sel1.value));
+  row.appendChild(sel1);
+
+  // Second control: value select/toggle
+  const valWrap = document.createElement('div');
+  valWrap.id = 'guided-value-wrap';
+  valWrap.style.display = 'none';
+  row.appendChild(valWrap);
+
+  // Actions
+  const actions = document.createElement('div');
+  actions.className = 'guided-actions';
+  actions.id = 'guided-actions';
+  actions.style.display = 'none';
+
+  const keepBtn = document.createElement('button');
+  keepBtn.className = 'guided-btn keep';
+  keepBtn.id = 'guided-keep';
+  keepBtn.innerHTML = '<span class="btn-icon">✅</span> Keep';
+  keepBtn.addEventListener('click', keepGuidedChange);
+
+  const revertBtn = document.createElement('button');
+  revertBtn.className = 'guided-btn revert';
+  revertBtn.id = 'guided-revert';
+  revertBtn.innerHTML = '<span class="btn-icon">❌</span> Revert';
+  revertBtn.addEventListener('click', revertGuidedChange);
+
+  actions.appendChild(keepBtn);
+  actions.appendChild(revertBtn);
+  row.appendChild(actions);
+
+  frag.appendChild(row);
+
+  const hint = document.createElement('p');
+  hint.className = 'guided-hint';
+  hint.id = 'guided-hint';
+  frag.appendChild(hint);
+
+  return frag;
+}
+
+/* ---------- guided value controls ---------- */
+function buildGuidedValueControl(optionId) {
+  const opt = OPTION_MAP[optionId];
+  if (!opt) return null;
+  const wrap = document.getElementById('guided-value-wrap');
+  wrap.innerHTML = '';
+  wrap.style.display = '';
+
+  if (opt.type === 'toggle') {
+    const sel = document.createElement('select');
+    sel.id = 'guided-value';
+    const on = document.createElement('option'); on.value = 'true'; on.textContent = '✅ On';
+    const off = document.createElement('option'); off.value = 'false'; off.textContent = '❌ Off';
+    sel.appendChild(on); sel.appendChild(off);
+    sel.addEventListener('change', () => onGuidedValue(optionId, sel.value === 'true'));
+    wrap.appendChild(sel);
+  } else if (opt.type === 'select') {
+    const sel = document.createElement('select');
+    sel.id = 'guided-value';
+    for (const c of opt.choices) {
+      const o = document.createElement('option');
+      o.value = c.value;
+      o.textContent = c.label;
+      sel.appendChild(o);
+    }
+    sel.addEventListener('change', () => onGuidedValue(optionId, sel.value));
+    wrap.appendChild(sel);
+  }
+}
+
+/* ---------- category tab ---------- */
+function buildCategoryTab(sec) {
+  const frag = document.createDocumentFragment();
+  const desc = document.createElement('p');
+  desc.className = 'tab-desc';
+  desc.textContent = sec.desc;
+  frag.appendChild(desc);
+
+  for (const o of sec.options) {
+    const row = document.createElement('div');
+    row.className = 'option-row';
+
+    const label = document.createElement('label');
+    label.htmlFor = `opt-${o.id}`;
+    label.textContent = o.label;
+    if (o.tooltip) label.title = o.tooltip;
+    row.appendChild(label);
+
+    const ctrl = document.createElement('div');
+    ctrl.className = 'opt-control';
+
+    if (o.type === 'toggle') {
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = `opt-${o.id}`;
+      cb.checked = getDeep(state.committedConfig, o.id) ?? o.def ?? false;
+      cb.addEventListener('change', () => applyDirectOption(o.id, cb.checked));
+      ctrl.appendChild(cb);
+    } else if (o.type === 'select') {
+      const sel = document.createElement('select');
+      sel.id = `opt-${o.id}`;
+      for (const c of o.choices) {
+        const opt = document.createElement('option');
+        opt.value = c.value;
+        opt.textContent = c.label;
+        sel.appendChild(opt);
+      }
+      sel.value = String(getDeep(state.committedConfig, o.id) ?? o.def ?? '');
+      sel.addEventListener('change', () => applyDirectOption(o.id, sel.value));
+      ctrl.appendChild(sel);
+    } else if (o.type === 'number') {
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.id = `opt-${o.id}`;
+      inp.min = o.min; inp.max = o.max; inp.step = o.step;
+      const val = getDeep(state.committedConfig, o.id);
+      inp.value = val != null ? val : (o.def ?? '');
+      inp.addEventListener('input', () => applyDirectOption(o.id, parseFloat(inp.value) || 0));
+      ctrl.appendChild(inp);
+    } else if (o.type === 'text') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.id = `opt-${o.id}`;
+      inp.value = getDeep(state.committedConfig, o.id) ?? o.def ?? '';
+      inp.addEventListener('change', () => applyDirectOption(o.id, inp.value));
+      ctrl.appendChild(inp);
+    }
+
+    row.appendChild(ctrl);
+    frag.appendChild(row);
+  }
+  return frag;
+}
+
+/* ---------- config summary ---------- */
+function renderSummary() {
+  const el = document.getElementById('config-summary');
+  el.innerHTML = '';
+
+  // Preset chip
+  const preset = PRESET_MAP[state.currentPreset];
+  const chip = document.createElement('span');
+  chip.className = 'summary-chip preset-chip';
+  chip.textContent = `${preset.icon} ${preset.label}`;
+  el.appendChild(chip);
+
+  // Change chips
+  for (const [key, data] of state.changes) {
+    const chip = document.createElement('span');
+    chip.className = 'summary-chip';
+    chip.textContent = data.summary;
+    el.appendChild(chip);
+  }
+}
+
+/* ===========================================================
+   Actions
+   =========================================================== */
+
+function announce(msg) {
+  const ann = document.getElementById('live-announcer');
+  ann.textContent = '';
+  requestAnimationFrame(() => { ann.textContent = msg; });
+}
+
+function showToast(msg, duration) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => t.classList.remove('show'), duration || 1800);
+}
+
+function selectPreset(id) {
+  const p = PRESET_MAP[id];
+  if (!p) return;
+  state.currentPreset = id;
+  state.startingPreset = id;
+  state.committedConfig = resolvePresetConfig(id);
+  state.history = [];
+  state.historyIndex = -1;
+  state.changes.clear();
+  state.isPreviewing = false;
+  state.guidedOption = null;
+  state.guidedValue = null;
+
+  restartFireworks(state.committedConfig);
+  renderPresets();
+  renderSummary();
+  switchTab('guided');
+  announce(`Preset: ${p.label}`);
+}
+
+function switchTab(tabId) {
+  if (!SECTIONS[tabId]) return;
+  state.activeTab = tabId;
+
+  // Update tab bar
+  $$('.tab-btn').forEach(b => {
+    const active = b.dataset.tab === tabId;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  // Update panels
+  $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tabId}`));
+
+  // Reset guided UI if switching away/back
+  if (tabId !== 'guided') {
+    resetGuidedRow();
+  } else {
+    resetGuidedRow();
+  }
+
+  // Rebuild summary when switching
+  renderSummary();
+}
+
+function onGuidedSelect(optionId) {
+  if (!optionId) {
+    resetGuidedRow();
+    return;
+  }
+  state.guidedOption = optionId;
+  state.isPreviewing = false;
+  state.guidedValue = null;
+
+  buildGuidedValueControl(optionId);
+  document.getElementById('guided-actions').style.display = 'none';
+  document.getElementById('guided-hint').textContent = OPTION_MAP[optionId]?.tooltip || '';
+}
+
+function onGuidedValue(optionId, value) {
+  state.guidedValue = value;
+  state.isPreviewing = true;
+
+  // Build draft: clone committed + apply change
+  const opt = OPTION_MAP[optionId];
+  state.draftConfig = deepMerge({}, state.committedConfig);
+  opt.apply(state.draftConfig, value, fw);
+
+  // Update preview
+  if (opt.updateMode === 'restart') {
+    restartFireworks(state.draftConfig);
+  } else {
+    liveUpdate(state.draftConfig);
+  }
+
+  document.getElementById('guided-actions').style.display = '';
+  document.getElementById('guided-keep').disabled = false;
+  document.getElementById('guided-revert').disabled = false;
+  announce(`Previewing: ${opt.summary ? opt.summary(value) : opt.label}`);
+}
+
+function keepGuidedChange() {
+  if (!state.isPreviewing || !state.guidedOption || state.guidedValue === null) return;
+
+  const opt = OPTION_MAP[state.guidedOption];
+  const value = state.guidedValue;
+
+  // Push current committed to history
+  state.history.push(deepMerge({}, state.committedConfig));
+  if (state.history.length > 20) state.history.shift();
+  state.historyIndex = state.history.length - 1;
+
+  // Commit the draft
+  state.committedConfig = deepMerge({}, state.draftConfig);
+  state.isPreviewing = false;
+
+  // Record change for summary
+  const summary = opt.summary ? opt.summary(value) : `${opt.label}: ${value}`;
+  state.changes.set(state.guidedOption, { label: opt.label, summary });
+
+  renderSummary();
+  const hint = document.getElementById('guided-hint');
+  hint.textContent = `✅ Kept: ${summary}`;
+  announce(`Kept: ${summary}`);
+
+  // Reset guided row
+  resetGuidedRow();
+  // Rebuild category tabs to reflect new committed values
+  rebuildCategoryTabs();
+}
+
+function revertGuidedChange() {
+  if (!state.isPreviewing) return;
+
+  state.isPreviewing = false;
+  const opt = OPTION_MAP[state.guidedOption];
+
+  // Restore preview from committed
+  applyConfigToPreview(state.committedConfig, false);
+
+  document.getElementById('guided-hint').textContent = `↩ Reverted ${opt.label}`;
+  announce(`Reverted: ${opt.label}`);
+
+  resetGuidedRow();
+}
+
+function resetGuidedRow() {
+  state.guidedOption = null;
+  state.guidedValue = null;
+  state.isPreviewing = false;
+
+  const sel1 = document.getElementById('guided-select');
+  if (sel1) sel1.value = '';
+
+  const wrap = document.getElementById('guided-value-wrap');
+  if (wrap) { wrap.innerHTML = ''; wrap.style.display = 'none'; }
+
+  const acts = document.getElementById('guided-actions');
+  if (acts) acts.style.display = 'none';
+
+  const hint = document.getElementById('guided-hint');
+  if (hint) hint.textContent = '';
+}
+
+function applyDirectOption(optionId, value) {
+  const opt = OPTION_MAP[optionId];
+  if (!opt) return;
+
+  // Apply to committed config
+  opt.apply(state.committedConfig, value, fw);
+
+  // Update preview
+  if (opt.updateMode === 'restart') {
+    restartFireworks(state.committedConfig);
+  } else {
+    // For live updates, setOptions is already called inside apply
+    // But some applies call fw.setOptions, so this should already work
+  }
+
+  // Record change for summary
+  const summary = opt.summary ? opt.summary(value) : `${opt.label}: ${value}`;
+  state.changes.set(optionId, { label: opt.label, summary });
+  renderSummary();
+  announce(`Updated: ${opt.label}`);
+}
+
+function rebuildCategoryTabs() {
+  // Re-render tab panel content for non-guided tabs so controls show committed values
+  for (const sk of SECTION_KEYS) {
+    if (sk === 'guided') continue;
+    const panel = document.getElementById(`panel-${sk}`);
+    if (panel) {
+      const sec = SECTIONS[sk];
+      panel.innerHTML = '';
+      panel.appendChild(buildCategoryTab(sec));
+    }
+  }
+}
+
+function undo() {
+  if (state.history.length === 0) return;
+  const prev = state.history.pop();
+  state.historyIndex = state.history.length - 1;
+  state.committedConfig = prev;
+  state.isPreviewing = false;
+  resetGuidedRow();
+
+  // Rebuild changes from scratch (simplification: clear them)
+  state.changes.clear();
+  restartFireworks(state.committedConfig);
+  renderSummary();
+  rebuildCategoryTabs();
+  switchTab('guided');
+  announce('Undid last change');
+  showToast('↩ Undone');
+}
+
+function resetToStart() {
+  selectPreset(state.startingPreset);
+  showToast(`⟲ Reset to ${PRESET_MAP[state.startingPreset].label}`);
+}
+
+function copyConfig() {
+  if (state.isPreviewing) {
+    showToast('⚠️ Keep or revert the previewed change first', 2500);
+    return;
+  }
+
+  // Build final config: committed + preset + core
+  const finalConfig = deepMerge(deepMerge({}, CORE_CONFIG), state.committedConfig);
+  // Remove container/mode/autoStart since user will set those
+  delete finalConfig.container;
+
+  const json = JSON.stringify(finalConfig, null, 2);
+  const code = `const fireworks = new GrandFireworks(${json});`;
+
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('📋 Configuration copied!');
+    announce('Configuration copied to clipboard');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Configuration copied!');
+  });
+}
+
+/* ===========================================================
+   Initialization
+   =========================================================== */
+
+function init() {
+  renderPresets();
+  renderTabs();
+  renderTabContent();
+
+  // Start fireworks with default preset
+  restartFireworks(state.committedConfig);
+
+  // Wire header buttons
+  document.getElementById('restart-btn').addEventListener('click', () => {
+    restartFireworks(effectiveConfig());
+    showToast('↻ Restarted preview');
+  });
+
+  // Wire bottom actions
+  document.getElementById('copy-btn').addEventListener('click', copyConfig);
+  document.getElementById('undo-btn').addEventListener('click', undo);
+  document.getElementById('reset-btn').addEventListener('click', resetToStart);
+
+  // Keyboard: Escape reverts guided change
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && state.isPreviewing) {
+      revertGuidedChange();
+      e.preventDefault();
+    }
+  });
+
+  // Render summary
+  renderSummary();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body></html>
