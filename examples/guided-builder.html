@@ -21,13 +21,21 @@
 .preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.1);font:400 10px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
 
 /* Controls panel */
-#controls{flex-shrink:0;max-height:58svh;max-height:58vh;background:#03040e;display:flex;flex-direction:column;overflow:hidden;z-index:10000;opacity:.8;backdrop-filter:blur(8px);transform:translateX(0);transition:transform .45s cubic-bezier(.4,0,.2,1)}
-#controls.panel-hidden{transform:translateX(-100%)}
-@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{min-width:620px;max-width:620px;max-height:100vh;border-top:none;border-right:none;order:1;border-left:none;box-shadow:2px 0 12px rgba(0,0,0,.5)}#controls.panel-hidden{transform:translateX(-100%)}}
+/* Left header bar */
+#controls{flex-shrink:0;background:#03040e;z-index:10000;opacity:.85;backdrop-filter:blur(8px);display:flex;flex-direction:column}
+@media(min-width:768px){body{flex-direction:row}#preview{min-height:100vh;flex:1;order:2}#controls{width:auto;max-height:100vh;border-right:1px solid rgba(255,255,255,.06);order:1}}
+
+/* Builder drawer overlay */
+#builder-drawer{position:fixed;top:0;left:0;bottom:0;z-index:2147483644;width:620px;max-width:90vw;background:#03040e;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+#builder-drawer.open{transform:translateX(0)}
+#builder-drawer .drawer-header{display:flex;align-items:center;gap:8px;padding:10px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06)}
+#builder-drawer .drawer-header h2{margin:0;font-size:14px;font-weight:700;color:#ffd65a;flex:1}
+.drawer-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px}
+.drawer-close:hover{color:#fff;background:rgba(255,255,255,.1)}
 
 /* Toggle tab */
 #controls-toggle{display:none}
-@media(min-width:768px){#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3)}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}#controls-toggle{left:620px}#controls-toggle.panel-hidden{left:0}}
+@media(min-width:768px){#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3)}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}}
 
 /* Preset bar */
 #preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
@@ -165,7 +173,7 @@
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Landscape phone adjustment */
-@media(max-height:500px) and (orientation:landscape){#preview{min-height:70vh}.controls-header{padding:4px 10px}.controls-header h1{font-size:13px}#controls{max-height:30vh}#tab-content{padding:6px 10px}.option-row{min-height:30px}.option-row label{min-width:70px;font-size:12px}.bottom-btn,.guided-btn{min-height:30px;padding:5px 8px;font-size:11px}}
+@media(max-height:500px) and (orientation:landscape){#preview{min-height:70vh}.controls-header{padding:4px 10px}.controls-header h1{font-size:13px}#builder-drawer{width:100vw;max-width:100vw}#tab-content{padding:6px 10px}.option-row{min-height:30px}.option-row label{min-width:70px;font-size:12px}.bottom-btn,.guided-btn{min-height:30px;padding:5px 8px;font-size:11px}}
 
 /* Scrollbar styling */
 #tab-content::-webkit-scrollbar{width:4px}
@@ -188,19 +196,24 @@
       <span id="countdown-timer"></span>
     </div>
     <nav>
+      <button id="configure-btn" title="Open settings">⚙️</button>
       <a href="../index.html">Docs</a>
       <a href="configuration-builder.html">Advanced</a>
       <button id="restart-btn">↻</button>
     </nav>
   </div>
+</div>
+
+<!-- Builder drawer overlay -->
+<div id="builder-drawer">
+  <div class="drawer-header">
+    <h2>🎆 Configuration</h2>
+    <button class="drawer-close" id="drawer-close" title="Close">✕</button>
+  </div>
   <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
-
   <nav id="tab-bar" role="tablist" aria-label="Configuration sections"></nav>
-
   <div id="tab-content"></div>
-
   <div id="config-summary" aria-live="polite" aria-atomic="false"></div>
-
   <div id="bottom-actions">
     <button class="bottom-btn primary" id="copy-btn" title="Copy configuration code">📋 Copy</button>
     <button class="bottom-btn" id="save-btn" title="Save current configuration">💾 Save</button>
@@ -1371,17 +1384,15 @@ function refreshSavedConfigs(){const sel=document.getElementById('load-saved-sel
 /* ===== Panel slide-in & toggle ===== */
 function dismissWizard() {
   document.getElementById('wizard-overlay').classList.add('hidden');
-  // Slide controls in from the left
-  document.getElementById('controls').classList.remove('panel-hidden');
   document.getElementById('controls-toggle').classList.add('visible');
-  document.getElementById('controls-toggle').textContent = '◀';
+  document.getElementById('controls-toggle').textContent = '▶';
 }
 
 function toggleControlsPanel() {
-  const ctrl = document.getElementById('controls');
+  const drawer = document.getElementById('builder-drawer');
   const tog = document.getElementById('controls-toggle');
-  const hidden = ctrl.classList.toggle('panel-hidden');
-  tog.textContent = hidden ? '▶' : '◀';
+  const open = drawer.classList.toggle('open');
+  tog.textContent = open ? '◀' : '▶';
   setTimeout(() => {
     if (fw) try { fw.resizePending = true; } catch(e) {}
   }, 500);
@@ -1391,13 +1402,12 @@ function init() {
   renderPresets();renderTabs();renderTabContent();
   restartFireworks(state.committedConfig);
 
-  // Initially hide controls (wizard is showing)
-  document.getElementById('controls').classList.add('panel-hidden');
-
   document.getElementById('play-btn').onclick=()=>{if(fw)try{fw.start();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('pause-btn').onclick=()=>{if(fw)try{fw.pause();document.getElementById('play-btn').classList.add('paused')}catch(e){}};
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
+  document.getElementById('configure-btn').onclick=()=>{document.getElementById('builder-drawer').classList.add('open');document.getElementById('controls-toggle').textContent='◀';};
+  document.getElementById('drawer-close').onclick=()=>{document.getElementById('builder-drawer').classList.remove('open');document.getElementById('controls-toggle').textContent='▶';setTimeout(()=>{if(fw)try{fw.resizePending=true}catch(e){}},500);};
   document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
   document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};
   document.getElementById('save-cancel').onclick=()=>document.getElementById('save-overlay').classList.add('hidden');
@@ -1417,6 +1427,7 @@ function init() {
   setInterval(updateCountdown, 500);
   document.onkeydown=e=>{
     if(e.key==='Escape'){
+      if(document.getElementById('builder-drawer').classList.contains('open')){document.getElementById('drawer-close').click();return;}
       if(!document.getElementById('save-overlay').classList.contains('hidden')){document.getElementById('save-overlay').classList.add('hidden');return;}
       if(!document.getElementById('load-overlay').classList.contains('hidden')){document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';return;}
       if(!document.getElementById('wizard-overlay').classList.contains('hidden')){dismissWizard();return;}
