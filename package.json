@@ -1,10 +1,38 @@
 {
   "name": "grand-fireworks-js",
-  "version": "1.4.0",
-  "private": true,
+  "version": "1.5.0",
+  "description": "A dependency-free, configurable browser fireworks engine with WebGL and Canvas rendering.",
+  "main": "./dist/GrandFireworks-v1.4.0.js",
+  "browser": "./dist/GrandFireworks-v1.4.0.js",
+  "unpkg": "./dist/GrandFireworks-v1.4.0.min.js",
+  "jsdelivr": "./dist/GrandFireworks-v1.4.0.min.js",
+  "exports": {
+    ".": {
+      "require": "./dist/GrandFireworks-v1.4.0.js",
+      "default": "./dist/GrandFireworks-v1.4.0.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "GrandFireworks.js",
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "fireworks",
+    "webgl",
+    "canvas",
+    "animation",
+    "particles",
+    "celebration"
+  ],
+  "license": "MIT",
   "scripts": {
     "build": "node scripts/build-dist.js",
-    "test": "node tests/run-tests.js"
+    "test": "node tests/run-tests.js",
+    "prepublishOnly": "npm test && npm run build"
   },
   "devDependencies": {
     "terser": "^5.49.0"

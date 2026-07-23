@@ -16,8 +16,9 @@
 #restart-btn:hover{background:rgba(255,255,255,.14)}
 
 /* Preview */
-#preview{position:relative;min-height:45svh;min-height:45vh;flex:1;background:radial-gradient(ellipse at 50% 20%,#0e1535,#02030a 70%);overflow:hidden;flex-shrink:0}
+#preview{position:relative;flex:1;background:radial-gradient(ellipse at 50% 20%,#0e1535,#02030a 70%);overflow:hidden}
 #preview-inner{position:absolute;inset:0}
+#preview.fullscreen{position:fixed;inset:0;z-index:2147483643;min-height:100dvh}
 .preview-watermark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.1);font:400 10px/1 system-ui,sans-serif;pointer-events:none;z-index:5;white-space:nowrap}
 
 /* Builder drawer overlay */
@@ -39,8 +40,7 @@
 #restart-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* Toggle tab */
-#controls-toggle{display:none}
-@media(min-width:768px){#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3)}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}}
+#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3);display:none}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}
 
 /* Preset bar */
 #preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
@@ -209,8 +209,8 @@
     <button class="drawer-close" id="drawer-close" title="Close">✕</button>
   </div>
   <div class="drawer-subhead">
-    <a href="../index.html">📄 Docs</a>
-    <a href="configuration-builder.html">⚙️ Advanced</a>
+    <a class="back" href="../index.html" style="color:rgba(255,255,255,.6);background:rgba(8,10,25,.85);border:1px solid rgba(255,255,255,.15);padding:5px 10px;border-radius:8px;text-decoration:none;font-size:12px">← Documentation</a>
+    <button id="sound-btn" style="color:rgba(255,255,255,.6);background:rgba(8,10,25,.85);border:1px solid rgba(255,255,255,.15);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12px">🔇 Sound</button>
     <button id="restart-btn">↻ Restart</button>
   </div>
   <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
@@ -1386,19 +1386,24 @@ function refreshSavedConfigs(){const sel=document.getElementById('load-saved-sel
 /* ===== Panel slide-in & toggle ===== */
 function dismissWizard() {
   document.getElementById('wizard-overlay').classList.add('hidden');
-  // Auto-open the builder drawer
   document.getElementById('builder-drawer').classList.add('open');
   document.getElementById('controls-toggle').classList.add('visible');
   document.getElementById('controls-toggle').textContent = '◀';
+  document.getElementById('preview').classList.remove('fullscreen');
 }
 
 function toggleControlsPanel() {
   const drawer = document.getElementById('builder-drawer');
+  const preview = document.getElementById('preview');
   const tog = document.getElementById('controls-toggle');
   const open = drawer.classList.toggle('open');
   tog.textContent = open ? '◀' : '▶';
+  preview.classList.toggle('fullscreen', !open);
   setTimeout(() => {
-    if (fw) try { fw.resizePending = true; } catch(e) {}
+    if (fw) try {
+      if(!open){fw.destroy();initFireworks(effectiveConfig());}
+      else fw.resizePending = true;
+    } catch(e) {}
   }, 500);
 }
 
@@ -1411,7 +1416,7 @@ function init() {
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
   document.getElementById('controls-toggle').onclick=toggleControlsPanel;
-  document.getElementById('drawer-close').onclick=()=>{document.getElementById('builder-drawer').classList.remove('open');document.getElementById('controls-toggle').textContent='▶';setTimeout(()=>{if(fw)try{fw.resizePending=true}catch(e){}},500);};
+  document.getElementById('drawer-close').onclick=()=>{document.getElementById('builder-drawer').classList.remove('open');document.getElementById('controls-toggle').textContent='▶';document.getElementById('preview').classList.add('fullscreen');setTimeout(()=>{if(fw)try{fw.destroy();initFireworks(effectiveConfig());}catch(e){}},500);};
   document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
   document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};
   document.getElementById('save-cancel').onclick=()=>document.getElementById('save-overlay').classList.add('hidden');
@@ -1699,5 +1704,6 @@ function applyLoadedConfig() {
   showToast('📂 Configuration loaded!');
 }
 init();
+let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',()=>{soundOn=!soundOn;if(soundOn&&fw)fw.enableSound();else if(fw)fw.disableSound();event.target.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
 </script>
 </body></html>

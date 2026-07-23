@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1774" height="887" viewBox="0 0 1774 887" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">Grand Fireworks JS</title>
+  <desc id="logo-description">A colourful firework fountain beside the words Grand Fireworks JS and the tagline Spark Your Creativity.</desc>
+
+  <defs>
+    <linearGradient id="cyan-a" x1="455" y1="665" x2="146" y2="261" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2736b5"/>
+      <stop offset="0.42" stop-color="#168df2"/>
+      <stop offset="0.78" stop-color="#00d8ee"/>
+      <stop offset="1" stop-color="#b9ffff"/>
+    </linearGradient>
+    <linearGradient id="cyan-b" x1="455" y1="665" x2="111" y2="423" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#303ab6"/>
+      <stop offset="0.45" stop-color="#159af6"/>
+      <stop offset="0.82" stop-color="#00ddea"/>
+      <stop offset="1" stop-color="#9dffff"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="455" y1="665" x2="145" y2="570" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34279c"/>
+      <stop offset="0.52" stop-color="#2856dc"/>
+      <stop offset="0.86" stop-color="#159df8"/>
+      <stop offset="1" stop-color="#8bdcff"/>
+    </linearGradient>
+    <linearGradient id="magenta" x1="468" y1="665" x2="320" y2="197" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5c178e"/>
+      <stop offset="0.46" stop-color="#cb238e"/>
+      <stop offset="0.82" stop-color="#f43dbd"/>
+      <stop offset="1" stop-color="#ffe0f5"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="487" y1="665" x2="493" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7a248e"/>
+      <stop offset="0.32" stop-color="#f34c73"/>
+      <stop offset="0.7" stop-color="#ffb54d"/>
+      <stop offset="0.9" stop-color="#ffda65"/>
+      <stop offset="1" stop-color="#fff3bd"/>
+    </linearGradient>
+    <linearGradient id="coral" x1="505" y1="665" x2="600" y2="207" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b218e"/>
+      <stop offset="0.42" stop-color="#ed3478"/>
+      <stop offset="0.8" stop-color="#ff765c"/>
+      <stop offset="1" stop-color="#ffd0bb"/>
+    </linearGradient>
+    <linearGradient id="orange-a" x1="510" y1="665" x2="733" y2="262" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8d218f"/>
+      <stop offset="0.42" stop-color="#ef3d70"/>
+      <stop offset="0.75" stop-color="#ff9a4e"/>
+      <stop offset="1" stop-color="#fff0a2"/>
+    </linearGradient>
+    <linearGradient id="orange-b" x1="510" y1="665" x2="799" y2="434" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b238e"/>
+      <stop offset="0.43" stop-color="#ed386f"/>
+      <stop offset="0.78" stop-color="#ff9f50"/>
+      <stop offset="1" stop-color="#ffe58c"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="510" y1="665" x2="785" y2="574" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#65188f"/>
+      <stop offset="0.52" stop-color="#cf2b99"/>
+      <stop offset="0.86" stop-color="#fb407f"/>
+      <stop offset="1" stop-color="#ffc3c1"/>
+    </linearGradient>
+    <linearGradient id="tip-shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.82"/>
+      <stop offset="0.62" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <g id="firework-mark">
+    <!-- Main plumes: intentionally broad, continuous vector gradients. -->
+    <path fill="url(#cyan-a)" d="M456 670C420 534 349 388 210 318c-29-15-67-3-79 25-11 26 5 52 32 60 139 39 232 137 293 267Z"/>
+    <path fill="url(#cyan-b)" d="M453 671C390 579 292 499 155 485c-32-3-61 16-65 44-4 27 20 47 48 47 132-3 239 39 315 95Z"/>
+    <path fill="url(#blue)" d="M454 672C365 625 264 599 157 619c-27 5-45 28-38 50 7 23 34 32 59 22 96-39 188-37 276-19Z"/>
+
+    <path fill="url(#magenta)" d="M470 670C450 510 416 352 351 242c-16-27-50-38-72-20-21 17-17 47 4 68 91 89 142 228 187 380Z"/>
+    <path fill="url(#gold)" d="M487 670C473 489 467 319 470 157c1-34 23-61 49-60 27 1 44 30 40 63-20 168-42 337-72 510Z"/>
+    <path fill="url(#coral)" d="M500 670C515 505 545 358 586 250c11-29 41-45 65-31 23 14 22 44 4 68-72 96-114 225-155 383Z"/>
+
+    <path fill="url(#orange-a)" d="M508 670C549 517 609 389 698 300c22-22 58-25 76-4 18 21 7 50-18 66-109 69-183 173-248 308Z"/>
+    <path fill="url(#orange-b)" d="M510 672C581 563 677 488 786 468c31-6 62 10 67 37 5 27-17 49-45 51-123 8-217 49-298 116Z"/>
+    <path fill="url(#pink)" d="M510 674C601 625 696 606 792 626 819 632 836 655 828 677 820 699 793 707 769 697 683 662 598 658 510 674Z"/>
+
+    <!-- Narrow inner streaks create the layered fountain silhouette. -->
+    <path fill="url(#cyan-a)" d="M459 673C422 568 366 487 289 436c-14-9-31-5-36 8-5 12 5 24 20 29 78 25 137 93 186 200Z"/>
+    <path fill="url(#magenta)" d="M475 671C460 547 440 449 407 372c-7-16-23-23-34-14-10 8-7 23 3 35 48 58 76 151 99 278Z"/>
+    <path fill="url(#coral)" d="M496 672C516 549 543 462 579 400c8-14 24-19 34-9 9 10 4 24-8 34-47 42-80 122-109 247Z"/>
+    <path fill="url(#orange-a)" d="M506 673C551 574 608 505 676 469c15-8 31-2 34 11 4 13-8 23-23 26-70 14-126 70-181 167Z"/>
+
+    <!-- Soft white accents sit above the colour rather than replacing it. -->
+    <path fill="url(#tip-shine)" opacity="0.75" d="M204 333c-25-12-49-5-57 12-4 9-2 18 4 25 103 22 190 78 255 159-53-93-118-158-202-196Z"/>
+    <path fill="url(#tip-shine)" opacity="0.72" d="M346 250c-14-23-37-30-51-17-7 6-8 15-5 24 60 63 101 148 129 250-15-111-38-196-73-257Z"/>
+    <path fill="url(#tip-shine)" opacity="0.8" d="M484 161c1-26 15-47 31-47 10 0 17 8 21 19-10 70-19 143-27 216-2-78-6-141-25-188Z"/>
+    <path fill="url(#tip-shine)" opacity="0.72" d="M704 312c20-20 45-22 56-9 6 7 6 16 1 24-76 41-137 105-184 192 35-102 76-168 127-207Z"/>
+    <path fill="url(#tip-shine)" opacity="0.72" d="M781 482c26-5 49 6 52 22 2 9-3 17-11 22-93 3-171 29-239 78 58-65 123-103 198-122Z"/>
+
+    <!-- Sparks -->
+    <g fill="#ffffff">
+      <path d="M177 250l8 21 21 8-21 8-8 21-8-21-21-8 21-8 8-21Z"/>
+      <path d="M279 151l7 18 18 7-18 7-7 18-7-18-18-7 18-7 7-18Z"/>
+      <path d="M686 186l8 21 21 8-21 8-8 21-8-21-21-8 21-8 8-21Z"/>
+      <path d="M811 345l7 19 19 7-19 7-7 19-7-19-19-7 19-7 7-19Z"/>
+      <path d="M116 676l8 21 21 8-21 8-8 21-8-21-21-8 21-8 8-21Z"/>
+      <path d="M844 654l8 21 21 8-21 8-8 21-8-21-21-8 21-8 8-21Z"/>
+    </g>
+    <g>
+      <circle cx="229" cy="211" r="13" fill="#10dce8"/>
+      <circle cx="238" cy="426" r="10" fill="#05bff0"/>
+      <circle cx="179" cy="537" r="8" fill="#06d9e7"/>
+      <circle cx="343" cy="167" r="9" fill="#ff9a60"/>
+      <circle cx="730" cy="245" r="10" fill="#ffd458"/>
+      <circle cx="772" cy="399" r="11" fill="#ffad4d"/>
+      <circle cx="835" cy="527" r="8" fill="#ffd25a"/>
+      <circle cx="769" cy="722" r="12" fill="#f43b72"/>
+      <circle cx="223" cy="723" r="11" fill="#178df3"/>
+    </g>
+  </g>
+
+  <g id="wordmark" font-family="Inter, Montserrat, Arial, sans-serif">
+    <text x="900" y="350" fill="#ffffff" font-size="144" font-weight="800" letter-spacing="-4">GRAND</text>
+    <text x="900" y="503" fill="#ffffff" font-size="116" font-weight="800" letter-spacing="-4" textLength="680" lengthAdjust="spacingAndGlyphs">FIREWORKS</text>
+    <rect x="1598" y="415" width="76" height="76" rx="12" fill="#ffffff"/>
+    <text x="1611" y="470" fill="#0b1730" font-size="43" font-weight="900" letter-spacing="-3">JS</text>
+    <text x="904" y="588" fill="#c8cedb" font-size="55" font-weight="400" letter-spacing="1">Spark Your Creativity</text>
+  </g>
+</svg>

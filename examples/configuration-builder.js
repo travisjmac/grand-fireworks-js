@@ -5,75 +5,801 @@
  * https://github.com/travisjmac/grand-fireworks-js
  */
 (() => {
-  'use strict';
+  "use strict";
   const definitions = [
-    ['Core',[
-      ['autoStart','boolean',false,'Start automatically after construction.','Recommended off for user-controlled pages.'],['baseStyle','select','medium','Overall particle size and motion feel. Classic = old-school, Thin = delicate, Medium = balanced, Bold = thick, Spectacle = over the top.','Choose a base look, then override individual settings below.',['classic','oldSchool','thin','medium','bold','spectacle']],['colorTheme','select','default','Color palette theme. Default uses the built-in multi-color palettes.','Pick a palette set, then override individual palettes below if needed.',['default','iceBlue','emberRed','neonGreen','goldenSun','royalPurple','festival']],['duration','number',0,'Show duration in milliseconds; 0 runs forever.','Default 0.'],['durationMode','select','graceful','How duration completion is handled.','Graceful lets active fireworks finish.',['graceful','strict']],['maxFinishTime','number',5000,'Maximum graceful-drain wait in milliseconds.','Default 5000.'],['mode','select','fullscreen','Fill the viewport or a specific container.','Use contained inside page components.',['fullscreen','contained']],['placement','select','overlay','Place fireworks above content or behind it.','Overlay is the most reliable default.',['overlay','background']],['clip','boolean',true,'Clip particles at the selected boundary.','Keep enabled for contained displays.'],['zIndex','number',9999,'Stacking order of the fireworks root.','Raise only when another overlay covers it.']
-    ]],
-    ['Renderer',[
-      ['renderer.preferred','select','auto','Select automatic, WebGL 2, or Canvas 2D rendering.','Auto is recommended — when mode is "contained" it falls back to Canvas 2D for reliable rendering inside nested containers. Setting to webgl2 forces WebGL in all modes, including contained.',['auto','webgl2','canvas2d']],['renderer.fallback','select','canvas2d','Renderer used if WebGL is unavailable or its context is lost.','Canvas 2D is the supported fallback.',['canvas2d']],['renderer.preserveDrawingBuffer','select','auto','Preserves previous pixels for persistent trails.','Auto balances appearance and memory use.',['auto','true','false']]
-    ]],
-    ['Performance',[
-      ['performance.preset','select','medium','Applies coordinated quality and capacity limits.','Medium is the broad compatibility default.',['low','medium','high','ultra']],['performance.adaptive','boolean',true,'Adjusts quality when frame rate drops.','Recommended on.'],['performance.pauseWhenHidden','boolean',true,'Pauses when the browser tab is hidden.','Recommended on to save battery and CPU.'],['performance.pauseWhenOffscreen','boolean',true,'Allows contained effects to pause when not visible.','Recommended on.'],['performance.respectReducedMotion','boolean',true,'Honors the visitor’s reduced-motion preference.','Recommended for accessibility.']
-    ]],
-    ['Visuals',[
-      ['visuals.trails','boolean',true,'Keeps luminous motion trails behind particles.','Recommended on for realism.'],['visuals.trailFade','number',0.115,'How quickly old trail pixels fade; lower values leave longer trails.','Default 0.115; useful range 0.06–0.2.'],['visuals.bloom','number',1.25,'Scales the glow around rockets and particles.','Default 1.25; excessive bloom reduces clarity.'],['visuals.rocketExhaust','boolean',true,'Adds sparks behind ascending rockets.','Recommended on.'],['visuals.explosionFlashes','boolean',true,'Adds a bright ignition flash at each burst.','Recommended on.'],['visuals.starChance','number',0.08,'Chance that a particle receives a sharp star core.','Default 0.08; valid range 0–0.3.'],['visuals.groupedSalvos','boolean',true,'Occasionally launches coordinated groups.','Recommended on for a natural show rhythm.'],['visuals.secondaryCrackle','boolean',true,'Adds delayed micro-explosions to supported shells.','Turn off first when reducing secondary particle work.']
-    ]],
-    ['Show',[
-      ['show.intensity','number',1,'Multiplies automatic launch frequency.','Default 1.'],['show.openingSalvo','number',6,'Rockets queued when a show begins.','Default 6.'],['show.maxRockets','optional-number','','Maximum simultaneous rockets.','Leave blank to use the selected performance preset.'],['show.maxParticles','optional-number','','Maximum active particles.','Leave blank to use the selected performance preset.'],['show.launchInterval','optional-number','','Base milliseconds between automatic launches.','Leave blank to use the selected performance preset.'],['show.launchSpread','number',0.55,'Horizontal launch area as a fraction of the display.','Default 0.55.'],['show.angleRange','number',14,'Maximum launch-angle variation in degrees.','Default 14° produces natural angled launches.'],['show.angleStrength','number',1,'Strength of horizontal motion caused by launch angle.','Default 1.'],['show.textRocketAngle','number',0,'Launch angle for text rockets in degrees.','Keep 0 for centered text.'],['show.enabledTypes','select','all','Select all built-in shell types.','All is recommended for variety.',['all']],['show.palettes','select','default','Use the built-in color palettes.','Default provides the complete color set.',['default']]
-    ]],
-    ['Super Grand Finale',[
-      ['finale.enabled','boolean',false,'Allows stop or duration events to trigger the finale.','Off by default; manual launchFinale() still works.'],['finale.type','select','super-grand-finale','Selects the finale choreography.','Super Grand Finale is the built-in sequence.',['super-grand-finale']],['finale.triggers','multiselect',['stop','duration'],'Events allowed to trigger the finale.','Both stop and duration are recommended.',['stop','duration']],['finale.trails','number',10,'Number of outward-flying finale comets.','Default and recommended: 10.'],['finale.trailFlight','number',1100,'Flight time before each comet’s secondary explosion.','Default 1100ms.'],['finale.burstScale','number',1,'Scales secondary grand explosion density.','Default 1; use caution above 1.3.'],['finale.maxWaitBeforeLaunch','number',3000,'Maximum wait before the finale carrier launches.','Default 3000ms.'],['finale.particleScale','number',1,'Finale-specific particle scale.','Default 1.'],['finale.finishDelay','number',800,'Extra finishing delay in milliseconds.','Default 800ms.'],['finale.maxDuration','number',9000,'Safety limit for the complete finale.','Default 9000ms.']
-    ]],
-    ['Text Fireworks',[
-      ['textFirework.enabled','boolean',true,'Enables launchText().','On by default.'],['textFirework.renderMode','select','hybrid','Crisp text, particles, or both.','Hybrid is recommended for readable dissolving text.',['hybrid','crisp','particles']],['textFirework.maxCharacters','number',72,'Maximum accepted message length.','Default 72.'],['textFirework.maxCharactersPerLine','number',24,'Target characters before wrapping.','Default 24.'],['textFirework.maxLines','number',3,'Maximum rendered text lines.','Default 3.'],['textFirework.overflow','select','ellipsis','How truncated text is indicated.','Ellipsis clearly signals truncation.',['ellipsis']],['textFirework.maxWidth','number',0.82,'Maximum text width as a display fraction.','Default 0.82.'],['textFirework.verticalPosition','number',0.42,'Vertical center as a display fraction.','Default 0.42.'],['textFirework.lineHeight','number',1.15,'Spacing between text lines.','Default 1.15.'],['textFirework.fontFamily','text','system-ui, sans-serif','CSS font family used for crisp text.','System UI is fast and widely available.'],['textFirework.fontWeight','number',800,'CSS font weight.','800 creates strong particle silhouettes.'],['textFirework.fontSize','number',92,'Text size in CSS pixels.','Default 92; reduce for small containers.'],['textFirework.particleSpacing','number',4,'Sampling distance between text particles.','Default 4; larger values improve performance.'],['textFirework.particleSize','number',2.5,'Size of dissolving text particles.','Default 2.5.'],['textFirework.colors','text','#FFFFFF, #FFD700, #FF69B4','Comma-separated text colors.','White, gold, and pink are the default.'],['textFirework.revealDuration','number',250,'Text fade-in time in milliseconds.','Default 250ms.'],['textFirework.holdDuration','number',1400,'Readable hold time in milliseconds.','Default 1400ms.'],['textFirework.dissolveDuration','number',900,'Particle dissolve time in milliseconds.','Default 900ms.'],['textFirework.dissolveStyle','select','sparkle','Order in which text particles release.','Sparkle is the most firework-like.',['sparkle','random','left-to-right','top-down']],['textFirework.fallDuration','number',3200,'How long dissolved particles fall.','Default 3200ms.'],['textFirework.gravity','number',0.025,'Downward acceleration of text particles.','Default 0.025.'],['textFirework.textGlow','number',1,'Glow strength for crisp text.','Default 1.'],['textFirework.shimmer','boolean',true,'Makes text particles twinkle.','Recommended on.'],['textFirework.synchronizeExplosions','boolean',true,'Coordinates multiline text reveals.','Recommended on.'],['textFirework.exclusive','boolean',true,'Temporarily suppresses regular launches for readability.','Recommended on.']
-    ]],
-    ['Transitions & Background',[
-      ['transition.fadeIn','number',500,'Background fade-in time in milliseconds.','Default 500ms.'],['transition.fadeOut','number',400,'Effect fade-out time in milliseconds.','Default 400ms.'],['transition.easing','select','ease-out','CSS easing used for transitions.','Ease-out feels responsive.',['ease-out','ease','linear','ease-in-out']],['transition.clearOnHide','boolean',true,'Clears particles after the effect hides.','Recommended on.'],['background.enabled','boolean',false,'Adds a configurable background layer.','Off for transparent overlays.'],['background.value','text','linear-gradient(#101a4b, #040714)','CSS background value: gradient, color, or image.','A dark gradient makes fireworks easier to see.'],['background.className','text','','Optional CSS class placed on the background layer.','Leave blank unless your site supplies a class.'],['background.opacity','number',1,'Final background opacity.','Default 1.']
-    ]]
+    [
+      "Core",
+      [
+        [
+          "autoStart",
+          "boolean",
+          false,
+          "Start automatically after construction.",
+          "Recommended off for user-controlled pages.",
+        ],
+        [
+          "baseStyle",
+          "select",
+          "medium",
+          "Overall particle size and motion feel. Classic = old-school, Thin = delicate, Medium = balanced, Bold = thick, Spectacle = over the top.",
+          "Choose a base look, then override individual settings below.",
+          ["classic", "oldSchool", "thin", "medium", "bold", "spectacle"],
+        ],
+        [
+          "colorTheme",
+          "select",
+          "default",
+          "Color palette theme. Default uses the built-in multi-color palettes.",
+          "Pick a palette set, then override individual palettes below if needed.",
+          [
+            "default",
+            "iceBlue",
+            "emberRed",
+            "neonGreen",
+            "goldenSun",
+            "royalPurple",
+            "festival",
+          ],
+        ],
+        [
+          "duration",
+          "number",
+          0,
+          "Show duration in milliseconds; 0 runs forever.",
+          "Default 0.",
+        ],
+        [
+          "durationMode",
+          "select",
+          "graceful",
+          "How duration completion is handled.",
+          "Graceful lets active fireworks finish.",
+          ["graceful", "strict"],
+        ],
+        [
+          "maxFinishTime",
+          "number",
+          5000,
+          "Maximum graceful-drain wait in milliseconds.",
+          "Default 5000.",
+        ],
+        [
+          "mode",
+          "select",
+          "fullscreen",
+          "Fill the viewport or a specific container.",
+          "Use contained inside page components.",
+          ["fullscreen", "contained"],
+        ],
+        [
+          "placement",
+          "select",
+          "overlay",
+          "Place fireworks above content or behind it.",
+          "Overlay is the most reliable default.",
+          ["overlay", "background"],
+        ],
+        [
+          "clip",
+          "boolean",
+          true,
+          "Clip particles at the selected boundary.",
+          "Keep enabled for contained displays.",
+        ],
+        [
+          "zIndex",
+          "number",
+          9999,
+          "Stacking order of the fireworks root.",
+          "Raise only when another overlay covers it.",
+        ],
+      ],
+    ],
+    [
+      "Renderer",
+      [
+        [
+          "renderer.preferred",
+          "select",
+          "auto",
+          "Select automatic, WebGL 2, or Canvas 2D rendering.",
+          'Auto is recommended — when mode is "contained" it falls back to Canvas 2D for reliable rendering inside nested containers. Setting to webgl2 forces WebGL in all modes, including contained.',
+          ["auto", "webgl2", "canvas2d"],
+        ],
+        [
+          "renderer.fallback",
+          "select",
+          "canvas2d",
+          "Renderer used if WebGL is unavailable or its context is lost.",
+          "Canvas 2D is the supported fallback.",
+          ["canvas2d"],
+        ],
+        [
+          "renderer.preserveDrawingBuffer",
+          "select",
+          "auto",
+          "Preserves previous pixels for persistent trails.",
+          "Auto balances appearance and memory use.",
+          ["auto", "true", "false"],
+        ],
+      ],
+    ],
+    [
+      "Performance",
+      [
+        [
+          "performance.preset",
+          "select",
+          "medium",
+          "Applies coordinated quality and capacity limits.",
+          "Medium is the broad compatibility default.",
+          ["low", "medium", "high", "ultra"],
+        ],
+        [
+          "performance.adaptive",
+          "boolean",
+          true,
+          "Adjusts quality when frame rate drops.",
+          "Recommended on.",
+        ],
+        [
+          "performance.pauseWhenHidden",
+          "boolean",
+          true,
+          "Pauses when the browser tab is hidden.",
+          "Recommended on to save battery and CPU.",
+        ],
+        [
+          "performance.pauseWhenOffscreen",
+          "boolean",
+          true,
+          "Allows contained effects to pause when not visible.",
+          "Recommended on.",
+        ],
+        [
+          "performance.respectReducedMotion",
+          "boolean",
+          true,
+          "Honors the visitor’s reduced-motion preference.",
+          "Recommended for accessibility.",
+        ],
+      ],
+    ],
+    [
+      "Visuals",
+      [
+        [
+          "visuals.trails",
+          "boolean",
+          true,
+          "Keeps luminous motion trails behind particles.",
+          "Recommended on for realism.",
+        ],
+        [
+          "visuals.trailFade",
+          "number",
+          0.115,
+          "How quickly old trail pixels fade; lower values leave longer trails.",
+          "Default 0.115; useful range 0.06–0.2.",
+        ],
+        [
+          "visuals.bloom",
+          "number",
+          1.25,
+          "Scales the glow around rockets and particles.",
+          "Default 1.25; excessive bloom reduces clarity.",
+        ],
+        [
+          "visuals.rocketExhaust",
+          "boolean",
+          true,
+          "Adds sparks behind ascending rockets.",
+          "Recommended on.",
+        ],
+        [
+          "visuals.explosionFlashes",
+          "boolean",
+          true,
+          "Adds a bright ignition flash at each burst.",
+          "Recommended on.",
+        ],
+        [
+          "visuals.starChance",
+          "number",
+          0.08,
+          "Chance that a particle receives a sharp star core.",
+          "Default 0.08; valid range 0–0.3.",
+        ],
+        [
+          "visuals.groupedSalvos",
+          "boolean",
+          true,
+          "Occasionally launches coordinated groups.",
+          "Recommended on for a natural show rhythm.",
+        ],
+        [
+          "visuals.secondaryCrackle",
+          "boolean",
+          true,
+          "Adds delayed micro-explosions to supported shells.",
+          "Turn off first when reducing secondary particle work.",
+        ],
+      ],
+    ],
+    [
+      "Show",
+      [
+        [
+          "show.intensity",
+          "number",
+          1,
+          "Multiplies automatic launch frequency.",
+          "Default 1.",
+        ],
+        [
+          "show.openingSalvo",
+          "number",
+          6,
+          "Rockets queued when a show begins.",
+          "Default 6.",
+        ],
+        [
+          "show.maxRockets",
+          "optional-number",
+          "",
+          "Maximum simultaneous rockets.",
+          "Leave blank to use the selected performance preset.",
+        ],
+        [
+          "show.maxParticles",
+          "optional-number",
+          "",
+          "Maximum active particles.",
+          "Leave blank to use the selected performance preset.",
+        ],
+        [
+          "show.launchInterval",
+          "optional-number",
+          "",
+          "Base milliseconds between automatic launches.",
+          "Leave blank to use the selected performance preset.",
+        ],
+        [
+          "show.launchSpread",
+          "number",
+          0.55,
+          "Horizontal launch area as a fraction of the display.",
+          "Default 0.55.",
+        ],
+        [
+          "show.angleRange",
+          "number",
+          14,
+          "Maximum launch-angle variation in degrees.",
+          "Default 14° produces natural angled launches.",
+        ],
+        [
+          "show.angleStrength",
+          "number",
+          1,
+          "Strength of horizontal motion caused by launch angle.",
+          "Default 1.",
+        ],
+        [
+          "show.textRocketAngle",
+          "number",
+          0,
+          "Launch angle for text rockets in degrees.",
+          "Keep 0 for centered text.",
+        ],
+        [
+          "show.enabledTypes",
+          "select",
+          "all",
+          "Select all built-in shell types.",
+          "All is recommended for variety.",
+          ["all"],
+        ],
+        [
+          "show.palettes",
+          "select",
+          "default",
+          "Use the built-in color palettes.",
+          "Default provides the complete color set.",
+          ["default"],
+        ],
+      ],
+    ],
+    [
+      "Super Grand Finale",
+      [
+        [
+          "finale.enabled",
+          "boolean",
+          false,
+          "Allows stop or duration events to trigger the finale.",
+          "Off by default; manual launchFinale() still works.",
+        ],
+        [
+          "finale.type",
+          "select",
+          "super-grand-finale",
+          "Selects the finale choreography.",
+          "Super Grand Finale is the built-in sequence.",
+          ["super-grand-finale"],
+        ],
+        [
+          "finale.triggers",
+          "multiselect",
+          ["stop", "duration"],
+          "Events allowed to trigger the finale.",
+          "Both stop and duration are recommended.",
+          ["stop", "duration"],
+        ],
+        [
+          "finale.trails",
+          "number",
+          10,
+          "Number of outward-flying finale comets.",
+          "Default and recommended: 10.",
+        ],
+        [
+          "finale.trailFlight",
+          "number",
+          1100,
+          "Flight time before each comet’s secondary explosion.",
+          "Default 1100ms.",
+        ],
+        [
+          "finale.burstScale",
+          "number",
+          1,
+          "Scales secondary grand explosion density.",
+          "Default 1; use caution above 1.3.",
+        ],
+        [
+          "finale.maxWaitBeforeLaunch",
+          "number",
+          3000,
+          "Maximum wait before the finale carrier launches.",
+          "Default 3000ms.",
+        ],
+        [
+          "finale.particleScale",
+          "number",
+          1,
+          "Finale-specific particle scale.",
+          "Default 1.",
+        ],
+        [
+          "finale.finishDelay",
+          "number",
+          800,
+          "Extra finishing delay in milliseconds.",
+          "Default 800ms.",
+        ],
+        [
+          "finale.maxDuration",
+          "number",
+          9000,
+          "Safety limit for the complete finale.",
+          "Default 9000ms.",
+        ],
+      ],
+    ],
+    [
+      "Text Fireworks",
+      [
+        [
+          "textFirework.enabled",
+          "boolean",
+          true,
+          "Enables launchText().",
+          "On by default.",
+        ],
+        [
+          "textFirework.renderMode",
+          "select",
+          "hybrid",
+          "Crisp text, particles, or both.",
+          "Hybrid is recommended for readable dissolving text.",
+          ["hybrid", "crisp", "particles"],
+        ],
+        [
+          "textFirework.maxCharacters",
+          "number",
+          72,
+          "Maximum accepted message length.",
+          "Default 72.",
+        ],
+        [
+          "textFirework.maxCharactersPerLine",
+          "number",
+          24,
+          "Target characters before wrapping.",
+          "Default 24.",
+        ],
+        [
+          "textFirework.maxLines",
+          "number",
+          3,
+          "Maximum rendered text lines.",
+          "Default 3.",
+        ],
+        [
+          "textFirework.overflow",
+          "select",
+          "ellipsis",
+          "How truncated text is indicated.",
+          "Ellipsis clearly signals truncation.",
+          ["ellipsis"],
+        ],
+        [
+          "textFirework.maxWidth",
+          "number",
+          0.82,
+          "Maximum text width as a display fraction.",
+          "Default 0.82.",
+        ],
+        [
+          "textFirework.verticalPosition",
+          "number",
+          0.42,
+          "Vertical center as a display fraction.",
+          "Default 0.42.",
+        ],
+        [
+          "textFirework.lineHeight",
+          "number",
+          1.15,
+          "Spacing between text lines.",
+          "Default 1.15.",
+        ],
+        [
+          "textFirework.fontFamily",
+          "text",
+          "system-ui, sans-serif",
+          "CSS font family used for crisp text.",
+          "System UI is fast and widely available.",
+        ],
+        [
+          "textFirework.fontWeight",
+          "number",
+          800,
+          "CSS font weight.",
+          "800 creates strong particle silhouettes.",
+        ],
+        [
+          "textFirework.fontSize",
+          "number",
+          92,
+          "Text size in CSS pixels.",
+          "Default 92; reduce for small containers.",
+        ],
+        [
+          "textFirework.particleSpacing",
+          "number",
+          4,
+          "Sampling distance between text particles.",
+          "Default 4; larger values improve performance.",
+        ],
+        [
+          "textFirework.particleSize",
+          "number",
+          2.5,
+          "Size of dissolving text particles.",
+          "Default 2.5.",
+        ],
+        [
+          "textFirework.colors",
+          "text",
+          "#FFFFFF, #FFD700, #FF69B4",
+          "Comma-separated text colors.",
+          "White, gold, and pink are the default.",
+        ],
+        [
+          "textFirework.revealDuration",
+          "number",
+          250,
+          "Text fade-in time in milliseconds.",
+          "Default 250ms.",
+        ],
+        [
+          "textFirework.holdDuration",
+          "number",
+          1400,
+          "Readable hold time in milliseconds.",
+          "Default 1400ms.",
+        ],
+        [
+          "textFirework.dissolveDuration",
+          "number",
+          900,
+          "Particle dissolve time in milliseconds.",
+          "Default 900ms.",
+        ],
+        [
+          "textFirework.dissolveStyle",
+          "select",
+          "sparkle",
+          "Order in which text particles release.",
+          "Sparkle is the most firework-like.",
+          ["sparkle", "random", "left-to-right", "top-down"],
+        ],
+        [
+          "textFirework.fallDuration",
+          "number",
+          3200,
+          "How long dissolved particles fall.",
+          "Default 3200ms.",
+        ],
+        [
+          "textFirework.gravity",
+          "number",
+          0.025,
+          "Downward acceleration of text particles.",
+          "Default 0.025.",
+        ],
+        [
+          "textFirework.textGlow",
+          "number",
+          1,
+          "Glow strength for crisp text.",
+          "Default 1.",
+        ],
+        [
+          "textFirework.shimmer",
+          "boolean",
+          true,
+          "Makes text particles twinkle.",
+          "Recommended on.",
+        ],
+        [
+          "textFirework.synchronizeExplosions",
+          "boolean",
+          true,
+          "Coordinates multiline text reveals.",
+          "Recommended on.",
+        ],
+        [
+          "textFirework.exclusive",
+          "boolean",
+          true,
+          "Temporarily suppresses regular launches for readability.",
+          "Recommended on.",
+        ],
+      ],
+    ],
+    [
+      "Transitions & Background",
+      [
+        [
+          "transition.fadeIn",
+          "number",
+          500,
+          "Background fade-in time in milliseconds.",
+          "Default 500ms.",
+        ],
+        [
+          "transition.fadeOut",
+          "number",
+          400,
+          "Effect fade-out time in milliseconds.",
+          "Default 400ms.",
+        ],
+        [
+          "transition.easing",
+          "select",
+          "ease-out",
+          "CSS easing used for transitions.",
+          "Ease-out feels responsive.",
+          ["ease-out", "ease", "linear", "ease-in-out"],
+        ],
+        [
+          "transition.clearOnHide",
+          "boolean",
+          true,
+          "Clears particles after the effect hides.",
+          "Recommended on.",
+        ],
+        [
+          "background.enabled",
+          "boolean",
+          false,
+          "Adds a configurable background layer.",
+          "Off for transparent overlays.",
+        ],
+        [
+          "background.value",
+          "text",
+          "linear-gradient(#101a4b, #040714)",
+          "CSS background value: gradient, color, or image.",
+          "A dark gradient makes fireworks easier to see.",
+        ],
+        [
+          "background.className",
+          "text",
+          "",
+          "Optional CSS class placed on the background layer.",
+          "Leave blank unless your site supplies a class.",
+        ],
+        [
+          "background.opacity",
+          "number",
+          1,
+          "Final background opacity.",
+          "Default 1.",
+        ],
+      ],
+    ],
   ];
-  const root=document.querySelector('#builder-fields'), output=document.querySelector('#config-output'), status=document.querySelector('#builder-status'), preview=document.querySelector('#builder-preview');
-  const controls=new Map();
-  const coerce=(kind,value)=>kind==='boolean'?Boolean(value):kind==='number'?Number(value):kind==='optional-number'?(value===''?null:Number(value)):kind==='multiselect'?value:kind==='select'&&['true','false'].includes(value)?value==='true':value;
-  const setPath=(obj,path,value)=>{const parts=path.split('.');let target=obj;parts.forEach((part,i)=>{if(i===parts.length-1)target[part]=value;else target=target[part]||(target[part]={});});};
-  const read=()=>{const cfg={};for(const [path,data] of controls){let value;if(data.kind==='boolean')value=data.el.checked;else if(data.kind==='multiselect')value=[...data.el.selectedOptions].map(o=>o.value);else if(path==='textFirework.colors')value=data.el.value.split(',').map(v=>v.trim()).filter(Boolean);else value=coerce(data.kind,data.el.value);setPath(cfg,path,value);}if(!cfg.background.enabled)cfg.background=false;else{delete cfg.background.enabled;}return cfg;};
-  const refresh=()=>{output.value=`const fireworks = new GrandFireworks(${JSON.stringify(read(),null,2)});`;};
-  for(const [groupName,items] of definitions){const section=document.createElement('details');section.className='group';section.open=['Core','Renderer','Performance'].includes(groupName);const summary=document.createElement('summary');summary.textContent=groupName;const fields=document.createElement('div');fields.className='fields';for(const [path,kind,defaultValue,description,recommendation,choices] of items){const row=document.createElement('div');row.className='field';const label=document.createElement('label');label.textContent=path.split('.').pop();label.innerHTML+=`<span class="path">${path}</span>`;let input;if(kind==='select'||kind==='multiselect'){input=document.createElement('select');if(kind==='multiselect')input.multiple=true;for(const choice of choices){const option=document.createElement('option');option.value=choice;option.textContent=choice;option.selected=Array.isArray(defaultValue)?defaultValue.includes(choice):String(defaultValue)===choice;input.append(option);}}else{input=document.createElement('input');input.type=kind==='boolean'?'checkbox':(kind==='number'||kind==='optional-number')?'number':'text';if(kind==='boolean')input.checked=defaultValue;else input.value=defaultValue;if(kind==='number'||kind==='optional-number')input.step='any';}input.id=`option-${path.replaceAll('.','-')}`;label.htmlFor=input.id;const help=document.createElement('div');help.className='help';help.innerHTML=`${description} <strong>${recommendation}</strong> Default: <code>${Array.isArray(defaultValue)?defaultValue.join(', '):(defaultValue===''?'automatic':String(defaultValue))}</code>`;row.append(label,input,help);fields.append(row);controls.set(path,{el:input,kind,defaultValue});input.addEventListener('input',refresh);input.addEventListener('change',refresh);}section.append(summary,fields);root.append(section);}
-  let fireworks=null;
-  const parseOutput=()=>{const raw=output.value.trim().replace(/^const\s+fireworks\s*=\s*new\s+GrandFireworks\s*\(/,'').replace(/\);?\s*$/,'');return JSON.parse(raw);};
-
-  function startPreview(fullscreen){
-    try{
-      if(fireworks)fireworks.destroy();
-      const chosen=parseOutput();
-      const previewOptions={...chosen,container:preview,mode:'contained',placement:'overlay',autoStart:false,zIndex:1,background:chosen.background||{value:'linear-gradient(#101a4b,#040714)',opacity:1}};
-      fireworks=new GrandFireworks(previewOptions);
-      fireworks.start({duration:fullscreen?0:6500});
-      if(fullscreen){
-        preview.classList.add('preview-fullscreen');
-        document.body.classList.add('preview-active');
-        document.querySelector('#close-preview').style.display='block';
-        document.querySelector('#preview-button').textContent='🔄 Restart preview';
-        status.textContent='Preview is now fullscreen. Use Close to exit.';
+  const root = document.querySelector("#builder-fields"),
+    output = document.querySelector("#config-output"),
+    status = document.querySelector("#builder-status"),
+    preview = document.querySelector("#builder-preview");
+  const controls = new Map();
+  const coerce = (kind, value) =>
+    kind === "boolean"
+      ? Boolean(value)
+      : kind === "number"
+        ? Number(value)
+        : kind === "optional-number"
+          ? value === ""
+            ? null
+            : Number(value)
+          : kind === "multiselect"
+            ? value
+            : kind === "select" && ["true", "false"].includes(value)
+              ? value === "true"
+              : value;
+  const setPath = (obj, path, value) => {
+    const parts = path.split(".");
+    let target = obj;
+    parts.forEach((part, i) => {
+      if (i === parts.length - 1) target[part] = value;
+      else target = target[part] || (target[part] = {});
+    });
+  };
+  const read = () => {
+    const cfg = {};
+    for (const [path, data] of controls) {
+      let value;
+      if (data.kind === "boolean") value = data.el.checked;
+      else if (data.kind === "multiselect")
+        value = [...data.el.selectedOptions].map((o) => o.value);
+      else if (path === "textFirework.colors")
+        value = data.el.value
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean);
+      else value = coerce(data.kind, data.el.value);
+      setPath(cfg, path, value);
+    }
+    if (!cfg.background.enabled) cfg.background = false;
+    else {
+      delete cfg.background.enabled;
+    }
+    return cfg;
+  };
+  const refresh = () => {
+    output.value = `const fireworks = new GrandFireworks(${JSON.stringify(read(), null, 2)});`;
+  };
+  for (const [groupName, items] of definitions) {
+    const section = document.createElement("details");
+    section.className = "group";
+    section.open = ["Core", "Renderer", "Performance"].includes(groupName);
+    const summary = document.createElement("summary");
+    summary.textContent = groupName;
+    const fields = document.createElement("div");
+    fields.className = "fields";
+    for (const [
+      path,
+      kind,
+      defaultValue,
+      description,
+      recommendation,
+      choices,
+    ] of items) {
+      const row = document.createElement("div");
+      row.className = "field";
+      const label = document.createElement("label");
+      label.textContent = path.split(".").pop();
+      label.innerHTML += `<span class="path">${path}</span>`;
+      let input;
+      if (kind === "select" || kind === "multiselect") {
+        input = document.createElement("select");
+        if (kind === "multiselect") input.multiple = true;
+        for (const choice of choices) {
+          const option = document.createElement("option");
+          option.value = choice;
+          option.textContent = choice;
+          option.selected = Array.isArray(defaultValue)
+            ? defaultValue.includes(choice)
+            : String(defaultValue) === choice;
+          input.append(option);
+        }
       } else {
-        status.textContent='Preview started. The preview safely forces contained mode; your generated configuration remains unchanged.';
+        input = document.createElement("input");
+        input.type =
+          kind === "boolean"
+            ? "checkbox"
+            : kind === "number" || kind === "optional-number"
+              ? "number"
+              : "text";
+        if (kind === "boolean") input.checked = defaultValue;
+        else input.value = defaultValue;
+        if (kind === "number" || kind === "optional-number") input.step = "any";
       }
-    }catch(error){status.textContent=`Configuration error: ${error.message}`;}
+      input.id = `option-${path.replaceAll(".", "-")}`;
+      label.htmlFor = input.id;
+      const help = document.createElement("div");
+      help.className = "help";
+      help.innerHTML = `${description} <strong>${recommendation}</strong> Default: <code>${Array.isArray(defaultValue) ? defaultValue.join(", ") : defaultValue === "" ? "automatic" : String(defaultValue)}</code>`;
+      row.append(label, input, help);
+      fields.append(row);
+      controls.set(path, { el: input, kind, defaultValue });
+      input.addEventListener("input", refresh);
+      input.addEventListener("change", refresh);
+    }
+    section.append(summary, fields);
+    root.append(section);
+  }
+  let fireworks = null;
+  const parseOutput = () => {
+    const raw = output.value
+      .trim()
+      .replace(/^const\s+fireworks\s*=\s*new\s+GrandFireworks\s*\(/, "")
+      .replace(/\);?\s*$/, "");
+    return JSON.parse(raw);
+  };
+
+  function startPreview(fullscreen) {
+    try {
+      if (fireworks) fireworks.destroy();
+      const chosen = parseOutput();
+      const previewOptions = {
+        ...chosen,
+        container: preview,
+        mode: "contained",
+        placement: "overlay",
+        autoStart: false,
+        zIndex: 1,
+        background: chosen.background || {
+          value: "linear-gradient(#101a4b,#040714)",
+          opacity: 1,
+        },
+      };
+      fireworks = new GrandFireworks(previewOptions);
+      fireworks.start({ duration: fullscreen ? 0 : 6500 });
+      if (fullscreen) {
+        preview.classList.add("preview-fullscreen");
+        document.body.classList.add("preview-active");
+        document.querySelector("#close-preview").style.display = "block";
+        document.querySelector("#preview-button").textContent =
+          "🔄 Restart preview";
+        status.textContent = "Preview is now fullscreen. Use Close to exit.";
+      } else {
+        status.textContent =
+          "Preview started. The preview safely forces contained mode; your generated configuration remains unchanged.";
+      }
+    } catch (error) {
+      status.textContent = `Configuration error: ${error.message}`;
+    }
   }
 
-  function exitPreview(){
-    if(fireworks)fireworks.destroy();
-    fireworks=null;
-    preview.classList.remove('preview-fullscreen');
-    document.body.classList.remove('preview-active');
-    document.querySelector('#close-preview').style.display='none';
-    document.querySelector('#preview-button').textContent='Preview show';
-    document.querySelector('#builder-preview').style.display='';
-    status.textContent='Preview closed.';
+  function exitPreview() {
+    if (fireworks) fireworks.destroy();
+    fireworks = null;
+    preview.classList.remove("preview-fullscreen");
+    document.body.classList.remove("preview-active");
+    document.querySelector("#close-preview").style.display = "none";
+    document.querySelector("#preview-button").textContent = "Preview show";
+    document.querySelector("#builder-preview").style.display = "";
+    status.textContent = "Preview closed.";
   }
 
-  document.querySelector('#preview-button').addEventListener('click',()=>{
-    if(preview.classList.contains('preview-fullscreen')&&fireworks){
+  document.querySelector("#preview-button").addEventListener("click", () => {
+    if (preview.classList.contains("preview-fullscreen") && fireworks) {
       // Restart existing fullscreen preview
       startPreview(true);
     } else {
@@ -81,33 +807,54 @@
     }
   });
 
-  document.querySelector('#close-preview').addEventListener('click',exitPreview);
+  document
+    .querySelector("#close-preview")
+    .addEventListener("click", exitPreview);
 
-  document.querySelector('#text-button').addEventListener('click',()=>{
-    if(!fireworks||!preview.classList.contains('preview-fullscreen')){
+  document.querySelector("#text-button").addEventListener("click", () => {
+    if (!fireworks || !preview.classList.contains("preview-fullscreen")) {
       startPreview(true);
     }
-    setTimeout(()=>fireworks&&fireworks.launchText('Grand Fireworks!'),80);
+    setTimeout(() => fireworks && fireworks.launchText("Grand Fireworks!"), 80);
   });
 
-  document.querySelector('#finale-button').addEventListener('click',()=>{
-    if(!fireworks||!preview.classList.contains('preview-fullscreen')){
+  document.querySelector("#finale-button").addEventListener("click", () => {
+    if (!fireworks || !preview.classList.contains("preview-fullscreen")) {
       startPreview(true);
     }
-    setTimeout(()=>fireworks&&fireworks.launchFinale(),80);
+    setTimeout(() => fireworks && fireworks.launchFinale(), 80);
   });
 
-  document.querySelector('#copy-button').addEventListener('click',async()=>{await navigator.clipboard.writeText(output.value);status.textContent='Configuration copied to the clipboard.';});
-  document.querySelector('#reset-button').addEventListener('click',()=>{for(const [,data] of controls){if(data.kind==='boolean')data.el.checked=data.defaultValue;else if(data.kind==='multiselect')[...data.el.options].forEach(o=>o.selected=data.defaultValue.includes(o.value));else data.el.value=data.defaultValue;}refresh();status.textContent='All settings restored to their documented defaults.';});
-  output.addEventListener('input',()=>status.textContent='The configuration text was edited. Preview will validate it when run.');
+  document.querySelector("#copy-button").addEventListener("click", async () => {
+    await navigator.clipboard.writeText(output.value);
+    status.textContent = "Configuration copied to the clipboard.";
+  });
+  document.querySelector("#reset-button").addEventListener("click", () => {
+    for (const [, data] of controls) {
+      if (data.kind === "boolean") data.el.checked = data.defaultValue;
+      else if (data.kind === "multiselect")
+        [...data.el.options].forEach(
+          (o) => (o.selected = data.defaultValue.includes(o.value)),
+        );
+      else data.el.value = data.defaultValue;
+    }
+    refresh();
+    status.textContent = "All settings restored to their documented defaults.";
+  });
+  output.addEventListener(
+    "input",
+    () =>
+      (status.textContent =
+        "The configuration text was edited. Preview will validate it when run."),
+  );
   refresh();
 
   // Mobile toggle for config panel
-  const toggleBtn=document.querySelector('#toggle-builder');
-  const builderSection=document.querySelector('.builder');
-  toggleBtn.addEventListener('click',()=>{
-    const collapsed=builderSection.classList.toggle('collapsed');
-    toggleBtn.textContent=collapsed?'▼ Show settings':'▲ Hide settings';
-    toggleBtn.setAttribute('aria-expanded',String(!collapsed));
+  const toggleBtn = document.querySelector("#toggle-builder");
+  const builderSection = document.querySelector(".builder");
+  toggleBtn.addEventListener("click", () => {
+    const collapsed = builderSection.classList.toggle("collapsed");
+    toggleBtn.textContent = collapsed ? "▼ Show settings" : "▲ Hide settings";
+    toggleBtn.setAttribute("aria-expanded", String(!collapsed));
   });
 })();

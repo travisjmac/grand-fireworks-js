@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <a class="back" href="../index.html">← Documentation</a>
+  <div class="back-row"><a class="back" href="../index.html">← Documentation</a><button id="sound-btn" class="sound-btn">🔇 Sound</button></div>
   <div class="scene"></div>
   <section class="sequence-panel">
     <h1>Text Message Sequence</h1>
@@ -44,6 +44,7 @@
     document.querySelector('#cancel-sequence').addEventListener('click',()=>{
       if(!fireworks.cancelTextSequence())status.textContent='No sequence is running';
     });
+    let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',()=>{soundOn=!soundOn;if(soundOn)fireworks.enableSound();else fireworks.disableSound();event.target.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
   </script>
   <footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.4.0 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:inherit;text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:inherit;text-decoration:none">GitHub</a></footer>
 </body>

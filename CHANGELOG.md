@@ -2,6 +2,20 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.5.0] — July 23, 2026
+
+### Changed
+
+- Updated home page logo to a static SVG with toggle behavior removed.
+- Replaced Guided Builder with unified Configuration Tool.
+- Removed Advanced Builder from navigation (functionality folded into Configuration Tool).
+- Added sound toggle buttons to all example pages, styled consistently.
+- Simplified themes page to use `start()` instead of duplicating full config.
+- Renamed logo CSS class from `logo-toggle` to `logo` and cleaned up related styles.
+- Fixed `disableSound()` to properly stop ambience, voices, and suspend the AudioContext.
+- Fixed missing `applyStyle()`/`applyTheme()` functions in index.html after code cleanup.
+- Fixed preview layout in Configuration Tool (fullscreen toggle, always-visible hide tab).
+
 ## [1.4.0] — July 21, 2026
 
 ### Added

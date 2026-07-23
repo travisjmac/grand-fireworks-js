@@ -4,7 +4,7 @@
   Created: July 15, 2026
   Website: http://travisandjoelyweareaperfect.fit/
   Repository: https://github.com/travisjmac/grand-fireworks-js
---><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="A configurable JavaScript fireworks engine with realistic WebGL effects, Canvas fallback, text fireworks, contained displays, and staged grand finales."><meta name="version" content="1.4.0"><meta name="date" content="2026-07-15"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS"><meta property="og:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><meta property="og:url" content="https://github.com/travisjmac/grand-fireworks-js"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Grand Fireworks JS"><meta name="twitter:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>GrandFireworks Documentation</title><link rel="stylesheet" href="styles.css"></head><body><div id="page-content" class="page-content"><header><span class="pill">Version 1.4.0</span><span class="pill">WebGL 2 first</span><span class="pill">Canvas fallback</span><span class="pill">No dependencies</span><button id="logo-toggle" class="logo-toggle" type="button" aria-label="Showing the traced logo. Click to show the handcrafted logo." title="Click to compare logos"><img id="site-logo" src="assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS — Spark Your Creativity"></button><p class="lead">WebGL 2 fireworks with 15 distinct shell types, adaptive performance, multi-line text that shimmers and dissolves, and a choreographed Super Grand Finale. Zero dependencies. Tiny footprint.</p><p class="lead" style="margin-top:12px"><strong>Some libraries just draw circles and call them fireworks.</strong> Grand Fireworks renders genuine pyrotechnic geometry — crossettes that split mid-air, weeping willows that trail gravity-realistic embers, galactic spirals, and chrysanthemum shells that <em>bloom</em>. Built for landing pages, hero sections, celebrations, and anyone who refuses to ship a half-baked effect.</p><p><a href="https://github.com/travisjmac/grand-fireworks-js">View source on GitHub</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip">Download source ZIP</a> · <a href="https://travisjmac.github.io/grand-fireworks-js/">Open the GitHub Pages site</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/blob/main/CHANGELOG.md">What changed in 1.4.0</a></p></header><main>
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="A configurable JavaScript fireworks engine with realistic WebGL effects, Canvas fallback, text fireworks, contained displays, and staged grand finales."><meta name="version" content="1.4.0"><meta name="date" content="2026-07-15"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS"><meta property="og:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><meta property="og:url" content="https://github.com/travisjmac/grand-fireworks-js"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Grand Fireworks JS"><meta name="twitter:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>GrandFireworks Documentation</title><link rel="stylesheet" href="styles.css"></head><body><div id="page-content" class="page-content"><header><span class="pill">Version 1.4.0</span><span class="pill">WebGL 2 first</span><span class="pill">Canvas fallback</span><span class="pill">No dependencies</span><img id="site-logo" class="logo" src="assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS — Spark Your Creativity"><p class="lead">WebGL 2 fireworks with 15 distinct shell types, adaptive performance, multi-line text that shimmers and dissolves, and a choreographed Super Grand Finale. Zero dependencies. Tiny footprint.</p><p class="lead" style="margin-top:12px"><strong>Some libraries just draw circles and call them fireworks.</strong> Grand Fireworks renders genuine pyrotechnic geometry — crossettes that split mid-air, weeping willows that trail gravity-realistic embers, galactic spirals, and chrysanthemum shells that <em>bloom</em>. Built for landing pages, hero sections, celebrations, and anyone who refuses to ship a half-baked effect.</p><p><a href="https://github.com/travisjmac/grand-fireworks-js">View source on GitHub</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip">Download source ZIP</a> · <a href="https://travisjmac.github.io/grand-fireworks-js/">Open the GitHub Pages site</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/blob/main/CHANGELOG.md">What changed in 1.4.0</a></p></header><main>
 <h2>Quick start</h2><div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="GrandFireworks.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   const fireworks = new GrandFireworks();
@@ -14,8 +14,7 @@
 <h2 id="cdn">CDN</h2><p>Load directly from GitHub via jsDelivr — no build step, no bundler required.</p>
 <div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks-v1.4.0.min.js"&gt;&lt;/script&gt;</code></pre></div>
 <div id="generated-config" class="code-block"><button class="copy-btn" id="gen-copy">Copy</button><pre id="gen-config-display"></pre></div>
-<h2>Examples</h2><div class="grid"><a class="card" href="examples/guided-builder.html"><strong>Guided Builder ✨</strong><span>Design your show step by step — pick a preset, tweak one thing at a time with live preview, then copy the config.</span></a>
-<a class="card" href="examples/configuration-builder.html"><strong>Advanced Builder ⚙️</strong><span>Full control over every setting with inline defaults, recommendations, and live preview.</span></a>
+<h2>Examples</h2><div class="grid"><a class="card" href="examples/guided-builder.html"><strong>Configuration Tool ✨</strong><span>Design your show step by step — pick a preset, tweak one thing at a time with live preview, then copy the config.</span></a>
 <a class="card" href="examples/default.html"><strong>Default show</strong><span>Zero-argument initialization and controls.</span></a>
 <a class="card" href="examples/lucky.html"><strong>I'm Feeling Lucky ✨</strong><span>Randomly generate and preview gorgeous configurations with one tap. Keep or undo with forward/back.</span></a>
 <a class="card" href="examples/themes.html"><strong>Color Themes 🎨</strong><span>Explore curated color palettes — ice blue, ember red, neon green, golden, and mixed multi-palette rows. Switch live with one click.</span></a>
@@ -157,12 +156,13 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   <select id="theme-select" aria-label="Color theme"><option value="default">🎨 Default</option><option value="iceBlue">❄️ Ice Blue</option><option value="emberRed">🔥 Ember Red</option><option value="neonGreen">💚 Neon Green</option><option value="goldenSun">☀️ Golden Sun</option><option value="royalPurple">👑 Royal Purple</option><option value="festival">🎉 Festival</option><option value="random" disabled style="color:rgba(255,215,0,.6);font-style:italic">✨ Random</option></select>
   <button class="panel-btn copy-btn" id="copy-config-btn">📋 Copy Config to Page</button>
   <button class="panel-btn" id="fps-btn">📊 FPS</button>
-  <button class="panel-btn" id="sound-btn">🔇 Sound</button>
 </div>
-<footer>GrandFireworks 1.4.0 · <a href="https://github.com/travisjmac/grand-fireworks-js">GitHub</a> · <a href="examples/configuration-builder.html">Configuration Builder</a> · <a href="examples/lucky.html">I'm Feeling Lucky</a> · <a href="examples/themes.html">Color Themes</a></footer><script>document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.nextElementSibling.innerText);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200);});</script>
+<button id="sound-btn" class="sound-btn-home">🔇 Sound</button>
+<footer>GrandFireworks 1.4.0 · <a href="https://github.com/travisjmac/grand-fireworks-js">GitHub</a> · <a href="examples/lucky.html">I'm Feeling Lucky</a> · <a href="examples/themes.html">Color Themes</a></footer><script>document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.nextElementSibling.innerText);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200);});</script>
 <style>
   body::before{content:"";position:fixed;z-index:1;inset:0 max(12px,calc((100vw - 1160px)/2));pointer-events:none;opacity:0;background:linear-gradient(90deg,rgba(4,6,20,.20),rgba(4,6,20,.48) 18%,rgba(7,8,22,.60) 50%,rgba(4,6,20,.48) 82%,rgba(4,6,20,.20));border-inline:1px solid rgba(151,177,255,.13);box-shadow:0 0 70px rgba(0,0,0,.36);backdrop-filter:blur(2px);animation:page-content-backdrop 1.2s ease-out 5s forwards;transition:opacity .45s ease}
   .page-content{position:relative;z-index:2}
+  .sound-btn-home{position:fixed;z-index:2147483647;top:16px;left:16px;border:1px solid rgba(255,255,255,.1);background:rgba(8,10,25,.85);color:white;border-radius:8px;padding:6px 12px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;backdrop-filter:blur(10px);transition:all .15s}.sound-btn-home:hover{background:rgba(255,255,255,.14)}
   body.showing-fireworks::before{opacity:0;animation:none}
   @keyframes page-content-backdrop{to{opacity:1}}
 </style>
@@ -193,9 +193,9 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
         whistleDuration: 0.75,
         whistleGain: 0.045,
         whistleWave: 'sine',
-        boomDuration: 2,
-        boomGain: 38,
-        boomCutoff: 220,
+        boomDuration: 1.4,
+        boomGain: 0.7,
+        boomCutoff: 170,
         crackleGain: 0.045,
         cracklePitch: 1400,
         crackleCount: 12
@@ -222,14 +222,6 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   const copyConfigBtn = document.querySelector('#copy-config-btn');
   const fpsBtn = document.querySelector('#fps-btn');
   const soundBtn = document.querySelector('#sound-btn');
-  const logoToggle = document.querySelector('#logo-toggle');
-  const siteLogo = document.querySelector('#site-logo');
-  const logos = [
-    { src: 'assets/grand-fireworks-logo-v193ct.svg', name: 'traced' },
-    { src: 'assets/grand-fireworks-logo-original.png', name: 'traced' },
-    { src: 'assets/grand-fireworks-logo-handcrafted.svg', name: 'handcrafted' }
-  ];
-  let activeLogo = 0;
   let fpsVisible = false;
   let soundOn = false;
   const genConfigDisplay = document.querySelector('#gen-config-display');
@@ -237,22 +229,6 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   const genCopyBtn = document.querySelector('#gen-copy');
 
   let isFullscreen = false;
-
-  // Keep one logo visible at a time; clicking it swaps to the other design.
-  logos.forEach(({ src }) => {
-    const image = new Image();
-    image.src = src;
-  });
-  logoToggle.addEventListener('click', () => {
-    activeLogo = (activeLogo + 1) % logos.length;
-    const selectedLogo = logos[activeLogo];
-    const nextLogo = logos[(activeLogo + 1) % logos.length];
-    siteLogo.src = selectedLogo.src;
-    logoToggle.setAttribute(
-      'aria-label',
-      `Showing the ${selectedLogo.name} logo. Click to show the ${nextLogo.name} logo.`
-    );
-  });
 
   // Helper: update the displayed config code
   function updateDisplayedConfig() {
@@ -327,6 +303,7 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   randomBtn.addEventListener('click', () => {
     randomBtn.classList.add('spinning');
     setTimeout(() => {
+      fireworks.setColorTheme('default');
       fireworks.feelingLucky();
       fireworks.setOpacity(1);
       styleSelect.value = 'random';
