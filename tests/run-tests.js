@@ -190,6 +190,21 @@ test('reuses audio context and preserves zero volume', () => {
   assert.equal(audioStats.closes, 1);
 });
 
+test('keeps sound opt-in and unlocks it through the public control', () => {
+  const { GrandFireworks, audioStats } = createRuntime({ audio: true });
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  fireworks._playSound('launch');
+  assert.equal(audioStats.contexts, 0);
+  fireworks.enableSound();
+  assert.equal(fireworks.options.sound.enabled, true);
+  assert.equal(audioStats.contexts, 1);
+  assert.equal(audioStats.resumes, 1);
+  fireworks.setMuted(true);
+  fireworks._playSound('explode');
+  assert.equal(audioStats.sources, 0);
+  fireworks.destroy();
+});
+
 test('runs and cancels text sequences and supports staggered lines', async () => {
   const { GrandFireworks } = createRuntime();
   const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, textFirework: { maxCharactersPerLine: 3, maxLines: 2, synchronizeExplosions: false } });
