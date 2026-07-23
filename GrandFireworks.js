@@ -34,15 +34,15 @@
   const STYLES = {
     classic:{
       visuals:{ opacity:1, trails:false, trailFade:1, bloom:.65, rocketExhaust:false, explosionFlashes:false, starChance:0, groupedSalvos:false, secondaryCrackle:false },
-      show:{ intensity:.6, openingSalvo:4, launchInterval:1200, launchSpread:.45, angleRange:8, angleStrength:.4, enabledTypes:['grand_peony','starburst'], palettes:[['#FF0000','#FF4444','#FFFFFF'],['#00CC00','#44FF44','#FFFFFF'],['#0066FF','#4499FF','#FFFFFF'],['#FFD700','#FFEE88','#FFFFFF'],['#FF6600','#FF9944','#FFFFFF']] }
+      show:{ intensity:1, openingSalvo:4, launchInterval:1200, launchSpread:.45, angleRange:8, angleStrength:.4, enabledTypes:['grand_peony','starburst'], palettes:[['#FF0000','#FF4444','#FFFFFF'],['#00CC00','#44FF44','#FFFFFF'],['#0066FF','#4499FF','#FFFFFF'],['#FFD700','#FFEE88','#FFFFFF'],['#FF6600','#FF9944','#FFFFFF']] }
     },
     oldSchool:{
       visuals:{ opacity:.5, trails:true, trailFade:.35, bloom:.55, rocketExhaust:false, explosionFlashes:false, starChance:0, groupedSalvos:false, secondaryCrackle:false },
-      show:{ intensity:1.2, openingSalvo:3, launchInterval:650, launchSpread:.5, angleRange:20, angleStrength:1, enabledTypes:['grand_peony','starburst','imperial_chrysanthemum'], palettes:[['#FF0040','#FF8080','#FFFFFF'],['#00FF80','#80FFC0','#FFFFFF'],['#4080FF','#80B0FF','#FFFFFF'],['#FFD700','#FFE880','#FFFFFF'],['#FF00FF','#FF80FF','#FFFFFF'],['#00FFFF','#80FFFF','#FFFFFF']] }
+      show:{ intensity:1, openingSalvo:3, launchInterval:650, launchSpread:.5, angleRange:20, angleStrength:1, enabledTypes:['grand_peony','starburst','imperial_chrysanthemum'], palettes:[['#FF0040','#FF8080','#FFFFFF'],['#00FF80','#80FFC0','#FFFFFF'],['#4080FF','#80B0FF','#FFFFFF'],['#FFD700','#FFE880','#FFFFFF'],['#FF00FF','#FF80FF','#FFFFFF'],['#00FFFF','#80FFFF','#FFFFFF']] }
     },
     thin:{
       visuals:{ opacity:1, trails:true, trailFade:.18, bloom:.7, rocketExhaust:true, explosionFlashes:true, starChance:.02, groupedSalvos:false, secondaryCrackle:false },
-      show:{ intensity:.8, openingSalvo:4, launchInterval:1000, launchSpread:.5, angleRange:10, angleStrength:.5, enabledTypes:['grand_peony','starburst','imperial_chrysanthemum','diamond_ring'], palettes:'default' }
+      show:{ intensity:1, openingSalvo:4, launchInterval:1000, launchSpread:.5, angleRange:10, angleStrength:.5, enabledTypes:['grand_peony','starburst','imperial_chrysanthemum','diamond_ring'], palettes:'default' }
     },
     medium:{
       visuals:{ opacity:1, trails:true, trailFade:.115, bloom:1.25, rocketExhaust:true, explosionFlashes:true, starChance:.08, groupedSalvos:true, secondaryCrackle:true },
@@ -73,9 +73,9 @@
     transition:{ fadeIn:500, fadeOut:400, easing:'ease-out', clearOnHide:true },
     renderer:{ preferred:'auto', fallback:'canvas2d', preserveDrawingBuffer:'auto' },
     visuals:{ opacity:1, trails:true, trailFade:.115, bloom:1.25, rocketExhaust:true, explosionFlashes:true, starChance:.08, groupedSalvos:true, secondaryCrackle:true },
-    sound:{ enabled:false, volume:.3, ambience:0, stereo:true, whistleChance:.12, finaleRhythm:true, maxVoices:36, tuning:{ launchGain:.055, launchEnd:620, whistleStart:1300, whistleEnd:4200, whistleDuration:1.35, whistleGain:.045, whistleWave:'sine', boomDuration:1.08, boomGain:.42, boomCutoff:230, crackleGain:.045, cracklePitch:1350, crackleCount:5 } },
+    sound:{ enabled:false, volume:1, ambience:.005, stereo:true, whistleChance:.03, finaleRhythm:true, maxVoices:36, tuning:{ launchGain:.015, launchEnd:1180, whistleStart:4100, whistleEnd:3500, whistleDuration:.75, whistleGain:.045, whistleWave:'sine', boomDuration:1.4, boomGain:.7, boomCutoff:170, crackleGain:.045, cracklePitch:1400, crackleCount:12 } },
     performance:{ preset:'high', adaptive:true, pauseWhenHidden:true, pauseWhenOffscreen:true, respectReducedMotion:true },
-    show:{ intensity:1, openingSalvo:6, maxRockets:null, maxParticles:null, launchInterval:null, launchSpread:.55, angleRange:14, angleStrength:1, textRocketAngle:0, enabledTypes:'all', palettes:'default' },
+    show:{ intensity:.75, openingSalvo:6, maxRockets:6, maxParticles:null, launchInterval:null, launchSpread:.55, angleRange:14, angleStrength:1, textRocketAngle:0, enabledTypes:'all', palettes:'default' },
     finale:{ enabled:false, type:'super-grand-finale', triggers:['stop','duration'], trails:10, trailFlight:1100, burstScale:1, maxWaitBeforeLaunch:3000, particleScale:1, finishDelay:800, maxDuration:9000 },
     textFirework:{ enabled:true, renderMode:'hybrid', maxCharacters:72, maxCharactersPerLine:24, maxLines:3, overflow:'ellipsis', maxWidth:.82, verticalPosition:.42, lineHeight:1.15, fontFamily:'system-ui, sans-serif', fontWeight:800, fontSize:92, particleSpacing:4, particleSize:2.5, colors:['#FFFFFF','#FFD700','#FF69B4'], revealDuration:250, holdDuration:1400, dissolveDuration:900, dissolveStyle:'sparkle', fallDuration:3200, gravity:.025, textGlow:1, shimmer:true, synchronizeExplosions:true, exclusive:true }
   };

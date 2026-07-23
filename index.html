@@ -158,32 +158,11 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   <button class="panel-btn copy-btn" id="copy-config-btn">📋 Copy Config to Page</button>
   <button class="panel-btn" id="fps-btn">📊 FPS</button>
   <button class="panel-btn" id="sound-btn">🔇 Sound</button>
-  <details class="sound-lab" id="sound-lab">
-    <summary>🎛️ Sound Lab</summary>
-    <label>Master <input id="sound-volume" type="range" min="0" max="1" step="0.01" value="0.3"></label>
-    <label>Event ambience <input id="sound-ambience" type="range" min="0" max="0.12" step="0.005" value="0"></label>
-    <label>Launch hiss <input id="launch-gain" type="range" min="0.005" max="0.2" step="0.005" value="0.055"></label>
-    <label>Launch rise <input id="launch-end" type="range" min="120" max="1800" step="20" value="620"></label>
-    <label>Whistle chance <input id="whistle-chance" type="range" min="0" max="0.5" step="0.01" value="0.12"></label>
-    <label>Whistle start <input id="whistle-start" type="range" min="400" max="5000" step="50" value="1300"></label>
-    <label>Whistle end <input id="whistle-end" type="range" min="800" max="8000" step="50" value="4200"></label>
-    <label>Whistle length <input id="whistle-duration" type="range" min="0.3" max="3" step="0.05" value="1.35"></label>
-    <label>Whistle voice <select id="whistle-wave"><option value="sine" selected>Pure</option><option value="triangle">Soft</option><option value="sawtooth">Raspy</option><option value="square">Harsh</option></select></label>
-    <label>Boom length <input id="boom-duration" type="range" min="0.25" max="3" step="0.05" value="1.08"></label>
-    <label>Boom strength <input id="boom-gain" type="range" min="0.05" max="0.8" step="0.01" value="0.42"></label>
-    <label>Boom brightness <input id="boom-cutoff" type="range" min="60" max="700" step="10" value="230"></label>
-    <label>Crackle brightness <input id="crackle-pitch" type="range" min="400" max="5000" step="50" value="1350"></label>
-    <label>Crackle count <input id="crackle-count" type="range" min="1" max="12" step="1" value="5"></label>
-    <div class="sound-tests"><button class="panel-btn" data-sound="launch">Test launch</button><button class="panel-btn" data-sound="whistle">Test whistle</button><button class="panel-btn" data-sound="explode">Test boom</button><button class="panel-btn" data-sound="crackle">Test crackle</button></div>
-    <button class="panel-btn copy-btn" id="copy-sound-settings">📋 Copy Sound Settings</button>
-    <pre class="sound-output" id="sound-output" aria-live="polite"></pre>
-  </details>
 </div>
 <footer>GrandFireworks 1.4.0 · <a href="https://github.com/travisjmac/grand-fireworks-js">GitHub</a> · <a href="examples/configuration-builder.html">Configuration Builder</a> · <a href="examples/lucky.html">I'm Feeling Lucky</a> · <a href="examples/themes.html">Color Themes</a></footer><script>document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.nextElementSibling.innerText);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200);});</script>
 <style>
   body::before{content:"";position:fixed;z-index:1;inset:0 max(12px,calc((100vw - 1160px)/2));pointer-events:none;opacity:0;background:linear-gradient(90deg,rgba(4,6,20,.20),rgba(4,6,20,.48) 18%,rgba(7,8,22,.60) 50%,rgba(4,6,20,.48) 82%,rgba(4,6,20,.20));border-inline:1px solid rgba(151,177,255,.13);box-shadow:0 0 70px rgba(0,0,0,.36);backdrop-filter:blur(2px);animation:page-content-backdrop 1.2s ease-out 5s forwards;transition:opacity .45s ease}
   .page-content{position:relative;z-index:2}
-  .sound-lab{border-top:1px solid rgba(255,255,255,.1);padding-top:8px;color:rgba(255,255,255,.75);font:500 12px/1.35 system-ui,sans-serif}.sound-lab summary{cursor:pointer;color:#ffdc68;list-style:none}.sound-lab summary::-webkit-details-marker{display:none}.sound-lab label{display:grid;grid-template-columns:1fr 94px;align-items:center;gap:8px;margin-top:7px}.sound-lab input,.sound-lab select{width:100%;accent-color:#ffdc68}.sound-lab select{background:#0b0e22;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:3px}.sound-tests{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px}.sound-tests .panel-btn{font-size:11px;padding:6px}.sound-output{display:none;max-height:150px;overflow:auto;margin:8px 0 0;padding:8px;background:rgba(0,0,0,.3);border-radius:6px;color:#cfe6ff;font-size:10px;white-space:pre-wrap}
   body.showing-fireworks::before{opacity:0;animation:none}
   @keyframes page-content-backdrop{to{opacity:1}}
 </style>
@@ -198,9 +177,33 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     visuals: {
       opacity: 1
     },
+    sound: {
+      enabled: false,
+      volume: 1,
+      ambience: 0.005,
+      stereo: true,
+      whistleChance: 0.03,
+      finaleRhythm: true,
+      maxVoices: 36,
+      tuning: {
+        launchGain: 0.015,
+        launchEnd: 1180,
+        whistleStart: 4100,
+        whistleEnd: 3500,
+        whistleDuration: 0.75,
+        whistleGain: 0.045,
+        whistleWave: 'sine',
+        boomDuration: 2,
+        boomGain: 38,
+        boomCutoff: 220,
+        crackleGain: 0.045,
+        cracklePitch: 1400,
+        crackleCount: 12
+      }
+    },
     show: {
-      intensity: 0.6,
-      maxRockets: 4,
+      intensity: 0.75,
+      maxRockets: 6,
       palettes: [
         ['#FF0055', '#FFCC00'],
         ['#00F2FE', '#4FACFE'],
@@ -232,9 +235,6 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   const genConfigDisplay = document.querySelector('#gen-config-display');
   const genConfigBlock = document.querySelector('#generated-config');
   const genCopyBtn = document.querySelector('#gen-copy');
-  const soundLabInputs = Array.from(document.querySelectorAll('#sound-lab input, #sound-lab select'));
-  const copySoundSettingsBtn = document.querySelector('#copy-sound-settings');
-  const soundOutput = document.querySelector('#sound-output');
 
   let isFullscreen = false;
 
@@ -379,45 +379,6 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     soundBtn.textContent = soundOn ? '🔊 Sound' : '🔇 Sound';
     soundBtn.style.background = soundOn ? 'rgba(100,200,255,.15)' : '';
     soundBtn.style.borderColor = soundOn ? 'rgba(100,200,255,.3)' : '';
-  });
-
-  function applySoundLab() {
-    const value = id => Number(document.querySelector(id).value);
-    fireworks.setOptions({ sound: {
-      volume: value('#sound-volume'),
-      ambience: value('#sound-ambience'),
-      whistleChance: value('#whistle-chance'),
-      tuning: {
-        launchGain: value('#launch-gain'),
-        launchEnd: value('#launch-end'),
-        whistleStart: value('#whistle-start'),
-        whistleEnd: value('#whistle-end'),
-        whistleDuration: value('#whistle-duration'),
-        whistleWave: document.querySelector('#whistle-wave').value,
-        boomDuration: value('#boom-duration'),
-        boomGain: value('#boom-gain'),
-        boomCutoff: value('#boom-cutoff'),
-        cracklePitch: value('#crackle-pitch'),
-        crackleCount: value('#crackle-count')
-      }
-    }});
-    if (soundOn) fireworks._audio(false);
-  }
-  soundLabInputs.forEach(input => { input.addEventListener('input', applySoundLab); input.addEventListener('change', applySoundLab); });
-  document.querySelectorAll('[data-sound]').forEach(button => button.addEventListener('click', () => {
-    if (!soundOn) { soundOn = true; fireworks.enableSound(); soundBtn.textContent = '🔊 Sound'; }
-    applySoundLab();
-    fireworks._playSound(button.dataset.sound, 0.5, 1);
-  }));
-  copySoundSettingsBtn.addEventListener('click', async () => {
-    applySoundLab();
-    const settings = fireworks.getOptions().sound;
-    const text = JSON.stringify({ sound: settings }, null, 2);
-    soundOutput.textContent = text;
-    soundOutput.style.display = 'block';
-    try { await navigator.clipboard.writeText(text); copySoundSettingsBtn.textContent = '✓ Copied — paste it here'; }
-    catch { copySoundSettingsBtn.textContent = 'Settings shown below'; }
-    setTimeout(() => { copySoundSettingsBtn.textContent = '📋 Copy Sound Settings'; }, 1800);
   });
 
   // Copy Config: slide content back, scroll to CDN + config, copy

@@ -178,7 +178,7 @@ test('honors explicit performance and live visual options', () => {
 
 test('reuses audio context and preserves zero volume', () => {
   const { GrandFireworks, audioStats } = createRuntime({ audio: true });
-  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { enabled: true, volume: .4 } });
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { enabled: true, volume: .4, ambience: 0 } });
   fireworks._playSound('launch');
   fireworks._playSound('explode');
   assert.equal(audioStats.contexts, 1);
@@ -192,7 +192,7 @@ test('reuses audio context and preserves zero volume', () => {
 
 test('keeps sound opt-in and unlocks it through the public control', () => {
   const { GrandFireworks, audioStats } = createRuntime({ audio: true });
-  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { ambience: 0 } });
   fireworks._playSound('launch');
   assert.equal(audioStats.contexts, 0);
   fireworks.enableSound();
