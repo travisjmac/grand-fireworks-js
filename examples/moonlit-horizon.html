@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A moonlit horizon demo for Grand Fireworks JS.">
+  <title>Moonlit Horizon — Grand Fireworks</title>
+  <style>
+    :root { color-scheme: dark; --view-scale: 1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100svh; overflow: hidden; background: #020617; color: #f8f4e8; font: 500 16px/1.45 system-ui, sans-serif; }
+    .scene, .scene::before, .scene::after { position: fixed; inset: 0; overflow: hidden; }
+    .scene { isolation: isolate; background: radial-gradient(ellipse 58% 30% at 50% 80%, rgba(198, 132, 82, .10), transparent 30%), linear-gradient(#03091a 0%, #000000 58%, #1f0d17 100%); transform: scale(var(--view-scale)); transform-origin: 50% 84%; transition: transform .55s cubic-bezier(.2,.72,.16,1); }
+    .fireworks-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+    .scene::before { content: ""; z-index: 0; opacity: .85; background-image: radial-gradient(1.2px 1.2px at 9% 14%, #fff 96%, transparent), radial-gradient(1px 1px at 20% 31%, #d8e8ff 96%, transparent), radial-gradient(1px 1px at 31% 11%, #fff 96%, transparent), radial-gradient(1.4px 1.4px at 47% 28%, #fff6ce 96%, transparent), radial-gradient(1px 1px at 61% 12%, #fff 96%, transparent), radial-gradient(1.4px 1.4px at 77% 24%, #d7e7ff 96%, transparent), radial-gradient(1px 1px at 91% 9%, #fff 96%, transparent), radial-gradient(1px 1px at 83% 48%, #fff 96%, transparent); background-size: 310px 220px, 370px 270px, 430px 290px, 520px 330px, 460px 250px, 380px 250px, 600px 380px, 330px 210px; animation: starglide 36s linear infinite alternate; transition: transform 10s cubic-bezier(.2,.72,.16,1); }
+    .scene::after { content: ""; z-index: 1; top: 45%; background: linear-gradient(180deg, transparent, rgba(244,161,100,.11) 35%, transparent 65%); filter: blur(18px); }
+    .scene::before, .scene::after, .fireworks-layer { will-change: transform, opacity; }
+    .moon-frame { position: absolute; z-index: 2; top: 12vh; right: 17vw; width: min(30vw, 370px); min-width: 185px; transition: transform 10s cubic-bezier(.2,.72,.16,1), opacity 5s ease; }
+    .moon { display: block; width: 100%; transform-origin: 132% 118%; filter: drop-shadow(0 0 18px rgba(255,224,150,.32)) drop-shadow(0 0 58px rgba(255,189,110,.18)); animation: moon-orbit 30s linear 1 forwards; user-select: none; }
+    .horizon { position: absolute; z-index: 2; inset: 56% -12vw -12vh; transform: translateY(52vh); transform-origin: center top; transition: transform 10s cubic-bezier(.2,.72,.16,1); }
+    .layer { position: absolute; left: -8%; right: -8%; bottom: 0; width: 116%; }
+    .far { height: 24%; bottom: 30%; opacity: .62; background: #14233c; clip-path: polygon(0 75%, 8% 57%, 17% 70%, 27% 35%, 39% 64%, 51% 43%, 64% 72%, 78% 38%, 90% 64%, 100% 43%, 100% 100%, 0 100%); filter: blur(1px); transition: transform 9.4s cubic-bezier(.2,.72,.16,1); }
+    .mid { height: 37%; bottom: 16%; background: #0b1729; clip-path: polygon(0 62%, 12% 42%, 21% 58%, 33% 23%, 43% 61%, 55% 32%, 67% 55%, 78% 20%, 89% 55%, 100% 34%, 100% 100%, 0 100%); transition: transform 8.7s cubic-bezier(.2,.72,.16,1); }
+    .near { height: 38%; background: #050b15; clip-path: polygon(0 52%, 10% 33%, 18% 55%, 29% 29%, 38% 61%, 49% 42%, 59% 58%, 71% 23%, 83% 52%, 93% 32%, 100% 48%, 100% 100%, 0 100%); transition: transform 8s cubic-bezier(.2,.72,.16,1); }
+    .ground-glow { position: absolute; z-index: 3; left: 13%; right: 13%; bottom: 8%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse, rgba(239,128,77,.22), rgba(246,178,104,.05) 35%, transparent 72%); filter: blur(18px); opacity: 0; transform: translateY(28vh); transition: transform 9s cubic-bezier(.2,.72,.16,1), opacity 4s ease 2.5s; }
+    .placard { position: absolute; z-index: 4; left: clamp(18px, 6vw, 90px); bottom: -70vh; width: min(39vw, 510px); min-width: 260px; aspect-ratio: 2 / 3; opacity: 1; transform: translate3d(0, 0, 0) rotate(-1.5deg); transition: transform 1.9s cubic-bezier(.2,.72,.16,1), bottom 7.4s cubic-bezier(.2,.72,.16,1), filter .95s ease 2.1s; filter: brightness(.34) saturate(.7) drop-shadow(0 18px 17px rgba(0,0,0,.48)); transform-origin: 38% 28%; }
+    .placard img { width: 100%; height: 100%; object-fit: contain; }
+    .placard-copy { position: absolute; inset: 6% 10% 14%; display: grid; align-content: start; justify-items: center; padding: 11% 7% 8%; color: #291309; text-align: center; text-shadow: 0 1px rgba(255,229,178,.32); }
+    .placard-copy p { margin: 0 0 8px; font-size: clamp(.58rem, 1vw, .8rem); font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
+    .placard-copy h1 { margin: 0 0 14px; font: 700 clamp(1.45rem, 3.7vw, 3.45rem)/.92 Georgia, serif; letter-spacing: -.045em; }
+    .placard-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; margin-top: auto; }
+    .placard-actions button { border-color: rgba(82,44,18,.38); background: rgba(255,247,230,.62); color: #321507; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+    .placard-actions button:hover, .placard-actions button:focus-visible { background: rgba(255,239,202,.9); }
+    .credit { position: fixed; z-index: 5; right: 20px; bottom: 17px; margin: 0; color: rgba(255,255,255,.5); font-size: .72rem; }
+    .demo-controls { position: fixed; z-index: 6; right: 18px; bottom: 56px; display: grid; gap: 10px; width: min(240px, calc(100vw - 36px)); padding: 14px; border: 1px solid rgba(255,226,174,.22); border-radius: 20px; background: linear-gradient(180deg, rgba(8,14,26,.72), rgba(4,8,15,.86)); box-shadow: 0 20px 60px rgba(0,0,0,.34); backdrop-filter: blur(10px); }
+    .demo-controls strong { color: #ffd59b; font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; }
+    .demo-controls button, .demo-controls a { width: 100%; background: rgba(255,255,255,.06); border-color: rgba(255,226,174,.24); }
+    .demo-controls a { display: block; border: 1px solid; border-radius: 999px; padding: 14px 16px; color: #fff8e9; text-align: center; text-decoration: none; font-weight: 750; transition: transform .18s ease, background .18s ease; }
+    .demo-controls a:hover, .demo-controls a:focus-visible { transform: translateY(-2px); background: rgba(255,203,128,.18); outline: none; }
+    .view-distance { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: center; color: rgba(255,238,204,.82); font-size: .74rem; font-weight: 750; letter-spacing: .05em; }
+    .view-distance input { grid-column: 1 / -1; width: 100%; accent-color: #ffd59b; }
+    .demo-controls[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
+    .reaper-flash { position: fixed; inset: 0; z-index: 18; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.96), rgba(255,255,255,.55) 12%, rgba(18,8,12,.16) 34%, rgba(0,0,0,0) 72%); mix-blend-mode: screen; transition: opacity 180ms ease; }
+    .scene.reaper-strike + .reaper-flash { opacity: 1; }
+    button { appearance: none; border: 1px solid rgba(255,225,176,.34); border-radius: 999px; padding: 14px 16px; background: rgba(255,255,255,.06); color: #fff8e9; cursor: pointer; font: inherit; font-weight: 750; transition: transform .18s ease, background .18s ease; }
+    button:hover, button:focus-visible { transform: translateY(-2px); background: rgba(255,203,128,.18); outline: none; }
+    @keyframes starglide { to { transform: translate3d(-1.5%, 1.2%, 0); } }
+    @keyframes moon-orbit { from { transform: rotate(0deg) translateY(0); } to { transform: rotate(40deg) translateY(-50px); } }
+    .scene.is-descending::before { transform: translateY(-10vh); }
+    .scene.is-descending .moon-frame { transform: translate3d(-3vw, -27vh, 0); opacity: .68; }
+    .scene.is-descending .horizon { transform: translateY(-3vh) scale(1.055); }
+    .scene.is-descending .far { transform: translateY(-2vh) scale(1.015); }
+    .scene.is-descending .mid { transform: translateY(-5vh) scale(1.04); }
+    .scene.is-descending .near { transform: translateY(-9vh) scale(1.085); }
+    .scene.is-descending .ground-glow { opacity: 1; transform: translateY(0); }
+    .scene.is-descending .placard { bottom: clamp(-25vh, -20vw, -13vh); filter: brightness(1) saturate(1) drop-shadow(0 18px 17px rgba(0,0,0,.48)); }
+    .scene.is-exiting .placard { bottom: -108vh; transform: translate3d(-18vw, 38vh, 0) rotate(-9deg); transition-duration: 1.7s, 1.7s, .45s; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; } }
+    @media (max-width: 600px) { .moon-frame { right: 8vw; top: 13vh; width: 48vw; } .placard { left: 50%; width: 88vw; min-width: 0; transform: translate3d(-50%, 0, 0) rotate(-1.5deg); } .scene.is-descending .placard { bottom: -15vh; } .scene.is-exiting .placard { transform: translate3d(-58%, 38vh, 0) rotate(-9deg); } .credit { left: 24px; right: auto; } }
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="Moonlit fireworks horizon">
+    <div class="fireworks-layer" aria-hidden="true"></div>
+    <div class="moon-frame"><img class="moon" src="../assets/moonlit-demo/moon.png" alt="Full moon"></div>
+    <div class="horizon" aria-hidden="true"><div class="layer far"></div><div class="layer mid"></div><div class="layer near"></div></div>
+    <div class="ground-glow" aria-hidden="true"></div>
+    <section class="placard" aria-label="Sound prompt">
+      <img src="../assets/moonlit-demo/horizon-placard.png" alt="Weathered wooden signpost">
+      <div class="placard-copy">
+        <p>Set the atmosphere</p>
+        <h1>Would you like sound?</h1>
+        <div class="placard-actions">
+          <button id="sound-on" type="button">With sound</button>
+          <button id="sound-off" type="button">Without sound</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="reaper-flash" aria-hidden="true"></div>
+  <p class="credit">Grand Fireworks JS v1.5.0</p>
+  <div class="demo-controls" id="demo-controls" hidden aria-label="Demo controls">
+    <strong>Demo controls</strong>
+    <label class="view-distance" for="view-distance">View distance <output id="view-distance-value">100%</output><input id="view-distance" type="range" min="0.55" max="1" value="1" step="0.01"></label>
+    <button id="rainbow-theme" type="button">Full rainbow</button>
+    <button id="text-burst" type="button">Launch text</button>
+    <button id="more-fireworks" type="button">More fireworks</button>
+    <button id="world-ender" type="button">World ender</button>
+    <button id="sound-toggle" type="button">Sound: off</button>
+    <button id="reset-demo" type="button">Reset demo</button>
+    <a href="../index.html">Visit project home</a>
+  </div>
+  <script src="../GrandFireworks.js"></script>
+  <script>
+    const fireworks = new GrandFireworks({
+      container: '.fireworks-layer',
+      placement: 'background',
+      autoStart: false,
+      background: false,
+      colorTheme: 'festival',
+      performance: { preset: 'high', adaptive: true },
+      show: { intensity: .62, openingSalvo: 4, maxRockets: 5, launchInterval: 1120 },
+      sound: { enabled: false, volume: .72, ambience: .0005, stereo: true, whistleChance: .035, tuning: { whistleWobbleRate: 7, whistleWobbleDepth: .1 } }
+    });
+    const scene = document.querySelector('.scene');
+    const reaperFlash = document.querySelector('.reaper-flash');
+    const placard = document.querySelector('.placard');
+    const controls = document.querySelector('#demo-controls');
+    let controlsTimer = 0;
+    let soundOn = false;
+    const worldEnderTimers = new Set();
+    let activeWorldEnderListener = null;
+    function setViewDistance(scale) {
+      scene.style.setProperty('--view-scale', String(scale));
+    }
+    const worldEnderDefaults = {
+      carrierFlightMs: 2350,
+      carrierBurstHeight: 0.384,
+      firstSplitDelayMs: 1040,
+      firstSplitCount: 8,
+      firstSplitSpreadDegrees: 300,
+      firstSplitSpreadPx: 300,
+      firstSplitSpeed: [190, 310],
+      firstSplitTravel: [280, 460],
+      secondSplitDelayMs: 3000,
+      secondSplitCount: 8,
+      secondSplitSpreadPx: 560,
+      secondSplitSpeed: [130, 220],
+      secondSplitTravel: [460, 760],
+      promotionChance: 0.02,
+      recursionDurationMs: 20000,
+      giantBranchDelayMs: 120,
+      giantScale: 1.45,
+      maxChainDepth: 8,
+      maxParticles: Infinity,
+      maxRockets: Infinity,
+      soundBoost: 2.1,
+      reaperDelayMs: 60000,
+    };
+    const worldEnderTypes = [
+      'grand_peony',
+      'imperial_chrysanthemum',
+      'weeping_willow',
+      'royal_palm',
+      'diamond_ring',
+      'crossette_supreme',
+      'golden_brocade',
+      'dragon_fish',
+      'majestic_comet',
+      'cascading_horsetail',
+      'starburst',
+      'glitter_nova',
+      'crown_jewel',
+      'thunder_clap',
+      'galactic_spiral',
+    ];
+    function randomWorldEnderType() {
+      return worldEnderTypes[Math.floor(Math.random() * worldEnderTypes.length)];
+    }
+    function randomWarheadType() {
+      return Math.random() < 0.5 ? 'thunder_clap' : randomWorldEnderType();
+    }
+    function pickWorldEnderColors() {
+      const palettes = fireworks.options.show.palettes;
+      if (Array.isArray(palettes) && palettes.length) {
+        const chosen = palettes[Math.floor(Math.random() * palettes.length)];
+        if (Array.isArray(chosen) && chosen.length) return chosen.slice();
+      }
+      return ['#FF1744', '#FF9100', '#FFD700', '#00E676', '#00B0FF', '#AA00FF', '#FFFFFF'];
+    }
+    function randomBetween(min, max) {
+      return min + Math.random() * (max - min);
+    }
+    function playWorldEnderBoom(position, accent = 1) {
+      if (typeof fireworks._playSound !== 'function') return;
+      const x = fireworks.width ? Math.min(1, Math.max(0, position / fireworks.width)) : 0.5;
+      fireworks._playSound('explode', x, accent);
+    }
+    function clearWorldEnderTimers() {
+      for (const timerId of worldEnderTimers) {
+        window.clearTimeout(timerId);
+      }
+      worldEnderTimers.clear();
+    }
+    function scheduleWorldEnder(delay, callback) {
+      const timerId = window.setTimeout(() => {
+        worldEnderTimers.delete(timerId);
+        callback();
+      }, delay);
+      worldEnderTimers.add(timerId);
+      return timerId;
+    }
+    function spawnWorldEnderShells(origin, count, options = {}) {
+      const shells = [];
+      const colors = options.colors || pickWorldEnderColors();
+      const startAngle = options.startAngle ?? -Math.PI / 2;
+      const spread = options.spread ?? Math.PI * 2;
+      const speedMin = options.speedMin ?? 220;
+      const speedMax = options.speedMax ?? 360;
+      const flightMin = options.flightMin ?? 2500;
+      const flightMax = options.flightMax ?? 3200;
+      const burstType = options.type || 'grand-finale-burst';
+      const scale = options.scale ?? 1;
+      const audioGain = options.audioGain ?? 1;
+      const now = performance.now();
+      for (let i = 0; i < count; i++) {
+        const angle = startAngle + (spread * i) / count + (Math.random() - 0.5) * (options.jitter ?? 0.26);
+        const speed = randomBetween(speedMin, speedMax) * scale;
+        const shell = {
+          x: origin.x,
+          y: origin.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          type: typeof burstType === 'function' ? burstType(i) : burstType,
+          colors,
+          finale: true,
+          // This is the engine's Grand Finale trail model: fly in every
+          // direction, then burst on a timer rather than at one shared Y value.
+          satellite: true,
+          detonateAt: now + randomBetween(flightMin, flightMax),
+          sparkClock: 0,
+          audioGain,
+          soundType: 'launch',
+          angle,
+          chainDepth: options.chainDepth ?? 0,
+          giantBranch: !!options.giantBranch,
+          worldEnderBranch: !!options.worldEnderBranch,
+          worldEnderDepth: options.worldEnderDepth ?? 0,
+        };
+        fireworks.rockets.push(shell);
+        shells.push(shell);
+      }
+      return shells;
+    }
+    function launchDemoText() {
+      fireworks.launchText('Grand Fireworks', {
+        renderMode: 'hybrid',
+        exclusive: false,
+        synchronizeExplosions: false,
+        fontFamily: 'Georgia, serif',
+        fontWeight: 800,
+        fontSize: 86,
+        particleSpacing: 3,
+        particleSize: 2.75,
+        colors: ['#FF1744', '#FF9100', '#FFD700', '#00E676', '#00B0FF', '#AA00FF', '#FFFFFF'],
+        holdDuration: 1700,
+        dissolveDuration: 1200,
+        gravity: .02,
+      });
+      window.setTimeout(() => {
+        fireworks.launchText('presents Moonlit Horizons', {
+          renderMode: 'hybrid',
+          exclusive: false,
+          synchronizeExplosions: false,
+          fontFamily: 'Georgia, serif',
+          fontWeight: 700,
+          fontSize: 78,
+          particleSpacing: 3,
+          particleSize: 2.75,
+          colors: ['#FF1744', '#FF9100', '#FFD700', '#00E676', '#00B0FF', '#AA00FF', '#FFFFFF'],
+          holdDuration: 1900,
+          dissolveDuration: 1200,
+          gravity: .02,
+        });
+      }, 4100);
+    }
+    function launchWorldEnder(overrides = {}) {
+      const cfg = {
+        ...worldEnderDefaults,
+        ...overrides,
+      };
+      clearWorldEnderTimers();
+      if (activeWorldEnderListener) {
+        fireworks.removeEventListener('finalestage', activeWorldEnderListener);
+        activeWorldEnderListener = null;
+      }
+      const previous = {
+        accepting: fireworks.accepting,
+        finale: { ...fireworks.options.finale },
+        show: {
+          maxParticles: fireworks.options.show.maxParticles,
+          maxRockets: fireworks.options.show.maxRockets,
+          enabledTypes: fireworks.options.show.enabledTypes,
+        },
+        sound: {
+          volume: fireworks.options.sound.volume,
+          tuning: {
+            launchGain: (fireworks.options.sound.tuning || {}).launchGain,
+          },
+        },
+      };
+      fireworks.setOptions({
+        show: { maxParticles: cfg.maxParticles, maxRockets: cfg.maxRockets, enabledTypes: 'all' },
+        // The carrier and its first eight shells now use the engine's actual
+        // Grand Finale path, rather than a separate approximation.
+        finale: {
+          trails: cfg.firstSplitCount,
+          trailFlight: cfg.secondSplitDelayMs,
+          trailSpread: cfg.firstSplitSpreadDegrees,
+          burstScale: 1.25,
+          particleScale: 1.2,
+        },
+        sound: {
+          volume: 1,
+          tuning: { launchGain: (previous.sound.tuning.launchGain || 0.055) * cfg.soundBoost },
+        },
+      });
+      fireworks.accepting = false;
+      fireworks.pendingRockets.length = 0;
+      fireworks.rockets.length = 0;
+      let primaryBurstCount = 0;
+      const onFinaleStage = (event) => {
+        const detail = event.detail || {};
+        if (detail.stage !== 'secondary-burst') return;
+        const source = detail.source;
+        const isInitialTrail = !source?.worldEnderBranch;
+        if (isInitialTrail) {
+          if (primaryBurstCount >= cfg.firstSplitCount) return;
+          primaryBurstCount += 1;
+        }
+        const depth = source?.worldEnderDepth || 0;
+        spawnWorldEnderShells({ x: detail.x, y: detail.y }, cfg.secondSplitCount, {
+          type: () => {
+            const canRecurse = depth < cfg.maxChainDepth;
+            return canRecurse && Math.random() < cfg.promotionChance
+              ? 'grand-finale-burst'
+              : randomWarheadType();
+          },
+          startAngle: -Math.PI / 2,
+          spread: (cfg.firstSplitSpreadDegrees / 360) * Math.PI * 2,
+          speedMin: cfg.secondSplitSpeed[0],
+          speedMax: cfg.secondSplitSpeed[1],
+          flightMin: cfg.secondSplitDelayMs,
+          flightMax: cfg.secondSplitDelayMs + 700,
+          audioGain: Math.random() < 0.5 ? 1.25 : 1.05,
+          jitter: 0.08,
+          worldEnderBranch: true,
+          worldEnderDepth: depth + 1,
+        });
+      };
+      fireworks.addEventListener('finalestage', onFinaleStage);
+      activeWorldEnderListener = onFinaleStage;
+      scheduleWorldEnder(cfg.recursionDurationMs, () => {
+        // Stop creating further generations, but leave every in-flight rocket
+        // alone so it can reach its own scheduled burst naturally.
+        fireworks.removeEventListener('finalestage', onFinaleStage);
+        if (activeWorldEnderListener === onFinaleStage) activeWorldEnderListener = null;
+      });
+      fireworks.launch({
+        type: 'grand-finale-carrier',
+        x: 0.5,
+        burstHeight: cfg.carrierBurstHeight,
+        syncAt: performance.now() + cfg.carrierFlightMs,
+        audioGain: 1,
+        finale: true,
+        angle: 0,
+      });
+      scheduleWorldEnder(cfg.reaperDelayMs, () => {
+        clearWorldEnderTimers();
+        fireworks.removeEventListener('finalestage', onFinaleStage);
+        if (activeWorldEnderListener === onFinaleStage) activeWorldEnderListener = null;
+        fireworks.setOptions(previous);
+        fireworks.accepting = previous.accepting;
+        fireworks.pendingRockets.length = 0;
+        fireworks.rockets.length = 0;
+        scene.classList.add('reaper-strike');
+        reaperFlash.style.opacity = '1';
+        fireworks.launchText('GRIM REAPER', {
+          renderMode: 'hybrid',
+          exclusive: false,
+          synchronizeExplosions: false,
+          fontFamily: 'Georgia, serif',
+          fontWeight: 900,
+          fontSize: 92,
+          particleSpacing: 3,
+          particleSize: 3,
+          colors: ['#FFFFFF', '#E6E6E6', '#FFD700', '#111111'],
+          holdDuration: 1200,
+          dissolveDuration: 1100,
+          gravity: .018,
+        });
+        window.setTimeout(() => {
+          reaperFlash.style.opacity = '0';
+          scene.classList.remove('reaper-strike');
+        }, 260);
+      });
+    }
+    function revealControls() {
+      window.clearTimeout(controlsTimer);
+      controlsTimer = window.setTimeout(() => { controls.hidden = false; }, 8000);
+    }
+    function begin(withSound) {
+      soundOn = withSound;
+      if (soundOn) fireworks.enableSound();
+      document.querySelector('#sound-toggle').textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
+      scene.classList.add('is-exiting');
+      placard.setAttribute('aria-hidden', 'true');
+      window.setTimeout(() => {
+        fireworks.start();
+        revealControls();
+        window.setTimeout(launchDemoText, 1200);
+      }, 900);
+    }
+    scene.classList.add('is-descending');
+    setViewDistance(1);
+    document.querySelector('#view-distance').addEventListener('input', (event) => {
+      const scale = Number(event.currentTarget.value);
+      setViewDistance(scale);
+      document.querySelector('#view-distance-value').value = `${Math.round(scale * 100)}%`;
+    });
+    document.querySelector('#rainbow-theme').addEventListener('click', () => fireworks.setColorTheme('festival'));
+    document.querySelector('#text-burst').addEventListener('click', () => launchDemoText());
+    document.querySelector('#more-fireworks').addEventListener('click', () => fireworks.launchFinale({ stopAfter: false }));
+    document.querySelector('#world-ender').addEventListener('click', () => launchWorldEnder());
+    document.querySelector('#sound-toggle').addEventListener('click', (event) => {
+      soundOn = !soundOn;
+      if (soundOn) fireworks.enableSound();
+      else fireworks.disableSound();
+      event.currentTarget.textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
+    });
+    document.querySelector('#reset-demo').addEventListener('click', () => window.location.reload());
+    document.querySelector('#sound-on').addEventListener('click', () => begin(true));
+    document.querySelector('#sound-off').addEventListener('click', () => begin(false));
+  </script>
+</body>
+</html>

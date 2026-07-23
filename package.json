@@ -1,11 +1,11 @@
 {
   "name": "grand-fireworks-js",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Photorealistic WebGL 2 fireworks engine with 15 shell types, multi-line text effects, adaptive performance, Canvas fallback, and a choreographed Super Grand Finale. Zero dependencies.",
   "main": "./GrandFireworks.js",
-  "browser": "./dist/GrandFireworks-v1.5.0.min.js",
-  "unpkg": "./dist/GrandFireworks-v1.5.0.min.js",
-  "jsdelivr": "./dist/GrandFireworks-v1.5.0.min.js",
+  "browser": "./dist/GrandFireworks-v1.6.0.min.js",
+  "unpkg": "./dist/GrandFireworks-v1.6.0.min.js",
+  "jsdelivr": "./dist/GrandFireworks-v1.6.0.min.js",
   "exports": {
     ".": {
       "require": "./GrandFireworks.js",

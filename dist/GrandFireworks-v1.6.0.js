@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.5.0
+ * Version: 1.6.0
  *
  * @author Travis MacDonald
- * @version 1.5.0
+ * @version 1.6.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -405,6 +405,7 @@
       triggers: ["stop", "duration"],
       trails: 10,
       trailFlight: 1100,
+      trailSpread: 360,
       burstScale: 1,
       maxWaitBeforeLaunch: 3000,
       particleScale: 1,
@@ -816,16 +817,14 @@
         o.renderer.preserveDrawingBuffer === "auto"
           ? o.mode === "contained" || Boolean(o.visuals.trails)
           : Boolean(o.renderer.preserveDrawingBuffer);
-      o.show.maxParticles = clamp(
-        Number(o.show.maxParticles || p.maxParticles),
-        100,
-        10000,
-      );
-      o.show.maxRockets = clamp(
-        Number(o.show.maxRockets || p.maxRockets),
-        1,
-        25,
-      );
+      o.show.maxParticles =
+        o.show.maxParticles === Infinity
+          ? Infinity
+          : clamp(Number(o.show.maxParticles || p.maxParticles), 100, 10000);
+      o.show.maxRockets =
+        o.show.maxRockets === Infinity
+          ? Infinity
+          : clamp(Number(o.show.maxRockets || p.maxRockets), 1, 25);
       o.show.launchInterval = Number(o.show.launchInterval || p.launchInterval);
       o.show.launchSpread = clamp(Number(o.show.launchSpread), 0, 1);
       o.show.angleRange = clamp(Number(o.show.angleRange), 0, 45);
@@ -854,6 +853,7 @@
         500,
         Number(o.finale.trailFlight) || 1100,
       );
+      o.finale.trailSpread = clamp(Number(o.finale.trailSpread) || 360, 30, 360);
       o.finale.burstScale = clamp(Number(o.finale.burstScale) || 1, 0.4, 2);
       o.finale.maxWaitBeforeLaunch = Math.max(
         0,
@@ -2459,7 +2459,9 @@
         flight = Math.max(500, Number(cfg.trailFlight) || 1100);
       for (let i = 0; i < count; i++) {
         const a =
-            -Math.PI / 2 + (i / count) * TAU + (Math.random() - 0.5) * 0.08,
+            -Math.PI / 2 +
+            (i / count) * ((cfg.trailSpread / 360) * TAU) +
+            (Math.random() - 0.5) * 0.08,
           s = 155 + Math.random() * 95,
           colors = PALETTES[i % PALETTES.length];
         this.rockets.push({
@@ -2510,7 +2512,7 @@
       });
       this.dispatchEvent(
         new CustomEvent("finalestage", {
-          detail: { stage: "secondary-burst", x: r.x, y: r.y },
+          detail: { stage: "secondary-burst", x: r.x, y: r.y, source: r },
         }),
       );
     }
@@ -3147,7 +3149,7 @@
     }
   }
 
-  GrandFireworks.VERSION = "1.5.0";
+  GrandFireworks.VERSION = "1.6.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

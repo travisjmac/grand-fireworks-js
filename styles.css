@@ -27,7 +27,7 @@ footer {
   margin: auto;
 }
 header {
-  padding: 72px 0 36px;
+  padding: 15px 0 36px;
 }
 h1 {
   font-size: clamp(2.5rem, 7vw, 5.2rem);
@@ -50,6 +50,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
+  grid-auto-flow: dense;
 }
 .card,
 .code,
@@ -60,9 +61,12 @@ h3 {
   padding: 20px;
 }
 .card {
+  position: relative;
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
   transition: 0.2s;
+  min-height: 128px;
 }
 .card:hover {
   transform: translateY(-3px);
@@ -75,6 +79,108 @@ h3 {
 }
 .card span {
   color: var(--muted);
+}
+.card.featured {
+  grid-column: span 2;
+  min-height: 176px;
+  padding: 22px;
+}
+.card.secondary-card {
+  min-height: 112px;
+  padding: 16px 18px;
+}
+.card.secondary-card strong {
+  font-size: 1rem;
+}
+.compare-strip {
+  margin-top: 18px;
+}
+.compare-strip .table-wrap {
+  margin-top: 12px;
+}
+.compare-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  max-width: 920px;
+}
+.config-card {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 215, 90, 0.22), transparent 18%),
+    radial-gradient(circle at 18% 80%, rgba(143, 212, 255, 0.08), transparent 24%),
+    linear-gradient(135deg, #232b47 0%, #12172f 44%, #070a16 100%);
+  border-color: rgba(255, 215, 90, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+.config-card::before {
+  content: "";
+  position: absolute;
+  inset: 16px 16px auto auto;
+  width: 112px;
+  height: 112px;
+  opacity: 0.55;
+  background:
+    radial-gradient(circle at center, transparent 0 20px, rgba(255, 215, 90, 0.24) 20px 26px, transparent 26px 100%),
+    conic-gradient(from 18deg,
+      rgba(255, 215, 90, 0.92) 0 12deg,
+      transparent 12deg 30deg,
+      rgba(255, 215, 90, 0.92) 30deg 42deg,
+      transparent 42deg 60deg,
+      rgba(255, 215, 90, 0.92) 60deg 72deg,
+      transparent 72deg 90deg,
+      rgba(255, 215, 90, 0.92) 90deg 102deg,
+      transparent 102deg 120deg,
+      rgba(255, 215, 90, 0.92) 120deg 132deg,
+      transparent 132deg 150deg,
+      rgba(255, 215, 90, 0.92) 150deg 162deg,
+      transparent 162deg 180deg,
+      rgba(255, 215, 90, 0.92) 180deg 192deg,
+      transparent 192deg 210deg,
+      rgba(255, 215, 90, 0.92) 210deg 222deg,
+      transparent 222deg 240deg,
+      rgba(255, 215, 90, 0.92) 240deg 252deg,
+      transparent 252deg 270deg,
+      rgba(255, 215, 90, 0.92) 270deg 282deg,
+      transparent 282deg 300deg,
+      rgba(255, 215, 90, 0.92) 300deg 312deg,
+      transparent 312deg 330deg,
+      rgba(255, 215, 90, 0.92) 330deg 342deg,
+      transparent 342deg 360deg);
+  filter: drop-shadow(0 0 18px rgba(255, 215, 90, 0.14));
+  pointer-events: none;
+}
+.horizon-card {
+  background:
+    radial-gradient(circle at 72% 25%, rgba(243, 232, 178, 0.92) 0 4px, rgba(243, 232, 178, 0.26) 4px 10px, transparent 10px 100%),
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1px 100%),
+    radial-gradient(circle at 42% 12%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1px 100%),
+    radial-gradient(circle at 58% 22%, rgba(255, 255, 255, 0.75) 0 1px, transparent 1px 100%),
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1px 100%),
+    radial-gradient(ellipse 58% 28% at 50% 82%, rgba(198, 132, 82, 0.14), transparent 34%),
+    linear-gradient(180deg, #050816 0%, #030612 44%, #101427 100%);
+  border-color: rgba(143, 212, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+.horizon-card::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background:
+    linear-gradient(180deg, rgba(3, 6, 16, 0) 0%, rgba(2, 3, 8, 0.5) 30%, rgba(1, 2, 6, 0.95) 100%),
+    linear-gradient(90deg, rgba(10, 11, 18, 0.0) 0%, rgba(10, 11, 18, 0.9) 18%, rgba(10, 11, 18, 0.95) 82%, rgba(10, 11, 18, 0) 100%);
+  pointer-events: none;
+}
+.horizon-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18%;
+  height: 2px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.18) 18%, rgba(255, 255, 255, 0.42) 48%, rgba(255, 255, 255, 0.18) 72%, transparent 100%);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+  pointer-events: none;
 }
 pre {
   overflow: auto;
@@ -117,6 +223,8 @@ th {
 footer {
   padding: 60px 0;
   color: var(--muted);
+  position: relative;
+  z-index: 3;
 }
 .pill {
   display: inline-block;
@@ -311,8 +419,12 @@ footer {
 #generated-config {
   display: none;
   margin-top: 12px;
-  max-height: 320px;
-  overflow: auto;
+  max-height: min(56vh, 420px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+#generated-config pre {
+  overflow: visible;
 }
 .code-block {
   position: relative;
@@ -355,6 +467,9 @@ footer {
   .fw-panel .panel-btn {
     font-size: 11px;
     padding: 5px 6px;
+  }
+  .card.featured {
+    grid-column: span 1;
   }
 }
 
