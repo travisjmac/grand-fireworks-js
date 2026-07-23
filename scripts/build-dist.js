@@ -14,7 +14,7 @@ const banner = `/*! Grand Fireworks JS v${pkg.version} | Travis MacDonald | MIT 
 
 async function build() {
   const source = fs.readFileSync(sourcePath, 'utf8');
-  if (!source.includes(`GrandFireworks.VERSION='${pkg.version}'`)) {
+  if (!source.includes(`GrandFireworks.VERSION = "${pkg.version}"`) && !source.includes(`GrandFireworks.VERSION='${pkg.version}'`)) {
     throw new Error(`GrandFireworks.VERSION does not match package version ${pkg.version}`);
   }
 

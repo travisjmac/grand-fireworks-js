@@ -1,12 +1,12 @@
 <!doctype html>
-<!-- Grand Fireworks JS v1.4.0 — Sequential Text Messages -->
+<!-- Grand Fireworks JS v1.5.0 — Sequential Text Messages -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="author" content="Travis MacDonald">
   <meta name="description" content="Launch a sequence of text fireworks one message at a time.">
-  <meta name="version" content="1.4.0">
+  <meta name="version" content="1.5.0">
   <title>Sequential Text Fireworks</title>
   <link rel="stylesheet" href="example.css">
   <style>
@@ -29,7 +29,7 @@
     <div class="actions"><button class="launch" id="launch-sequence">Launch sequence</button><button id="cancel-sequence">Cancel</button></div>
     <div class="status" id="status" aria-live="polite">Ready</div>
   </section>
-  <script src="../GrandFireworks.js?v=1.4.0"></script>
+  <script src="../GrandFireworks.js?v=1.5.0"></script>
   <script>
     const fireworks=new GrandFireworks({autoStart:true,baseStyle:'bold',textFirework:{fontSize:82,maxLines:2,holdDuration:1200,dissolveDuration:700,exclusive:true}});
     const status=document.querySelector('#status');
@@ -46,6 +46,6 @@
     });
     let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',()=>{soundOn=!soundOn;if(soundOn)fireworks.enableSound();else fireworks.disableSound();event.target.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
   </script>
-  <footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.4.0 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:inherit;text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:inherit;text-decoration:none">GitHub</a></footer>
+  <footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.5.0 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:inherit;text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:inherit;text-decoration:none">GitHub</a></footer>
 </body>
 </html>

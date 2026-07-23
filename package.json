@@ -1,15 +1,15 @@
 {
   "name": "grand-fireworks-js",
   "version": "1.5.0",
-  "description": "A dependency-free, configurable browser fireworks engine with WebGL and Canvas rendering.",
-  "main": "./dist/GrandFireworks-v1.4.0.js",
-  "browser": "./dist/GrandFireworks-v1.4.0.js",
-  "unpkg": "./dist/GrandFireworks-v1.4.0.min.js",
-  "jsdelivr": "./dist/GrandFireworks-v1.4.0.min.js",
+  "description": "Photorealistic WebGL 2 fireworks engine with 15 shell types, multi-line text effects, adaptive performance, Canvas fallback, and a choreographed Super Grand Finale. Zero dependencies.",
+  "main": "./GrandFireworks.js",
+  "browser": "./dist/GrandFireworks-v1.5.0.min.js",
+  "unpkg": "./dist/GrandFireworks-v1.5.0.min.js",
+  "jsdelivr": "./dist/GrandFireworks-v1.5.0.min.js",
   "exports": {
     ".": {
-      "require": "./dist/GrandFireworks-v1.4.0.js",
-      "default": "./dist/GrandFireworks-v1.4.0.js"
+      "require": "./GrandFireworks.js",
+      "default": "./GrandFireworks.js"
     },
     "./package.json": "./package.json"
   },
@@ -26,9 +26,30 @@
     "canvas",
     "animation",
     "particles",
-    "celebration"
+    "celebration",
+    "pyrotechnics",
+    "special-effects",
+    "confetti",
+    "visualization"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/travisjmac/grand-fireworks-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/travisjmac/grand-fireworks-js/issues"
+  },
+  "homepage": "https://github.com/travisjmac/grand-fireworks-js#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/travisjmac"
+  },
+  "author": {
+    "name": "Travis MacDonald",
+    "email": "travisjmac@gmail.com",
+    "url": "http://travisandjoelyweareaperfect.fit/"
+  },
   "scripts": {
     "build": "node scripts/build-dist.js",
     "test": "node tests/run-tests.js",
