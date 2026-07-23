@@ -369,6 +369,8 @@
         whistleDuration: 0.75,
         whistleGain: 0.045,
         whistleWave: "sine",
+        whistleWobbleRate: 7,
+        whistleWobbleDepth: 0.1,
         boomDuration: 1.4,
         boomGain: 0.7,
         boomCutoff: 170,
@@ -1673,6 +1675,16 @@
         whistleEnd = clamp(Number(t.whistleEnd) || 4200, 800, 8000),
         whistleDuration = clamp(Number(t.whistleDuration) || 1.35, 0.3, 3),
         whistleGain = clamp(Number(t.whistleGain) || 0.045, 0.005, 0.15),
+        whistleWobbleRate = clamp(
+          Number(t.whistleWobbleRate) || 7,
+          1,
+          18,
+        ),
+        whistleWobbleDepth = clamp(
+          Number(t.whistleWobbleDepth) || 0.1,
+          0.01,
+          0.35,
+        ),
         whistleWave = ["sine", "triangle", "sawtooth", "square"].includes(
           t.whistleWave,
         )
@@ -1725,16 +1737,27 @@
               : boomCutoff,
         at,
       );
-      filter.frequency.exponentialRampToValueAtTime(
-        type === "whistle"
-          ? whistleEnd
-          : type === "launch"
+      if (type === "whistle") {
+        const wobbleSteps = Math.max(
+          3,
+          Math.round(duration * whistleWobbleRate * 2),
+        );
+        for (let step = 1; step <= wobbleSteps; step++) {
+          const progress = step / wobbleSteps,
+            base = whistleStart * Math.pow(whistleEnd / whistleStart, progress),
+            wobble = step % 2 ? 1 + whistleWobbleDepth : 1 - whistleWobbleDepth;
+          filter.frequency.setValueAtTime(base * wobble, at + duration * progress);
+        }
+      } else {
+        filter.frequency.exponentialRampToValueAtTime(
+          type === "launch"
             ? launchEnd
             : type === "crackle"
               ? 900
               : 28,
-        at + duration * 0.82,
-      );
+          at + duration * 0.82,
+        );
+      }
       if (filter.Q)
         filter.Q.value =
           type === "whistle"
@@ -1769,14 +1792,19 @@
         const tone = a.createOscillator(),
           toneGain = this._soundOutput(a, position);
         tone.type = whistleWave;
-        tone.frequency.setValueAtTime(
-          whistleStart * (0.92 + Math.random() * 0.08),
-          at,
-        );
-        tone.frequency.exponentialRampToValueAtTime(
-          whistleEnd * (0.9 + Math.random() * 0.1),
-          at + duration * 0.88,
-        );
+        const toneStart = whistleStart * (0.92 + Math.random() * 0.08),
+          toneEnd = whistleEnd * (0.9 + Math.random() * 0.1),
+          wobbleSteps = Math.max(
+            3,
+            Math.round(duration * whistleWobbleRate * 2),
+          );
+        tone.frequency.setValueAtTime(toneStart, at);
+        for (let step = 1; step <= wobbleSteps; step++) {
+          const progress = step / wobbleSteps,
+            base = toneStart * Math.pow(toneEnd / toneStart, progress),
+            wobble = step % 2 ? 1 + whistleWobbleDepth : 1 - whistleWobbleDepth;
+          tone.frequency.setValueAtTime(base * wobble, at + duration * progress);
+        }
         toneGain.gain.setValueAtTime(0.001, at);
         toneGain.gain.exponentialRampToValueAtTime(
           Math.max(0.001, vol * whistleGain * 0.3 * accent),
