@@ -2,7 +2,7 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
-## [1.5.0] — July 23, 2026
+## [1.6.0] — July 23, 2026
 
 ### Changed
 
@@ -16,7 +16,7 @@ All notable changes to Grand Fireworks JS are documented here.
 - Fixed missing `applyStyle()`/`applyTheme()` functions in index.html after code cleanup.
 - Fixed preview layout in Configuration Tool (fullscreen toggle, always-visible hide tab).
 
-## [1.4.0] — July 21, 2026
+## [1.5.0] — July 21, 2026
 
 ### Added
 

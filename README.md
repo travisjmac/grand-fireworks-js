@@ -1,9 +1,9 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.4.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.6.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.4.0
+## Version 1.6.0
 
 This feature release adds the Guided Configuration Builder, curated themes and styles, reusable synthesized sound, cancellable sequential text messages, accessibility-aware motion and pause behavior, complete finale timing controls, automated regression tests, and reproducible distribution builds. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 

@@ -17,7 +17,18 @@
 (function (global) {
   "use strict";
 
+  /* ========================================================================
+   *  CONSTANTS & DEFAULTS
+   *  All configuration lives here — shell types, color palettes,
+   *  performance presets, visual styles, color themes, and the master
+   *  defaults object that drives the entire engine.
+   * ======================================================================== */
+
+  // 2π — used throughout for angular math (burst rings, spirals, twinkling)
   const TAU = Math.PI * 2;
+
+  // The 15 named pyrotechnic shell types. Each has its own burst algorithm
+  // in _explode(). The list doubles as the "all" option for enabledTypes.
   const TYPES = [
     "grand_peony",
     "imperial_chrysanthemum",
@@ -441,7 +452,18 @@
     },
   };
 
+  /* ========================================================================
+   *  UTILITY FUNCTIONS
+   *  Small, pure helpers used throughout the engine. Kept at module scope
+   *  so they're cheap to call from hot paths.
+   * ======================================================================== */
+
+  // Clamps n between a (min) and b (max). Used everywhere for bounds safety.
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+  // Deep-merges two option objects. Nested plain objects are merged
+  // recursively; arrays and primitives are replaced outright.
+  // This is how user config, style presets, and DEFAULTS compose together.
   const merge = (a, b) => {
     const out = { ...a };
     Object.keys(b || {}).forEach((k) => {
@@ -456,6 +478,9 @@
     });
     return out;
   };
+  // Converts a hex color string (e.g. "#FF0040" or "#F04") into a normalized
+  // [r, g, b] array with values 0–1. Handles both 3-char and 6-char hex.
+  // Used to feed color data into WebGL attributes and Canvas draw calls.
   const hex = (value) => {
     const h = value.replace("#", "");
     const n = parseInt(
@@ -470,7 +495,8 @@
     return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
   };
 
-  // Creates an array of N interpolated hex colors between two hex values
+  // Creates a smooth gradient of N hex colors between two endpoints.
+  // Used by normalizePalette() to fill out sparse user color arrays.
   function createColorRamp(hex1, hex2, steps = 4) {
     const parse = (h) => {
       const clean = h.replace("#", "");
@@ -506,7 +532,9 @@
     return ramp;
   }
 
-  // Guarantees any array of 1, 2, 3, or 4+ colors normalizes into exactly 4 colors
+  // Normalizes any color array into exactly 4 colors — the engine's internal
+  // format. 1 color → ramp to white, 2 → interpolated ramp, 3 → +white,
+  // 4+ → truncated. This guarantees every shell always has 4 usable colors.
   function normalizePalette(colors) {
     if (!Array.isArray(colors) || colors.length === 0) return PALETTES[0];
 
@@ -529,10 +557,22 @@
     return colors.slice(0, 4);
   }
 
+  // Resolves a CSS selector string to a DOM element, or passes through an
+  // existing element reference. Used for the container option.
   const cssTarget = (value) =>
     typeof value === "string" ? document.querySelector(value) : value;
 
+  /* ========================================================================
+   *  WEBGL RENDERER
+   *  GPU-accelerated particle rendering via WebGL2. Uses a custom point
+   *  sprite shader with radial falloff, star-shaped highlights, and an
+   *  additive blending pass. A separate fade program handles trail decay
+   *  without clearing the framebuffer.
+   * ======================================================================== */
+
   class WebGLRenderer {
+    // Creates a WebGL2 context with additive blending and a point-sprite
+    // shader. onLost is called if the GPU context is lost (triggers fallback).
     constructor(canvas, onLost, options = {}) {
       this.canvas = canvas;
       const gl = canvas.getContext("webgl2", {
@@ -606,8 +646,16 @@
       this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       this.dpr = dpr;
     }
+    // Fills a Float32Array with interleaved vertex attributes and uploads
+    // them in a single draw call. Each particle = 8 floats:
+    // [x, y, size, r, g, b, a, isStar]. The fade program draws a full-screen
+    // quad to decay trails when trailFade < 1 (additive fade, no clear).
     render(items, w, h, trailFade) {
       const g = this.gl;
+      // Trail decay without clearing: draw a full-screen black quad with
+      // alpha = trailFade using ZERO/ONE_MINUS_SRC_ALPHA blend. This
+      // darkens the previous frame instead of clearing it, preserving
+      // the trail effect across frames.
       if (trailFade >= 1) {
         g.clearColor(0, 0, 0, 0);
         g.clear(g.COLOR_BUFFER_BIT);
@@ -665,7 +713,16 @@
     }
   }
 
+  /* ========================================================================
+   *  CANVAS 2D FALLBACK RENDERER
+   *  Software renderer used when WebGL2 is unavailable or the context is
+   *  lost. Pre-renders radial-gradient sprites per color, caches them in
+   *  a Map, and draws with lighter composite for additive blending.
+   * ======================================================================== */
+
   class CanvasRenderer {
+    // Creates a 2D context with desynchronized hint for off-main-thread
+    // painting where supported.
     constructor(canvas) {
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
@@ -680,6 +737,9 @@
       this.dpr = dpr;
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
+    // Builds (or retrieves from cache) a 64×64 radial-gradient sprite.
+    // Sprites are keyed by [r,g,b]+star so identical colors share a canvas.
+    // The star variant draws a 5-point star in the center for twinkle effects.
     _sprite(r, g, b, star = false) {
       const rgb = [r, g, b].map((x) => Math.round(x * 255)),
         key = rgb.join(",") + (star ? "s" : "g");
@@ -713,6 +773,9 @@
       this.sprites.set(key, c);
       return c;
     }
+    // Draws all particles with additive blending. Trail fade is handled
+    // via destination-out composite — a semi-transparent black rectangle
+    // is drawn over the previous frame to fade trails.
     render(items, w, h, fade) {
       const x = this.ctx;
       x.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -747,7 +810,18 @@
     }
   }
 
+  /* ========================================================================
+   *  GRAND FIREWORKS ENGINE
+   *  The main class — an EventTarget that manages the full fireworks
+   *  lifecycle: rendering, particle physics, audio synthesis, text
+   *  effects, adaptive performance, and the choreographed finale.
+   * ======================================================================== */
+
   class GrandFireworks extends EventTarget {
+    // Initializes all internal state, resolves the full options tree
+    // (merging DEFAULTS → style → performance preset → user input),
+    // builds the DOM layers, picks a renderer, and binds events.
+    // If autoStart is true, kicks off on the next animation frame.
     constructor(options = {}) {
       super();
       this.userOptions = options;
@@ -786,6 +860,10 @@
       this._bind();
       if (this.options.autoStart) requestAnimationFrame(() => this.start());
     }
+    // Resolves the full configuration by layering:
+    //   DEFAULTS → style preset → color theme → performance preset → user input
+    // Clamps all numeric values to safe ranges and derives computed fields
+    // like preserveDrawingBuffer from mode/trails.
     _resolve(input = {}) {
       const styleName = input.baseStyle || "medium",
         style = STYLES[styleName] || STYLES.medium;
@@ -872,6 +950,10 @@
       o.duration = Math.max(0, Number(o.duration) || 0);
       return o;
     }
+    // Creates the DOM scaffolding: root container, optional backdrop,
+    // the main render canvas, a separate text overlay canvas, and an
+    // optional FPS counter. Inserts into the target container at the
+    // correct z-index layer.
     _buildLayers() {
       const o = this.options,
         c = this.container;
@@ -948,6 +1030,8 @@
       c.setAttribute("aria-hidden", "true");
       return c;
     }
+    // Attempts WebGL2 first; falls back to Canvas2D on failure.
+    // In contained mode, defaults to Canvas2D to avoid GPU contention.
     _initRenderer(force) {
       let pref = force || (this.options.renderer || {}).preferred || "auto";
       if (pref === "auto" && this.options.mode === "contained")
@@ -966,6 +1050,8 @@
       this.renderer = new CanvasRenderer(this.canvas);
       this.rendererType = "canvas2d";
     }
+    // Swaps the WebGL canvas for a new Canvas2D canvas and fires a
+    // rendererchange event. Called on context loss or explicit fallback.
     _fallback(reason) {
       if (this.rendererType === "canvas2d") return;
       this.contextLossCount++;
@@ -982,6 +1068,9 @@
         }),
       );
     }
+    // Registers resize, visibility, intersection, and reduced-motion
+    // listeners. Uses passive resize and IntersectionObserver for offscreen
+    // pause detection.
     _bind() {
       this.onResize = () => (this.resizePending = true);
       this.onVisibility = () => {
@@ -1024,6 +1113,14 @@
           this.motionQuery.addListener(this.onMotionChange);
       }
     }
+    /* ── Lifecycle ─────────────────────────────────────────────────── */
+
+    /**
+     * Starts the fireworks show. Fires an opening salvo, begins the
+     * render loop, and fades in the backdrop. Returns `this` for chaining.
+     * @param {Object} [run={}] - Runtime overrides (e.g. { duration: 5000 })
+     * @returns {GrandFireworks}
+     */
     start(run = {}) {
       if (this.state === "running") return this;
       clearTimeout(this.fadeTimer);
@@ -1099,6 +1196,12 @@
       this._resumeEngine();
       return this;
     }
+    /**
+     * Pauses the show. Use internal=true for auto-pause reasons
+     * (hidden tab, offscreen). Fires a 'pause' event.
+     * @param {boolean|string} [internal=false]
+     * @returns {GrandFireworks}
+     */
     pause(internal = false) {
       if (internal)
         return this._pauseFor(
@@ -1109,6 +1212,11 @@
       if (changed) this.dispatchEvent(new Event("pause"));
       return this;
     }
+    /**
+     * Resumes a previously paused show. Fires a 'resume' event.
+     * @param {boolean|string} [internal=false]
+     * @returns {GrandFireworks}
+     */
     resume(internal = false) {
       if (internal)
         return this._resumeFor(
@@ -1119,6 +1227,15 @@
       if (changed) this.dispatchEvent(new Event("resume"));
       return this;
     }
+    /**
+     * Gracefully stops the show. Enters the "finishing" state — lets
+     * in-flight rockets complete, optionally triggers the finale, then
+     * fades out. Use { immediate: true } to skip the wind-down.
+     * @param {Object} [options={}]
+     * @param {boolean} [options.immediate] - Skip finishing, fade immediately
+     * @param {boolean} [options.finale] - Force or suppress the finale
+     * @returns {Promise<GrandFireworks>}
+     */
     stop(options = {}) {
       if (this.state === "stopped" || this.state === "idle")
         return Promise.resolve(this);
@@ -1141,6 +1258,8 @@
       }
       return this.stopPromise;
     }
+    // Checks whether the finale should trigger for a given lifecycle event
+    // ("stop" or "duration"). Respects the enabled flag and trigger list.
     _finaleTriggered(trigger) {
       return (
         this.options.finale.enabled &&
@@ -1148,6 +1267,7 @@
         !this.finalePlayed
       );
     }
+    /** Triggers stop() with finale forced on. */
     finalize() {
       return this.stop({ finale: true });
     }
@@ -1210,6 +1330,9 @@
         this.container.style.position = this.oldPosition;
       this.state = "destroyed";
     }
+    // Transitions from idle/stopped to an active state (manual or finale),
+    // re-enabling the render loop if needed. Used by launch(), launchText(),
+    // and launchFinale() when called on an idle engine.
     _activateManual(state = "manual") {
       if (this.state === "destroyed" || this.state === "paused") return false;
       const inactive = ["idle", "stopped", "fading"].includes(this.state);
@@ -1239,12 +1362,26 @@
       } else this._loop();
       return true;
     }
+    /* ── Launch API ────────────────────────────────────────────────── */
+
+    /**
+     * Manually fires a single rocket with optional overrides.
+     * @param {Object} [options={}] - Overrides: type, x, burstHeight, colors, angle
+     * @returns {GrandFireworks}
+     */
     launch(options = {}) {
       this._activateManual("manual");
       if (!["running", "finishing", "manual"].includes(this.state)) return this;
       this._createRocket(options);
       return this;
     }
+    /**
+     * Launches the Super Grand Finale — a carrier shell that bursts into
+     * satellite rockets, each producing its own multi-layered explosion.
+     * @param {Object} [options={}]
+     * @param {boolean} [options.stopAfter=true] - Keep accepting rockets after
+     * @returns {GrandFireworks}
+     */
     launchFinale(options = {}) {
       const standalone = this._activateManual("finale");
       this.finalePlayed = true;
@@ -1271,6 +1408,15 @@
       );
       return this;
     }
+    /**
+     * Rasterizes text to a hidden canvas, samples pixel data to generate
+     * particle positions, then fires rockets that assemble into the text
+     * shape mid-air. Supports multi-line wrapping, character limits, and
+     * dissolve animations.
+     * @param {string} text - The text to display
+     * @param {Object} [overrides={}] - Text firework config overrides
+     * @returns {Promise<string[]>} Resolves with the lines rendered
+     */
     launchText(text, overrides = {}) {
       const cfg = merge(this.options.textFirework, overrides);
       if (!cfg.enabled || !text) return Promise.resolve([]);
@@ -1333,6 +1479,8 @@
       );
       return Promise.resolve(lines);
     }
+    // Strips all text-specific rockets, particles, and text blocks.
+    // Resets the exclusive reservation so normal fireworks can resume.
     _clearTextEffects() {
       this.pendingRockets = this.pendingRockets.filter((r) => !r.textPlan);
       this.rockets = this.rockets.filter((r) => r.type !== "text");
@@ -1353,6 +1501,12 @@
         this.textCanvas.style.display = "none";
       }
     }
+    /**
+     * Cancels the currently running text sequence.
+     * @param {Object} [options={}]
+     * @param {boolean} [options.clear=true] - Also clear text effects
+     * @returns {boolean} True if a sequence was cancelled
+     */
     cancelTextSequence(options = {}) {
       const sequence = this.textSequence;
       if (!sequence) return false;
@@ -1371,6 +1525,19 @@
       );
       return true;
     }
+    /**
+     * Plays a sequence of text fireworks with configurable timing.
+     * Each item can be a string or { text, overrides, duration }.
+     * Returns a promise that resolves when the sequence completes or is
+     * cancelled.
+     * @param {Array|string} messages - One or more text items
+     * @param {Object} [options={}]
+     * @param {number} [options.interval] - Time between items (ms)
+     * @param {number} [options.startDelay] - Delay before first item (ms)
+     * @param {boolean} [options.clearBetween] - Clear previous text between items
+     * @param {boolean} [options.clearOnComplete] - Clear after sequence ends
+     * @returns {Promise<{status:string, completed:number, total:number}>}
+     */
     launchTextSequence(messages, options = {}) {
       const source = Array.isArray(messages) ? messages : [messages],
         items = source
@@ -1464,6 +1631,8 @@
         else next();
       });
     }
+    // Word-wrap algorithm: greedily packs words onto lines, respecting
+    // maxCharactersPerLine. Adds ellipsis on overflow if configured.
     _wrapText(text, cfg) {
       const words = text.split(/\s+/),
         lines = [];
@@ -1486,11 +1655,15 @@
       }
       return lines.slice(0, cfg.maxLines);
     }
+    // Rasterizes each line of text to an off-screen canvas, then samples
+    // pixel alpha at a configurable step interval. Each opaque pixel
+    // becomes a target (x, y) coordinate for a text particle to animate to.
     _textPlans(lines, cfg) {
       const plans = [],
         block = cfg.fontSize * cfg.lineHeight * lines.length,
         top = this.height * cfg.verticalPosition - block / 2;
       lines.forEach((line, i) => {
+        // Render the line to an off-screen canvas at the configured font size
         const off = document.createElement("canvas"),
           x = off.getContext("2d");
         off.width = Math.max(280, Math.floor(this.width * cfg.maxWidth));
@@ -1500,6 +1673,9 @@
         x.textBaseline = "middle";
         x.font = `${cfg.fontWeight} ${cfg.fontSize}px ${cfg.fontFamily}`;
         x.fillText(line, off.width / 2, off.height / 2, off.width - 8);
+        // Sample the image data: any pixel with alpha > 100 becomes a
+        // particle target point. Step size is scaled by particleScale
+        // so higher quality = more particles.
         const data = x.getImageData(0, 0, off.width, off.height).data,
           points = [],
           step = Math.max(
@@ -1523,14 +1699,20 @@
       });
       return plans;
     }
+    // Schedules a rocket for future launch. Used for the opening salvo
+    // and grouped salvo follow-up shots.
     _queueRocket(time) {
       this.pendingRockets.push({ launchAt: time });
     }
+    /* ── Sound ─────────────────────────────────────────────────────── */
+
+    /** Enables procedural audio synthesis and fires up the AudioContext. */
     enableSound() {
       this.setOptions({ sound: { enabled: true } });
       this._audio(true);
       return this;
     }
+    /** Suspends audio and tears down the ambience source. */
     disableSound() {
       this.setOptions({ sound: { enabled: false } });
       if (this.audioAmbience) {
@@ -1546,6 +1728,7 @@
       }
       return this;
     }
+    /** Sets master volume to 0 (muted) or restores previous level. */
     setMuted(muted = true) {
       return this.setOptions({
         sound: { volume: muted ? 0 : this.options.sound.volume || 0.3 },
@@ -1664,6 +1847,15 @@
         } catch (e) {}
       }
     }
+    // Generates a buffer of white noise and routes it through a
+    // BiquadFilter for shaping. The filter type and frequency sweep
+    // depend on the sound type:
+    //   launch  → bandpass sweep down (whoosh)
+    //   whistle → bandpass with wobble modulation (oscillating pitch)
+    //   explode → lowpass sweep down (boom)
+    //   crackle → bandpass at high frequency (snap/crackle)
+    // Whistle sounds also layer a sine/triangle oscillator on top
+    // of the noise for a tonal component.
     _playNoise(type, position, startDelay = 0, accent = 1) {
       const a = this._audio(false),
         vol = clamp(Number(this.options.sound.volume), 0, 1),
@@ -1854,6 +2046,11 @@
           i === beats.length - 1 ? 1.35 : 0.56 + i * 0.1,
         );
     }
+    /* ── Internal: Rocket & Particle Creation ───────────────────────── */
+
+    // Creates a rocket with randomized or specified trajectory. Handles
+    // both spontaneous launches and text-synced launches (where velocity
+    // is calculated backward from the desired detonation time).
     _createRocket(o = {}) {
       if (this.rockets.length >= this.options.show.maxRockets) return;
       const show = this.options.show,
@@ -1915,11 +2112,15 @@
         soundType,
       });
     }
+    // Picks a random shell type from the enabled list.
     _type() {
       const e = this.options.show.enabledTypes;
       const list = e === "all" ? TYPES : e;
       return list[Math.floor(Math.random() * list.length)];
     }
+    // Selects a palette: either from the user-defined array (with
+    // normalizePalette), from the built-in PALETTES list, or via a
+    // user-supplied function that returns colors dynamically.
     _palette() {
       const p = this.options.show.palettes;
 
@@ -1941,6 +2142,15 @@
 
       return PALETTES[0];
     }
+    /* ── Internal: Main Loop ───────────────────────────────────────── */
+
+    // The rAF-driven game loop. On each frame it:
+    //   1. Calculates dt (capped at 50ms to prevent spiral-of-death)
+    //   2. Runs adaptive quality adjustments every 2 seconds
+    //   3. Calls _update (physics), _drawItems (collect → render), _drawText
+    //   4. Calls _finish (state machine for stopping/finale)
+    // The trailFade value is frame-rate-normalized so trails look
+    // consistent regardless of actual FPS.
     _loop() {
       if (
         this.raf ||
@@ -1973,6 +2183,9 @@
             }
           }
         }
+        // Adaptive quality: every 2 seconds, compare actual FPS to target.
+        // If we're below 78% of target, dial quality down (fewer particles).
+        // If above 93%, gradually dial back up. Hysteresis prevents flapping.
         if (this.options.performance.adaptive && now >= this.nextAdapt) {
           const target = this.options.performance.fps;
           this.nextAdapt = now + 2000;
@@ -1982,7 +2195,10 @@
             this.quality = Math.min(1, this.quality + 0.05);
         }
         this._update(now, dt);
-        const trailFade = this.options.visuals.trails
+      // Frame-rate-normalized trail fade. The pow() call ensures trails
+      // look the same regardless of actual frame time — faster frames
+      // fade less per frame, slower frames fade more.
+      const trailFade = this.options.visuals.trails
           ? 1 - Math.pow(1 - this.options.visuals.trailFade, dt * 60)
           : 1;
         this.renderer.render(
@@ -1999,6 +2215,8 @@
       };
       this.raf = requestAnimationFrame(frame);
     }
+    // Recalculates canvas dimensions and DPR. Fires on window resize,
+    // container resize (ResizeObserver), or DPR change.
     _resize() {
       this.resizePending = false;
       const r =
@@ -2018,6 +2236,16 @@
       this.textCanvas.style.height = this.height + "px";
       this.textCtx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
+    /* ── Internal: Physics Update ──────────────────────────────────── */
+
+    // The core update tick. Processes in this order:
+    //   1. Release text-exclusive lock if the reservation has expired
+    //   2. Spawn queued rockets whose launchAt time has arrived
+    //   3. Auto-launch new rockets based on intensity and interval
+    //   4. Move in-flight rockets, spawn exhaust particles, detect burst
+    //   5. Update all particles (standard physics or text-animation modes)
+    //   6. Age out dead/off-screen particles and expired flashes
+    // All loops scan backward so splicing is safe.
     _update(now, dt) {
       if (
         this.state === "running" &&
@@ -2077,6 +2305,8 @@
         r.y += r.vy * dt;
         r.vy += (r.satellite ? 28 : 45) * dt;
         r.sparkClock += dt;
+        // Rocket exhaust: spawn small trailing sparks behind the rocket.
+        // Satellites produce exhaust more frequently and with larger particles.
         if (
           this.options.visuals.rocketExhaust &&
           r.type !== "text" &&
@@ -2128,6 +2358,9 @@
             });
           }
         }
+        // Text particles use cubic ease-out to fly from burst point to
+        // their target position in the text shape, with sine-wave spiral
+        // decoration during the flight for visual flair.
         if (p.text && p.hybrid) {
           if (now < p.releaseAt) {
             p.x = p.tx;
@@ -2142,6 +2375,8 @@
               clamp(1 - released / p.fall, 0, 1) *
               (p.twinkle ? 0.55 + 0.45 * Math.sin(p.phase + age * 0.02) : 1);
           }
+        // Non-hybrid text particles: cubic ease-out from burst to target,
+        // hold in place with subtle shimmer, then gravity drop.
         } else if (p.text) {
           if (age < p.assemble) {
             const t = 1 - Math.pow(1 - age / p.assemble, 3);
@@ -2165,20 +2400,29 @@
             clamp(1 - age / p.life, 0, 1) *
             (p.twinkle ? 0.55 + 0.45 * Math.sin(p.phase + age * 0.02) : 1);
         } else {
+          // Standard particle physics — gravity pulls down, friction slows
+          // velocity each frame. Special particle types override gravity
+          // and friction for distinctive visual behaviors.
           let gravity = p.gravity,
             friction = p.friction;
+          // Willow: very light, drifts slowly downward like a weeping willow
           if (p.type === "willow") {
             gravity *= 0.2;
             friction = 0.997;
+          // Palm: medium-light, spreads outward in a palm-frond shape
           } else if (p.type === "palm") {
             gravity *= 0.6;
             friction = 0.995;
+          // Horsetail: heavy, falls fast in a tight column
           } else if (p.type === "horsetail") {
             gravity *= 1.5;
             friction = 0.98;
+          // Fish: sinusoidal swimming motion via oscillating velocity
+          // Fish: sinusoidal swimming motion via oscillating velocity
           } else if (p.type === "fish") {
             p.vx += Math.sin(now * 0.01 + p.x * 0.01) * 0.3 * dt * 60;
             p.vy += Math.cos(now * 0.01 + p.y * 0.01) * 0.3 * dt * 60;
+          // Spiral: gravitational pull toward the burst center point
           } else if (p.type === "spiral") {
             const dx = p.centerX - p.x,
               dy = p.centerY - p.y,
@@ -2209,6 +2453,10 @@
         if (now - this.flashes[i].birth >= this.flashes[i].life)
           this.flashes.splice(i, 1);
     }
+    // Pulls a particle from the object pool (or creates a new one),
+    // assigns all properties, converts hex color to RGB, and pushes
+    // onto the active particles array. Returns false if the particle
+    // limit is reached (unless it's a text particle, which gets priority).
     _spawn(o) {
       const textPriority = Boolean(o.text),
         motionScale = this._motionReduced() ? 0.4 : 1,
@@ -2252,6 +2500,13 @@
       this.particles.push(p);
       return true;
     }
+    /* ── Internal: Shell Burst Algorithms ───────────────────────────── */
+
+    // Workhorse burst function. Spawns `count` particles in a ring (or
+    // random directions if opts.randomAngles). Each particle gets a
+    // velocity vector, color from the rocket's palette, size jitter,
+    // and optional crackle delay. Particle types (willow, palm, fish,
+    // spiral) affect gravity and drag in _update().
     _burst(r, count, min, max, opts = {}) {
       count = Math.max(
         1,
@@ -2312,6 +2567,9 @@
           break;
       }
     }
+    // Creates a brief radial flash at the explosion point. Uses the
+    // rocket's primary color as a large, short-lived, semi-transparent
+    // circle that simulates the camera bloom from a real firework burst.
     _flash(r, now, size = 130) {
       if (!this.options.visuals.explosionFlashes) return;
       const c = hex(r.colors[0]);
@@ -2329,6 +2587,9 @@
         star: true,
       });
     }
+    // Crossette: a shell that splits into smaller "stars" mid-flight.
+    // Creates 28+ arms, each splitting into 6 sub-particles in a tight
+    // fan pattern. Produces the classic grid-like crossette break.
     _crossette(r) {
       const arms = Math.max(
         8,
@@ -2360,6 +2621,8 @@
         }
       }
     }
+    // Starburst: bright arms radiating from center. Each arm has a gradient
+    // of speeds (inner slow → outer fast) creating the classic star pattern.
     _starburst(r) {
       const arms = 8 + Math.floor(Math.random() * 4),
         per = Math.max(10, Math.floor(38 * this.options.performance.secondary));
@@ -2386,6 +2649,8 @@
         }
       }
     }
+    // Crown Jewel: 5-pronged crown shape pointing upward, with a white
+    // diamond at the center. Each prong has a tight angular spread.
     _crown(r) {
       const per = Math.max(
         10,
@@ -2421,6 +2686,10 @@
         randomAngles: true,
       });
     }
+    // Galactic Spiral: 4 interleaved spiral arms radiating outward.
+    // Speed increases with distance from center (i/loop * 8).
+    // Particles are type "spiral" so they're gravitationally attracted
+    // back to center in _update(), creating the spiral arm effect.
     _spiral(r) {
       const per = Math.max(
         20,
@@ -2452,6 +2721,9 @@
         }
       }
     }
+    // Launches satellite rockets from the finale carrier in a radial
+    // pattern. Each satellite has its own trajectory and detonates
+    // independently, creating a layered multi-burst effect.
     _launchFinaleTrails(r, now) {
       this._scheduleFinaleRhythm(r.x / this.width);
       const cfg = this.options.finale,
@@ -2482,6 +2754,8 @@
         new CustomEvent("finalestage", { detail: { stage: "trails", count } }),
       );
     }
+    // Each satellite rocket produces a multi-layered burst: a dense inner
+    // ring, a smaller white diamond ring, and a willow trail for hang-time.
     _grandFinaleBurst(r, now) {
       const scale =
         this.options.finale.burstScale * this.options.finale.particleScale;
@@ -2516,6 +2790,13 @@
         }),
       );
     }
+    // The main explosion dispatcher. Routes to the correct burst algorithm
+    // based on the rocket's type. Handles special cases:
+    //   - text rockets → rasterized particle assembly
+    //   - grand-finale-carrier → flash + trail satellite launch
+    //   - grand-finale-burst → satellite multi-burst
+    //   - sovereign-crown → finale crown burst
+    //   - all 15 named types → their specific burst pattern
     _explode(r, now) {
       this._playSound(
         r.finale ? "finale" : "explode",
@@ -2766,6 +3047,11 @@
           this._burst(r, 170, 3, 8, { life: 2500, minSize: 1.7, maxSize: 4.7 });
       }
     }
+    /* ── Internal: Text Rendering ──────────────────────────────────── */
+
+    // Draws the crisp text overlay on the separate text canvas layer.
+    // Each text block goes through reveal → hold → dissolve phases.
+    // Uses shadowBlur for glow and a semi-transparent stroke for legibility.
     _drawText(now) {
       const x = this.textCtx;
       if (!this.textBlocks.length) {
@@ -2811,6 +3097,9 @@
       }
       if (!this.textBlocks.length) this.textCanvas.style.display = "none";
     }
+    // Collects all drawable items into a flat array for the renderer:
+    // flashes (fading), rocket heads (bright stars at the tip), and
+    // all active particles.
     _drawItems(now = performance.now()) {
       const a = [];
       for (const f of this.flashes) {
@@ -2833,6 +3122,12 @@
       for (const p of this.particles) a.push(p);
       return a;
     }
+    /* ── Internal: State Machine ───────────────────────────────────── */
+
+    // Checks whether the show is finished. Handles three terminal states:
+    //   finishing → wait for drain or timeout, optionally launch finale
+    //   finale    → wait for all bursts to complete, then fade
+    //   manual    → fade as soon as all effects are done
     _finish(now) {
       if (!["finishing", "finale", "manual"].includes(this.state)) return;
       if (this.state === "finishing") {
@@ -2887,6 +3182,9 @@
         if (done) this._fade(false);
       }
     }
+    // Initiates the fade-out transition. Sets the backdrop opacity to 0
+    // via CSS transition, then after the duration: clears the canvas,
+    // hides the root, resolves the stop promise, and fires 'stop'.
     _fade(clear) {
       if (this.state === "fading")
         return this.stopPromise || Promise.resolve(this);
@@ -2913,6 +3211,14 @@
       }, duration);
       return promise;
     }
+    /* ── Configuration ─────────────────────────────────────────────── */
+
+    /**
+     * Merges partial options into the current configuration and re-resolves.
+     * Updates DOM opacity and triggers resize if DPR cap changed.
+     * @param {Object} [partial={}] - Options to merge
+     * @returns {GrandFireworks}
+     */
     setOptions(partial = {}) {
       const previous = this.options;
       this.userOptions = merge(this.userOptions, partial);
@@ -2933,11 +3239,21 @@
         this._resumeFor("offscreen");
       return this;
     }
+    /**
+     * Sets the overall opacity of the fireworks layer.
+     * @param {number} level - 0 to 1
+     * @returns {GrandFireworks}
+     */
     setOpacity(level) {
       return this.setOptions({
         visuals: { opacity: clamp(Number(level), 0, 1) },
       });
     }
+    /**
+     * Switches to a named visual style preset (e.g. "bold", "spectacle").
+     * @param {string} name - Style key from STYLES
+     * @returns {GrandFireworks}
+     */
     setStyle(name) {
       const s = STYLES[name];
       if (!s) return this;
@@ -2952,6 +3268,12 @@
         );
       return this;
     }
+    /**
+     * Switches to a named color theme and recolorizes all existing
+     * particles and rockets in-flight.
+     * @param {string} name - Theme key from COLOR_THEMES
+     * @returns {GrandFireworks}
+     */
     setColorTheme(name) {
       const t = COLOR_THEMES[name];
       if (!t) return this;
@@ -2990,6 +3312,12 @@
       return this;
     }
     // Generates a random visual configuration and applies it live
+    /**
+     * Randomizes the visual configuration for a fresh, unpredictable show.
+     * Picks random palettes, performance presets, trail/bloom settings,
+     * and optionally a background gradient. Recolors existing particles.
+     * @returns {Object} The generated configuration
+     */
     feelingLucky() {
       const PALETTE_POOL = [
         ["#FF0055", "#FFCC00"],
@@ -3127,9 +3455,15 @@
       }
       return cfg;
     }
+    /** @returns {Object} Deep-cloned snapshot of current options */
     getOptions() {
       return JSON.parse(JSON.stringify(this.options));
     }
+    /**
+     * @returns {{renderer:string, fallbackActive:boolean, contextLossCount:number,
+     *   state:string, particles:number, rockets:number, fps:number,
+     *   durationRemaining:number|null, quality:number}}
+     */
     getStats() {
       return {
         renderer: this.rendererType,
@@ -3148,6 +3482,12 @@
       };
     }
   }
+
+  /* ========================================================================
+   *  EXPORT
+   *  Attaches static constants and exposes GrandFireworks globally
+   *  (browser) and via module.exports (Node/CommonJS).
+   * ======================================================================== */
 
   GrandFireworks.VERSION = "1.6.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
