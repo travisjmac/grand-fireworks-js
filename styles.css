@@ -141,6 +141,24 @@ h3 {
   min-height: 176px;
   padding: 22px;
 }
+.game-example-card {
+  grid-column: span 1 !important;
+  display: grid;
+  grid-template-columns: minmax(170px, 42%) 1fr;
+  align-items: center;
+  gap: 20px;
+  background: radial-gradient(circle at 24% 50%, rgba(51, 132, 255, .16), transparent 48%), #0a1022;
+}
+.game-example-card img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .38);
+}
+.game-example-card strong small {
+  color: var(--muted);
+  font-size: .72em;
+  font-weight: 700;
+}
 .card.secondary-card {
   min-height: 112px;
   padding: 16px 18px;
@@ -534,6 +552,9 @@ footer {
   }
   .card.featured {
     grid-column: span 1;
+  }
+  .game-example-card {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,11 +1,11 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.6.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.6.2** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.6.1
+## Version 1.6.2
 
-This feature release adds the Guided Configuration Builder, curated themes and styles, reusable synthesized sound, cancellable sequential text messages, accessibility-aware motion and pause behavior, complete finale timing controls, automated regression tests, and reproducible distribution builds. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
+This patch release adds two release-ready interactive showcases: Fireworks Command, a Mars defence game, and Starlight Intercept, a space-action game. Both now live in self-contained example folders with readable, commented source. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
 Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-style bloom, star cores, rocket exhaust, explosion flashes, secondary crackles, specialized shell geometry, grouped salvos, and a Canvas 2D fallback. The class also includes graceful stopping, an optional finale, fullscreen or contained placement, timed shows, performance presets, and synchronized multi-line hybrid text fireworks.
 
@@ -22,6 +22,8 @@ After GitHub Pages is enabled for the repository, the complete interactive docum
 - [Moonlit Horizon](https://travisjmac.github.io/grand-fireworks-js/examples/moonlit-horizon.html) — the cinematic parallax showcase.
 - [Feature Demos](https://travisjmac.github.io/grand-fireworks-js/examples/feature-demos.html) — one draggable control panel for depth, shells, themes, text, finale, and sound.
 - [Config Maker & Loader](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html) — build, preview, save, load, and copy reusable configurations.
+- [Fireworks Command](https://travisjmac.github.io/grand-fireworks-js/examples/fireworks-command/) — a tactical Mars defence game showing the engine in an arcade setting.
+- [Starlight Intercept](https://travisjmac.github.io/grand-fireworks-js/examples/starlight-intercept/) — a space-action showcase with ember fields, ship combat, and a warp ending.
 
 The same files can be browsed directly inside the repository through the relative links in [`index.html`](index.html), but GitHub Pages is required to run the interactive JavaScript examples as a website.
 

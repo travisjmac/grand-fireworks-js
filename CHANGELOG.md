@@ -2,6 +2,22 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.6.2] — July 28, 2026
+
+### Added
+
+- Added Fireworks Command, a Mars defence game showcase with bunker interceptors, waves, upgrades, chain reactions, a SuperNova, music, and a Mars dust-scape.
+- Added Starlight Intercept, a space-action showcase with ember fields, power-ups, asteroids, saucers, laser bursts, music, and a cinematic warp ending.
+- Added polished game logos and home-page showcase cards for both examples.
+
+### Changed
+
+- Moved both games into self-contained example folders with separated HTML, CSS, and readable, commented JavaScript source credited to Travis MacDonald.
+
+### Fixed
+
+- Preserved the player's sound preference when advancing to the next Fireworks Command round.
+
 ## [1.6.1] — July 28, 2026
 
 ### Added

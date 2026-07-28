@@ -1,0 +1,262 @@
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    #14284d 0%,
+    #070d1e 48%,
+    #02030a 100%
+  );
+  color: #fff;
+  font:
+    600 14px/1.2 system-ui,
+    sans-serif;
+}
+#game {
+  position: fixed;
+  z-index: 2;
+  display: block;
+  width: 100vw;
+  height: 100svh;
+  cursor: crosshair;
+  background: transparent;
+}
+.hud {
+  position: fixed;
+  z-index: 3;
+  inset: 18px 18px auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+  text-shadow: 0 2px 8px #000;
+}
+.hud strong {
+  display: block;
+  color: #ffdc80;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  letter-spacing: 0.08em;
+}
+.hud span {
+  color: #a9c9ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.supernova {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  border: 1px solid #ffdc83aa;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #f43f5e33;
+  color: #fff1c5;
+  box-shadow: 0 0 22px #f43f5e55;
+  cursor: pointer;
+  font: 800 12px system-ui;
+  letter-spacing: 0.08em;
+}
+.supernova:disabled {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+.panel {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: min(560px, calc(100vw - 40px));
+  transform: translate(-50%, -50%);
+  padding: 28px;
+  border: 1px solid #668fcf66;
+  border-radius: 20px;
+  background: #071023d9;
+  box-shadow: 0 28px 90px #0009;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+.game-logo {
+  display: block;
+  width: min(100%, 520px);
+  margin: 0 auto 18px;
+}
+.panel h1 {
+  margin: 0 0 10px;
+  color: #ffda80;
+  font:
+    700 clamp(2rem, 9vw, 4rem) / 0.9 Georgia,
+    serif;
+}
+.panel p {
+  margin: 0 0 20px;
+  color: #c9dcff;
+  line-height: 1.55;
+}
+.start-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.panel button,
+.settings-toggle {
+  border: 1px solid #ffdb8277;
+  border-radius: 999px;
+  padding: 13px 22px;
+  background: #ffcf7033;
+  color: #fff5dc;
+  cursor: pointer;
+  font: 700 15px system-ui;
+}
+.panel button:hover,
+.settings-toggle:hover {
+  background: #ffcf7066;
+}
+.panel.round-next {
+  width: min(520px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 16px;
+  background: #071023e8;
+}
+.panel.round-next .game-logo,
+.panel.round-next h1,
+.panel.round-next p,
+.panel.round-next #start-muted {
+  display: none;
+}
+.panel.round-next .start-actions {
+  display: block;
+  margin-top: 10px;
+}
+.upgrades {
+  display: none;
+  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  text-align: left;
+}
+.panel.round-next .upgrades {
+  display: grid;
+}
+.upgrades button {
+  padding: 10px !important;
+  border-radius: 9px !important;
+  background: #123050 !important;
+  font-size: 12px !important;
+}
+.upgrades button.selected {
+  border-color: #ffe082 !important;
+  background: #70551c !important;
+}
+.panel.round-next #start-music:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.panel[hidden] {
+  display: none;
+}
+.hint {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  color: #a7c8ff99;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.settings-toggle {
+  position: fixed;
+  z-index: 5;
+  right: 18px;
+  bottom: 14px;
+  padding: 9px 13px;
+  background: #0b1630cc;
+  font-size: 12px;
+}
+.settings {
+  position: fixed;
+  z-index: 5;
+  right: 18px;
+  bottom: 56px;
+  width: 220px;
+  padding: 14px;
+  border: 1px solid #739ee377;
+  border-radius: 13px;
+  background: #071023e8;
+  box-shadow: 0 14px 40px #0008;
+  backdrop-filter: blur(10px);
+}
+.settings[hidden] {
+  display: none;
+}
+.settings label {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 12px;
+  color: #b9d5ff;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.settings label:last-child {
+  margin: 0;
+}
+.settings select,
+.settings button {
+  width: 100%;
+  border: 1px solid #5d88c077;
+  border-radius: 8px;
+  padding: 8px;
+  background: #122440;
+  color: #e8f3ff;
+  font: 600 13px system-ui;
+}
+.settings button {
+  cursor: pointer;
+}
+.settings button[aria-pressed="true"] {
+  background: #1e795f;
+  color: #e9fff7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings {
+    backdrop-filter: none;
+  }
+}
+body {
+  background: #170305 url("../../assets/starlight-intercept-mars.png") center /
+    cover no-repeat;
+}
+.dust-wind {
+  position: fixed;
+  inset: -20%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.28;
+  background: repeating-linear-gradient(
+    165deg,
+    transparent 0 28px,
+    rgba(255, 95, 50, 0.16) 34px 42px,
+    transparent 52px 92px
+  );
+  mix-blend-mode: screen;
+  animation: dust-drift 13s linear infinite;
+}
+@keyframes dust-drift {
+  from {
+    transform: translate3d(-9%, -3%, 0);
+  }
+  to {
+    transform: translate3d(9%, 3%, 0);
+  }
+}

@@ -1,0 +1,139 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background:
+    radial-gradient(
+      ellipse at 72% 18%,
+      rgba(108, 44, 177, 0.28),
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 22% 70%,
+      rgba(16, 105, 151, 0.17),
+      transparent 42%
+    ),
+    #02030b;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  height: 100vh;
+  touch-action: none;
+  user-select: none;
+}
+#game-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+#ui-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#score {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 30;
+  font:
+    700 clamp(2rem, 6vw, 4rem) / 1 system-ui,
+    sans-serif;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+#round-progress {
+  position: fixed;
+  z-index: 31;
+  left: 50%;
+  bottom: 20px;
+  width: min(420px, 58vw);
+  height: 7px;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  overflow: hidden;
+  background: rgba(128, 170, 255, 0.18);
+  box-shadow: 0 2px 14px #0008;
+  pointer-events: none;
+}
+#round-progress > i {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #54d7ff, #b36bff, #ffcf58);
+  transition: width 0.12s linear;
+}
+#message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+  text-align: center;
+  pointer-events: auto;
+}
+#message h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: #ffd65a;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.9);
+  margin-bottom: 12px;
+}
+#game-logo {
+  display: block;
+  width: min(720px, 84vw);
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  box-shadow: 0 18px 45px #0009;
+}
+#message p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+#message .hint {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  margin-top: 16px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.back-row {
+  position: fixed;
+  z-index: 100;
+  left: 14px;
+  top: 14px;
+  pointer-events: auto;
+}
+.back-row a {
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(8, 10, 25, 0.9);
+  border: 1px solid rgba(57, 66, 124, 0.5);
+  padding: 8px 12px;
+  border-radius: 9px;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.15s;
+}
+.back-row a:hover {
+  color: #fff;
+}

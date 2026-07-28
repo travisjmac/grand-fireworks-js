@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="author" content="Travis MacDonald" />
+    <meta name="creator" content="Travis MacDonald" />
+    <title>Fireworks Command v0.3 — Grand Fireworks</title>
+    <link rel="stylesheet" href="game.css" />
+  </head>
+  <body>
+    <div class="dust-wind" aria-hidden="true"></div>
+    <canvas id="game"></canvas>
+    <audio
+      id="game-music"
+      src="../../assets/GalacticRap.mp3"
+      loop
+      preload="metadata"
+    ></audio>
+    <div class="hud">
+      <div><span>Score</span><strong id="score">000000</strong></div>
+      <div style="text-align: right">
+        <span>Round · Cities · Time</span
+        ><strong id="wave">1 · 6 · 1:00</strong>
+      </div>
+    </div>
+    <div class="hint">Click/tap, Ctrl, or Space to fire · P pause · M mute</div>
+    <button class="supernova" id="supernova" type="button">
+      Use SuperNova
+    </button>
+    <button class="settings-toggle" id="settings-toggle" aria-expanded="false">
+      Settings
+    </button>
+    <aside class="settings" id="settings" hidden>
+      <label
+        >Sound &amp; music
+        <button id="sound-toggle" type="button" aria-pressed="true">
+          On
+        </button></label
+      ><label
+        >Bomb palette
+        <select id="palette">
+          <option value="rainbow">Rainbow</option>
+          <option value="redblue">Red &amp; blue</option>
+        </select></label
+      ><label
+        >Explosion style
+        <select id="effect">
+          <option value="arcade">Arcade</option>
+          <option value="bold">Bold</option>
+        </select></label
+      >
+    </aside>
+    <section class="panel" id="panel">
+      <img
+        class="game-logo"
+        src="../../assets/fireworks-command-logo.png"
+        alt="Fireworks Command"
+      />
+      <h1 hidden>Missile Command</h1>
+      <p>
+        <strong>YEAR 2088.</strong> Humanity colonised Mars, found lovely red
+        dirt, and immediately built six cities on it. Decades later we
+        discovered the locals: an evil race of tiny red bomb-shaped Martians.
+        They have no diplomacy, no visible legs, and an alarming enthusiasm for
+        city-sized craters. Defend the colony for one minute. Please try not to
+        start an interplanetary incident.
+      </p>
+      <div class="upgrades" id="upgrades">
+        <button data-upgrade="shield">Shield I · cities take another hit</button
+        ><button data-upgrade="reload">Rapid reload · shorter recharge</button
+        ><button data-upgrade="blast">Blast power · wider explosion</button
+        ><button data-upgrade="chain">
+          Chain reaction · 12% chance of 4× blast
+        </button>
+      </div>
+      <div class="start-actions">
+        <button id="start-music">Start with music</button
+        ><button id="start-muted">Start muted</button>
+      </div>
+    </section>
+    <script src="game.js"></script>
+  </body>
+</html>
