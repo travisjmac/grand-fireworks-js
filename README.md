@@ -1,9 +1,9 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.6.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.6.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.6.0
+## Version 1.6.1
 
 This feature release adds the Guided Configuration Builder, curated themes and styles, reusable synthesized sound, cancellable sequential text messages, accessibility-aware motion and pause behavior, complete finale timing controls, automated regression tests, and reproducible distribution builds. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
@@ -19,17 +19,9 @@ After GitHub Pages is enabled for the repository, the complete interactive docum
 
 **[View the source repository](https://github.com/travisjmac/grand-fireworks-js)** · **[Download the latest source ZIP](https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip)**
 
-- [Default show](https://travisjmac.github.io/grand-fireworks-js/examples/default.html)
-- [Background overlay](https://travisjmac.github.io/grand-fireworks-js/examples/background.html)
-- [Contained celebration](https://travisjmac.github.io/grand-fireworks-js/examples/contained.html)
-- [Manual controls](https://travisjmac.github.io/grand-fireworks-js/examples/manual.html)
-- [Super Grand Finale](https://travisjmac.github.io/grand-fireworks-js/examples/timed-finale.html)
-- [Love text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-love.html)
-- [Multiline text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-multiline.html)
-- [Sequential text messages](https://travisjmac.github.io/grand-fireworks-js/examples/text-sequence.html)
-- [Custom text firework](https://travisjmac.github.io/grand-fireworks-js/examples/text-custom.html)
-- [Guided Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html)
-- [Advanced Configuration Builder](https://travisjmac.github.io/grand-fireworks-js/examples/configuration-builder.html)
+- [Moonlit Horizon](https://travisjmac.github.io/grand-fireworks-js/examples/moonlit-horizon.html) — the cinematic parallax showcase.
+- [Feature Demos](https://travisjmac.github.io/grand-fireworks-js/examples/feature-demos.html) — one draggable control panel for depth, shells, themes, text, finale, and sound.
+- [Config Maker & Loader](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html) — build, preview, save, load, and copy reusable configurations.
 
 The same files can be browsed directly inside the repository through the relative links in [`index.html`](index.html), but GitHub Pages is required to run the interactive JavaScript examples as a website.
 
@@ -43,11 +35,13 @@ The same files can be browsed directly inside the repository through the relativ
 
 `duration: 0` runs indefinitely. `stop()` is graceful by default: it stops new launches, finishes active fireworks, optionally plays the configured finale, then fades out.
 
-The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `finalize`, `setOptions`, `setOpacity`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, and `getStats`.
+The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `launchWorldEnder`, `finalize`, `setOptions`, `setOpacity`, `setZoom`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, and `getStats`.
 
 `launch()`, `launchText()`, and `launchFinale()` are standalone-safe: they wake the renderer when the regular show is idle, stopped, paused, or fading, play only the requested effect, then fade away automatically. They do not restart automatic launches.
 
 The Super Grand Finale launches one central carrier, bursts it into independently glowing comet trails, sends those trails in different radial directions, and then detonates each into a large ringed, crackling secondary shell. Configure it with `finale.trails`, `finale.trailFlight`, `finale.burstScale`, `finale.maxWaitBeforeLaunch`, `finale.particleScale`, `finale.finishDelay`, and `finale.maxDuration`.
+
+`launchWorldEnder()` reuses that same carrier-and-trail pipeline, then turns each first-wave burst into mixed warheads. Configure `worldEnder.firstSplitCount`, `worldEnder.secondSplitCount`, `worldEnder.promotionChance`, `worldEnder.maxChainDepth`, and `worldEnder.recursionDurationMs` to balance spectacle against performance.
 
 Launch text messages one at a time with a cancellable sequence:
 
@@ -97,15 +91,25 @@ const fireworks = new GrandFireworks({
     explosionFlashes: true,
     starChance: 0.08,
     groupedSalvos: true,
-    secondaryCrackle: true
+    secondaryCrackle: true,
+    zoom: 1 // 0.1–4; smaller values reveal a wider field of view
   },
   show: {
     launchSpread: 0.55,
     angleRange: 14,
     angleStrength: 1,
-    textRocketAngle: 0
+    textRocketAngle: 0,
+    launchHorizon: 1, // total launch area, in screen widths
+    zAngleRange: 25, // 0–45° depth drift
+    zAngleStrength: 0.8 // 0–3 depth drift multiplier
   }
 });
 ```
+
+### Depth-staged horizon
+
+`visuals.zoom` controls the visible field of view: values below `1` pull back to reveal more of the horizon, while values above `1` move closer. `show.launchHorizon` sets the total launch area in screen widths.
+
+Shells are staged as near, middle, or far. Distance affects apparent size, flight speed, burst height, stereo position, loudness, and a slight delay on distant launch and boom sounds. Tune depth drift with `zAngleRange` and `zAngleStrength`, or call `fireworks.setZoom(0.5)` to update the view live. See the [Feature Demos](https://travisjmac.github.io/grand-fireworks-js/examples/feature-demos.html) for a live reference.
 
 Run the dependency-free regression suite with `npm test`.

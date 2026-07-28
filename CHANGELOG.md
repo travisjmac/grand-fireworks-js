@@ -2,6 +2,23 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.6.1] — July 28, 2026
+
+### Added
+
+- Added World Ender as a reusable engine effect, Feature Demos show-stopper option, and Guided Builder choice.
+- Added depth-aware close-shell staging, near-field boom controls, mixed styles, and live scene zoom support.
+- Added the Moonlit Horizon cinematic sequence with music, show timeline, style showcase, credits, and a configurable World Ender finale.
+
+### Changed
+
+- Manual Super Grand Finales and World Enders now keep a live show running unless `stopAfter: true` is requested.
+- Renamed the Zoom Playground experience to Feature Demos.
+
+### Fixed
+
+- Fixed camera zoom centring for active rockets, particles, flashes, and text fireworks.
+
 ## [1.6.0] — July 23, 2026
 
 ### Changed

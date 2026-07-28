@@ -23,10 +23,11 @@
 
 /* Builder drawer overlay */
 #controls{display:none}
-#builder-drawer{position:fixed;top:0;left:0;bottom:0;z-index:2147483644;width:620px;max-width:90vw;background:#03040e;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+#builder-drawer{position:fixed;top:64px;left:20px;bottom:auto;z-index:2147483644;width:500px;height:min(680px,calc(100vh - 88px));min-width:350px;min-height:390px;max-width:calc(100vw - 40px);max-height:calc(100vh - 32px);background:rgba(3,4,14,.78);display:flex;flex-direction:column;transform:translateX(calc(-100% - 28px));transition:transform .4s cubic-bezier(.4,0,.2,1);border:1px solid rgba(112,130,216,.55);border-radius:12px;box-shadow:10px 16px 50px rgba(0,0,0,.62),inset 0 0 0 1px rgba(255,255,255,.03);overflow:hidden;resize:both;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 #builder-drawer.open{transform:translateX(0)}
-#builder-drawer .drawer-header{display:flex;align-items:center;gap:8px;padding:10px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06)}
-#builder-drawer .drawer-header h1{margin:0;font-size:14px;font-weight:700;color:#ffd65a;flex:1;white-space:nowrap}
+#builder-drawer .drawer-header{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;flex-shrink:0;border-bottom:1px solid rgba(163,180,255,.25);background:linear-gradient(180deg,#313d78 0%,#1b2450 46%,#121a3e 100%);box-shadow:inset 0 1px rgba(255,255,255,.13),0 4px 12px rgba(0,0,0,.24);cursor:move;user-select:none}
+#builder-drawer .drawer-header::before{content:"";width:18px;height:16px;flex:0 0 18px;opacity:.72;background:radial-gradient(circle,#cbd4ff 1.2px,transparent 1.8px) 0 0/6px 6px}
+#builder-drawer .drawer-header h1{margin:0;font-size:14px;font-weight:700;color:#fff3c1;flex:1;white-space:nowrap;text-shadow:0 1px 1px rgba(0,0,0,.6)}
 #builder-drawer .playback-group{display:flex;gap:2px;align-items:center;margin:0 4px}
 #builder-drawer .playback-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:.15s;line-height:1}
 #builder-drawer .playback-btn:hover{background:rgba(255,255,255,.1)}
@@ -43,21 +44,25 @@
 #controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3);display:none}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}
 
 /* Preset bar */
-#preset-bar{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none}
+#preset-bar{display:none}
 #preset-bar::-webkit-scrollbar{display:none}
 .preset-btn{flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;white-space:nowrap}
 .preset-btn:hover{background:rgba(255,255,255,.1)}
 
 /* Tab bar */
-#tab-bar{display:flex;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)}
+#tab-bar{display:flex;flex-wrap:wrap;flex-shrink:0;overflow:visible;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.12)}
 #tab-bar::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;border:none;background:transparent;color:rgba(255,255,255,.5);padding:8px 12px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn{flex:1 0 auto;border:none;background:transparent;color:rgba(255,255,255,.5);padding:8px 10px;cursor:pointer;font:500 12px/1 system-ui,sans-serif;transition:.15s;border-bottom:2px solid transparent;white-space:nowrap}
 .tab-btn:hover{color:#fff}
 .tab-btn.active{color:#ffd65a;border-bottom-color:#ffd65a}
 .tab-btn .tab-icon{margin-right:4px}
 
 /* Tab content */
-#tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 8px}
+#tab-content{flex:1;overflow-y:scroll;overflow-x:hidden;padding:10px 12px 8px;scrollbar-gutter:stable;scrollbar-color:#8ea0f5 rgba(255,255,255,.08);scrollbar-width:auto}
+#tab-content::-webkit-scrollbar{width:12px}
+#tab-content::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.07)}
+#tab-content::-webkit-scrollbar-thumb{background:linear-gradient(#9dacff,#5f70c9);border:3px solid rgba(5,7,22,.75);border-radius:999px;min-height:44px}
+#tab-content::-webkit-scrollbar-thumb:hover{background:linear-gradient(#c4ceff,#788ce7)}
 .tab-panel{display:none;flex-direction:column;gap:8px}
 .tab-panel.active{display:flex}
 .tab-desc{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 4px;line-height:1.4}
@@ -74,6 +79,7 @@
 .option-row input[type=number]{-moz-appearance:textfield}
 .option-row input[type=number]::-webkit-inner-spin-button,.option-row input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .option-row input[type=checkbox]{width:18px;height:18px;accent-color:#ffd65a;cursor:pointer;flex-shrink:0}
+.slider-control{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}.slider-control input[type=range]{width:100%;accent-color:#ffd65a;cursor:pointer}.slider-control output{min-width:42px;color:#fff3c1;font:600 11px/1 ui-monospace,monospace;text-align:right}
 
 /* Action buttons inside tabs */
 .tab-action-row{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
@@ -199,14 +205,13 @@
 <!-- Builder drawer overlay (everything) -->
 <div id="builder-drawer">
   <div class="drawer-header">
-    <h1>🎆 Grand Fireworks</h1>
+    <h1>🎆 Configuration Workbench</h1>
     <div class="playback-group">
       <button class="playback-btn" id="play-btn" title="Start">▶</button>
       <button class="playback-btn" id="pause-btn" title="Pause">⏸</button>
       <button class="playback-btn" id="stop-btn" title="Stop">⏹</button>
       <span id="countdown-timer"></span>
     </div>
-    <button class="drawer-close" id="drawer-close" title="Close">✕</button>
   </div>
   <div class="drawer-subhead">
     <a class="back" href="../index.html" style="color:rgba(255,255,255,.6);background:rgba(8,10,25,.85);border:1px solid rgba(255,255,255,.15);padding:5px 10px;border-radius:8px;text-decoration:none;font-size:12px">← Documentation</a>
@@ -293,12 +298,16 @@
     </div>
     <div id="wizard-step-4" class="wizard-step">
       <h3>🏆 Grand finale</h3>
-      <p>Add a choreographed grand finale at the end of the show?</p>
-      <div class="wizard-option" data-value="true">
-        <input type="radio" name="wiz-finale" id="wiz-fin-yes">
-        <label for="wiz-fin-yes">🎆 Yes, add a grand finale!</label>
+      <p>Choose the final show stopper, or keep this show open-ended.</p>
+      <div class="wizard-option" data-value="grand-finale">
+        <input type="radio" name="wiz-finale" id="wiz-fin-grand">
+        <label for="wiz-fin-grand">🎆 Add a Grand Finale!</label>
       </div>
-      <div class="wizard-option" data-value="false">
+      <div class="wizard-option" data-value="world-ender">
+        <input type="radio" name="wiz-finale" id="wiz-fin-world">
+        <label for="wiz-fin-world">🌍 Add a World Ender</label>
+      </div>
+      <div class="wizard-option" data-value="none">
         <input type="radio" name="wiz-finale" id="wiz-fin-no" checked>
         <label for="wiz-fin-no">❌ No finale, just the show</label>
       </div>
@@ -438,8 +447,8 @@ const SECTIONS = {
     desc: 'Pick one thing to change, preview it, then keep or revert.',
     options: [
       { id: 'style',       label: 'Style',           type: 'select', updateMode: 'live',
-        choices: ['Classic','Old School','Thin','Medium','Bold','Spectacle'].map(v => ({ label: v, value: v.toLowerCase().replace(/\s+/g,'') })),
-        apply: (c, v, fw) => { fw.setStyle(v); c.baseStyle = v; },
+        choices: ['Classic','Old School','Thin','Medium','Bold','Spectacle','Mixed'].map(v => ({ label: v === 'Mixed' ? '🎲 Mixed styles' : v, value: v.toLowerCase().replace(/\s+/g,'') })),
+        apply: (c, v, fw) => { if (v === 'mixed') fw.setOptions({baseStyle:v}); else fw.setStyle(v); c.baseStyle = v; },
         summary: v => `${PRESET_MAP[v] ? PRESET_MAP[v].icon + ' ' : ''}${v.charAt(0).toUpperCase()+v.slice(1)} style`,
         tooltip: 'Overall look and feel — changes visuals and show behavior together' },
       { id: 'colorTheme',  label: 'Color theme',     type: 'select', updateMode: 'live',
@@ -517,16 +526,16 @@ const SECTIONS = {
     icon: '🎨', label: 'Visuals',
     desc: 'Control how bursts look — trails, glow, stars, and flash effects.',
     options: [
-      { id: 'visuals.opacity',          label: 'Opacity',           type: 'number', min: 0, max: 1, step: .05, def: 1, updateMode: 'live',
+      { id: 'visuals.opacity',          label: 'Opacity',           type: 'number', min: 0, max: 1, step: .05, def: 1, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {opacity:v}); fw.setOptions({visuals:{opacity:v}}); },
         tooltip: 'Overall fireworks transparency' },
       { id: 'visuals.trails',           label: 'Trails',            type: 'toggle', def: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {trails:v}); fw.setOptions({visuals:{trails:v}}); },
         tooltip: 'Luminous motion trails behind particles' },
-      { id: 'visuals.trailFade',        label: 'Trail fade',        type: 'number', min: .03, max: 1, step: .01, def: .115, updateMode: 'live',
+      { id: 'visuals.trailFade',        label: 'Trail fade',        type: 'number', min: .03, max: 1, step: .01, def: .115, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {trailFade:v}); fw.setOptions({visuals:{trailFade:v}}); },
         tooltip: 'How quickly trails fade — lower = longer tails' },
-      { id: 'visuals.bloom',            label: 'Glow (bloom)',      type: 'number', min: .5, max: 2.5, step: .05, def: 1.25, updateMode: 'live',
+      { id: 'visuals.bloom',            label: 'Glow (bloom)',      type: 'number', min: .5, max: 2.5, step: .05, def: 1.25, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {bloom:v}); fw.setOptions({visuals:{bloom:v}}); },
         tooltip: 'Glow intensity around explosions' },
       { id: 'visuals.rocketExhaust',    label: 'Rocket exhaust',    type: 'toggle', def: true, updateMode: 'live',
@@ -535,7 +544,7 @@ const SECTIONS = {
       { id: 'visuals.explosionFlashes', label: 'Explosion flashes', type: 'toggle', def: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {explosionFlashes:v}); fw.setOptions({visuals:{explosionFlashes:v}}); },
         tooltip: 'Bright flash at each burst point' },
-      { id: 'visuals.starChance',       label: 'Star chance',       type: 'number', min: 0, max: .3, step: .01, def: .08, updateMode: 'live',
+      { id: 'visuals.starChance',       label: 'Star chance',       type: 'number', min: 0, max: .3, step: .01, def: .08, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {starChance:v}); fw.setOptions({visuals:{starChance:v}}); },
         tooltip: 'Probability each particle gets a sharp star core' },
       { id: 'visuals.groupedSalvos',    label: 'Grouped salvos',    type: 'toggle', def: true, updateMode: 'live',
@@ -544,16 +553,38 @@ const SECTIONS = {
       { id: 'visuals.secondaryCrackle', label: 'Crackle',           type: 'toggle', def: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {secondaryCrackle:v}); fw.setOptions({visuals:{secondaryCrackle:v}}); },
         tooltip: 'Delayed micro-explosions inside certain shells' },
+      { id: 'visuals.zoom',             label: 'View zoom',         type: 'number', min: .1, max: 4, step: .05, def: 1, slider: true, unit: '×', updateMode: 'live',
+        apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {zoom:v}); fw.setZoom(v); },
+        tooltip: 'Viewport scale: lower values pull back to reveal more of the launch horizon' },
+      { id: 'mixedStyles.classic', label: 'Mix: Classic', type: 'number', min: 0, max: 100, step: 1, def: 20, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{classic:v}); fw.setOptions({mixedStyles:{classic:v}}); }, tooltip: 'Relative share of Classic shells when Mixed styles is selected' },
+      { id: 'mixedStyles.oldSchool', label: 'Mix: Old School', type: 'number', min: 0, max: 100, step: 1, def: 10, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{oldSchool:v}); fw.setOptions({mixedStyles:{oldSchool:v}}); }, tooltip: 'Relative share of Old School shells when Mixed styles is selected' },
+      { id: 'mixedStyles.thin', label: 'Mix: Thin', type: 'number', min: 0, max: 100, step: 1, def: 20, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{thin:v}); fw.setOptions({mixedStyles:{thin:v}}); }, tooltip: 'Relative share of Thin shells when Mixed styles is selected' },
+      { id: 'mixedStyles.medium', label: 'Mix: Medium', type: 'number', min: 0, max: 100, step: 1, def: 25, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{medium:v}); fw.setOptions({mixedStyles:{medium:v}}); }, tooltip: 'Relative share of Medium shells when Mixed styles is selected' },
+      { id: 'mixedStyles.bold', label: 'Mix: Bold', type: 'number', min: 0, max: 100, step: 1, def: 15, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{bold:v}); fw.setOptions({mixedStyles:{bold:v}}); }, tooltip: 'Relative share of Bold shells when Mixed styles is selected' },
+      { id: 'mixedStyles.spectacle', label: 'Mix: Spectacle', type: 'number', min: 0, max: 100, step: 1, def: 10, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{spectacle:v}); fw.setOptions({mixedStyles:{spectacle:v}}); }, tooltip: 'Relative share of Spectacle shells when Mixed styles is selected' },
       { id: 'bg',                       label: 'Background',        type: 'toggle', def: false, updateMode: 'restart',
         apply: (c,v,fw) => { if(v) c.background = {value:'linear-gradient(#101a4b,#040714)',opacity:1}; else c.background = false; },
         tooltip: 'Show a dark gradient background behind fireworks' }
+    ]
+  },
+  sound: {
+    icon: '🔊', label: 'Sound',
+    desc: 'Mix the synthesized launch, boom, crackle, ambience, and stereo behaviour.',
+    options: [
+      { id: 'sound.enabled', label: 'Enabled', type: 'toggle', def: false, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{enabled:v}); fw.setOptions({sound:{enabled:v}}); }, tooltip: 'Sound must be enabled from a user interaction before the browser can play it' },
+      { id: 'sound.volume', label: 'Volume', type: 'number', min: 0, max: 1, step: .05, def: 1, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{volume:v}); fw.setOptions({sound:{volume:v}}); }, tooltip: 'Master synthesized-fireworks volume' },
+      { id: 'sound.ambience', label: 'Ambience', type: 'number', min: 0, max: .05, step: .001, def: .005, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{ambience:v}); fw.setOptions({sound:{ambience:v}}); }, tooltip: 'Quiet background atmosphere beneath the fireworks' },
+      { id: 'sound.stereo', label: 'Stereo pan', type: 'toggle', def: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{stereo:v}); fw.setOptions({sound:{stereo:v}}); }, tooltip: 'Pan launches and bursts across the stereo field' },
+      { id: 'sound.whistleChance', label: 'Whistle chance', type: 'number', min: 0, max: .3, step: .01, def: .03, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{whistleChance:v}); fw.setOptions({sound:{whistleChance:v}}); }, tooltip: 'Chance a shell uses a rising whistle launch sound' },
+      { id: 'sound.finaleRhythm', label: 'Finale rhythm', type: 'toggle', def: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{finaleRhythm:v}); fw.setOptions({sound:{finaleRhythm:v}}); }, tooltip: 'Add the rhythmic boom pattern beneath the finale' },
+      { id: 'sound.maxVoices', label: 'Voice limit', type: 'number', min: 4, max: 64, step: 1, def: 36, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{maxVoices:v}); fw.setOptions({sound:{maxVoices:v}}); }, tooltip: 'Maximum concurrent synthesized sounds' }
     ]
   },
   show: {
     icon: '🚀', label: 'Show',
     desc: 'Control which shell types launch and how they spread.',
     options: [
-      { id: 'show.intensity',      label: 'Intensity',       type: 'number', min: .1, max: 3, step: .1, def: 1, updateMode: 'live',
+      { id: 'show.intensity',      label: 'Intensity',       type: 'number', min: .1, max: 3, step: .1, def: 1, slider: true, unit: '×', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {intensity:v}); fw.setOptions({show:{intensity:v}}); },
         tooltip: 'Multiplier for overall launch frequency' },
       { id: 'show.openingSalvo',   label: 'Opening salvo',   type: 'number', min: 1, max: 20, step: 1, def: 6, updateMode: 'live',
@@ -568,9 +599,18 @@ const SECTIONS = {
       { id: 'show.launchInterval', label: 'Launch interval', type: 'number', min: 100, max: 3000, step: 50, def: null, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchInterval:v}); fw.setOptions({show:{launchInterval:v}}); },
         tooltip: 'ms between automatic launches (blank = preset)' },
-      { id: 'show.launchSpread',   label: 'Launch spread',   type: 'number', min: 0, max: 1, step: .05, def: .55, updateMode: 'live',
+      { id: 'show.launchSpread',   label: 'Launch spread',   type: 'number', min: 0, max: 1, step: .05, def: .55, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchSpread:v}); fw.setOptions({show:{launchSpread:v}}); },
         tooltip: 'Horizontal spread of launch positions' },
+      { id: 'show.launchHorizon',  label: 'Launch horizon',  type: 'number', min: .5, max: 20, step: .5, def: 1, slider: true, unit: ' sw', updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchHorizon:v}); fw.setOptions({show:{launchHorizon:v}}); },
+        tooltip: 'Total launch area in screen widths; zoom out to reveal more of it' },
+      { id: 'show.zAngleRange',    label: 'Depth angle',     type: 'number', min: 0, max: 45, step: 1, def: 25, slider: true, unit: '°', updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {zAngleRange:v}); fw.setOptions({show:{zAngleRange:v}}); },
+        tooltip: 'Maximum near/far drift while a shell climbs, in degrees' },
+      { id: 'show.zAngleStrength', label: 'Depth strength',  type: 'number', min: 0, max: 3, step: .1, def: .8, slider: true, unit: '×', updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {zAngleStrength:v}); fw.setOptions({show:{zAngleStrength:v}}); },
+        tooltip: 'How strongly shells stage into near and distant layers' },
       { id: 'show.angleRange',     label: 'Angle range',     type: 'number', min: 0, max: 45, step: 1, def: 14, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleRange:v}); fw.setOptions({show:{angleRange:v}}); },
         tooltip: 'Max launch-angle variation in degrees' },
@@ -613,7 +653,7 @@ const SECTIONS = {
         apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {enabled:v}); fw.setOptions({finale:{enabled:v}}); },
         tooltip: 'Trigger finale on stop or duration end' },
       { id: 'finale.type',             label: 'Type',             type: 'select', updateMode: 'live',
-        choices: [{label:'Super Grand Finale',value:'super-grand-finale'}],
+        choices: [{label:'Super Grand Finale',value:'super-grand-finale'},{label:'World Ender',value:'world-ender'}],
         apply: (c,v,fw) => { c.finale = deepMerge(c.finale||{}, {type:v}); fw.setOptions({finale:{type:v}}); },
         tooltip: 'Finale choreography style' },
       { id: 'finale.triggers',         label: 'Triggers',         type: 'select', updateMode: 'live',
@@ -707,6 +747,19 @@ const SECTIONS = {
       { id: 'background.opacity',        label: 'BG opacity',      type: 'number', min: 0, max: 1, step: .05, def: 1, updateMode: 'restart',
         apply: (c,v,fw) => { c.background = c.background && typeof c.background === 'object' ? deepMerge(c.background,{opacity:v}) : {opacity:v}; },
         tooltip: 'Background layer opacity' }
+    ]
+  },
+  display: {
+    icon: '🖥️', label: 'Display',
+    desc: 'Choose where the fireworks render and how the layer enters and leaves the page.',
+    options: [
+      { id: 'mode', label: 'Mode', type: 'select', choices: [{label:'Fullscreen',value:'fullscreen'},{label:'Contained',value:'contained'}], updateMode: 'restart', apply: (c,v) => { c.mode=v; }, tooltip: 'Fullscreen covers the viewport; contained renders inside a supplied container' },
+      { id: 'placement', label: 'Placement', type: 'select', choices: [{label:'Overlay',value:'overlay'},{label:'Background',value:'background'}], updateMode: 'restart', apply: (c,v) => { c.placement=v; }, tooltip: 'Render over content or behind it' },
+      { id: 'clip', label: 'Clip to container', type: 'toggle', def: true, updateMode: 'restart', apply: (c,v) => { c.clip=v; }, tooltip: 'Keep contained effects inside their host element' },
+      { id: 'showFps', label: 'Show FPS', type: 'toggle', def: false, updateMode: 'live', apply: (c,v,fw) => { c.showFps=v; fw.setOptions({showFps:v}); }, tooltip: 'Display the live frames-per-second readout' },
+      { id: 'duration', label: 'Duration', type: 'number', min: 0, max: 60000, step: 500, def: 0, slider: true, unit: ' ms', updateMode: 'restart', apply: (c,v) => { c.duration=v; }, tooltip: '0 runs continuously; otherwise the show ends after this many milliseconds' },
+      { id: 'durationMode', label: 'End mode', type: 'select', choices: [{label:'Graceful',value:'graceful'},{label:'Immediate',value:'immediate'}], updateMode: 'live', apply: (c,v,fw) => { c.durationMode=v; fw.setOptions({durationMode:v}); }, tooltip: 'Graceful mode lets active shells finish before fading' },
+      { id: 'renderer.preferred', label: 'Renderer', type: 'select', choices: [{label:'Auto (recommended)',value:'auto'},{label:'WebGL 2',value:'webgl2'},{label:'Canvas 2D',value:'canvas2d'}], updateMode: 'restart', apply: (c,v) => { c.renderer=deepMerge(c.renderer||{},{preferred:v}); }, tooltip: 'Choose automatic rendering, WebGL 2, or Canvas 2D' }
     ]
   }
 };
@@ -1047,13 +1100,25 @@ function buildCategoryTab(sec) {
       ctrl.appendChild(sel);
     } else if (o.type === 'number') {
       const inp = document.createElement('input');
-      inp.type = 'number';
+      inp.type = o.slider ? 'range' : 'number';
       inp.id = `opt-${o.id}`;
       inp.min = o.min; inp.max = o.max; inp.step = o.step;
       const val = getDeep(state.committedConfig, o.id);
       inp.value = val != null ? val : (o.def ?? '');
-      inp.addEventListener('input', () => applyDirectOption(o.id, parseFloat(inp.value) || 0));
-      ctrl.appendChild(inp);
+      if (o.slider) {
+        ctrl.classList.add('slider-control');
+        const output = document.createElement('output');
+        const format = value => o.unit ? `${value}${o.unit}` : String(value);
+        output.textContent = format(inp.value);
+        inp.addEventListener('input', () => {
+          output.textContent = format(inp.value);
+          applyDirectOption(o.id, parseFloat(inp.value) || 0);
+        });
+        ctrl.append(inp, output);
+      } else {
+        inp.addEventListener('input', () => applyDirectOption(o.id, parseFloat(inp.value) || 0));
+        ctrl.appendChild(inp);
+      }
     } else if (o.type === 'text') {
       const inp = document.createElement('input');
       inp.type = 'text';
@@ -1073,7 +1138,7 @@ function buildCategoryTab(sec) {
     act.className = 'tab-action-row';
     const btn = document.createElement('button');
     btn.className = 'tab-action-btn';
-    btn.textContent = '🎬 Preview Grand Finale';
+    btn.textContent = '🎬 Preview Show Stopper';
     btn.addEventListener('click', () => { if (fw) try { fw.launchFinale(); } catch(e) {} });
     act.appendChild(btn);
     frag.appendChild(act);
@@ -1392,6 +1457,31 @@ function dismissWizard() {
   document.getElementById('preview').classList.remove('fullscreen');
 }
 
+function enableWorkbenchDrag() {
+  const drawer = document.getElementById('builder-drawer');
+  const header = drawer.querySelector('.drawer-header');
+  let drag = null;
+  header.addEventListener('mousedown', event => {
+    if (event.target.closest('button')) return;
+    const rect = drawer.getBoundingClientRect();
+    drag = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    drawer.style.transition = 'none';
+    event.preventDefault();
+  });
+  document.addEventListener('mousemove', event => {
+    if (!drag) return;
+    const maxX = Math.max(0, window.innerWidth - drawer.offsetWidth);
+    const maxY = Math.max(0, window.innerHeight - drawer.offsetHeight);
+    drawer.style.left = `${Math.max(0, Math.min(maxX, event.clientX - drag.x))}px`;
+    drawer.style.top = `${Math.max(0, Math.min(maxY, event.clientY - drag.y))}px`;
+  });
+  document.addEventListener('mouseup', () => {
+    if (!drag) return;
+    drag = null;
+    drawer.style.transition = '';
+  });
+}
+
 function toggleControlsPanel() {
   const drawer = document.getElementById('builder-drawer');
   const preview = document.getElementById('preview');
@@ -1409,6 +1499,7 @@ function toggleControlsPanel() {
 
 function init() {
   renderPresets();renderTabs();renderTabContent();
+  enableWorkbenchDrag();
   restartFireworks(state.committedConfig);
 
   document.getElementById('play-btn').onclick=()=>{if(fw)try{fw.start();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
@@ -1416,7 +1507,6 @@ function init() {
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
   document.getElementById('controls-toggle').onclick=toggleControlsPanel;
-  document.getElementById('drawer-close').onclick=()=>{document.getElementById('builder-drawer').classList.remove('open');document.getElementById('controls-toggle').textContent='▶';document.getElementById('preview').classList.add('fullscreen');setTimeout(()=>{if(fw)try{fw.destroy();initFireworks(effectiveConfig());}catch(e){}},500);};
   document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
   document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};
   document.getElementById('save-cancel').onclick=()=>document.getElementById('save-overlay').classList.add('hidden');
@@ -1436,7 +1526,7 @@ function init() {
   setInterval(updateCountdown, 500);
   document.onkeydown=e=>{
     if(e.key==='Escape'){
-      if(document.getElementById('builder-drawer').classList.contains('open')){document.getElementById('drawer-close').click();return;}
+      if(document.getElementById('builder-drawer').classList.contains('open')){toggleControlsPanel();return;}
       if(!document.getElementById('save-overlay').classList.contains('hidden')){document.getElementById('save-overlay').classList.add('hidden');return;}
       if(!document.getElementById('load-overlay').classList.contains('hidden')){document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';return;}
       if(!document.getElementById('wizard-overlay').classList.contains('hidden')){dismissWizard();return;}
@@ -1470,7 +1560,7 @@ function updateCountdown() {
   } catch(e) { el.style.display = 'none'; }
 }
 
-let wizardData = { theme: 'default', style: 'medium', continuous: true, duration: 10000, finale: false, text: false, textMsg: '' };
+let wizardData = { theme: 'default', style: 'medium', continuous: true, duration: 10000, finale: 'none', text: false, textMsg: '' };
 const WIZARD_THEMES = [
   { label: '🌈 Default', value: 'default' },
   { label: '❄️ Ice Blue', value: 'iceBlue' },
@@ -1614,7 +1704,7 @@ function initWizard() {
   document.getElementById('wiz-back-4').addEventListener('click', () => showStep(3));
   document.getElementById('wiz-next-4').addEventListener('click', () => {
     const sel = document.querySelector('input[name="wiz-finale"]:checked');
-    if (sel) wizardData.finale = sel.closest('.wizard-option')?.dataset?.value === 'true';
+    if (sel) wizardData.finale = sel.closest('.wizard-option')?.dataset?.value || 'none';
     showStep(5);
   });
 
@@ -1633,11 +1723,25 @@ function initWizard() {
       wizardData.textMsg = document.getElementById('wiz-text-value')?.value || '';
     }
     // Apply wizard config
-    const presetObj = PRESET_MAP[wizardData.style] || PRESET_MAP.medium;
+    const wizardPresetId = {
+      medium: 'balanced',
+      oldSchool: 'classic',
+      thin: 'subtle',
+      classic: 'classic',
+      bold: 'bold',
+      spectacle: 'spectacle',
+      mobile: 'mobile'
+    }[wizardData.style] || 'balanced';
+    const presetObj = PRESET_MAP[wizardPresetId];
     const cfg = deepMerge(deepMerge({}, CORE_CONFIG), presetObj.config);
+    cfg.baseStyle = wizardData.style === 'mobile' ? 'medium' : wizardData.style;
     cfg.colorTheme = wizardData.theme;
     if (!wizardData.continuous) cfg.duration = wizardData.duration;
-    if (wizardData.finale) cfg.finale = { enabled: true, triggers: ['stop', 'duration'] };
+    if (wizardData.finale !== 'none') cfg.finale = {
+      enabled: true,
+      type: wizardData.finale === 'world-ender' ? 'world-ender' : 'super-grand-finale',
+      triggers: ['stop', 'duration']
+    };
     state.currentPreset = wizardData.style;
     state.startingPreset = wizardData.style;
     state.committedConfig = cfg;

@@ -1,0 +1,367 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Zoom Controls</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        min-height: 100vh;
+        font: 14px/1.5 system-ui, sans-serif;
+        background: #070a1a;
+        color: #c8d0f0;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      h1 {
+        font-size: 1rem;
+        margin: 0 0 10px;
+        color: #ffd65a;
+        font-weight: 650;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      h1 small {
+        font-weight: 400;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      .section {
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        background: #0c0f24;
+        border: 1px solid #2a3368;
+        border-radius: 10px;
+      }
+      .section-title {
+        font-size: 0.7rem;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 8px;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .control-row:last-child {
+        margin-bottom: 0;
+      }
+      .control-row label {
+        font-size: 0.78rem;
+        color: #aab6e8;
+        min-width: 52px;
+        flex-shrink: 0;
+      }
+      .control-row input[type="range"] {
+        flex: 1;
+        accent-color: #ffd700;
+        height: 4px;
+        cursor: pointer;
+      }
+      .control-row .value {
+        font-size: 0.78rem;
+        color: #fff;
+        min-width: 42px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .presets {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+      }
+      .presets button {
+        flex: 1;
+        min-width: 48px;
+        font-size: 0.65rem;
+        padding: 4px 6px;
+        border: 1px solid #2a3368;
+        background: #12183a;
+        color: rgba(255, 255, 255, 0.6);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+        line-height: 1.2;
+      }
+      .presets button:hover {
+        background: #1e2758;
+        color: #fff;
+      }
+      .presets button.active {
+        background: #ffd700;
+        color: #000;
+        border-color: #ffd700;
+        font-weight: 600;
+      }
+
+      .num-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .num-row label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: #aab6e8;
+      }
+      .num-row input[type="number"] {
+        width: 52px;
+        background: #0c0f24;
+        border: 1px solid #2a3368;
+        border-radius: 5px;
+        color: #fff;
+        padding: 2px 4px;
+        font-size: 0.72rem;
+      }
+
+      .action-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .action-row button {
+        flex: 1;
+        padding: 7px 10px;
+        border-radius: 7px;
+        border: 1px solid #2a3368;
+        background: #12183a;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+      }
+      .action-row button:hover {
+        background: #1e2758;
+        color: #fff;
+      }
+      .action-row button.primary {
+        background: #1f285a;
+        color: #ffd700;
+        border-color: #3d4780;
+      }
+      .action-row button.primary:hover {
+        background: #2b3670;
+      }
+      .action-row button.danger {
+        color: #ff6b6b;
+        border-color: #5c2a2a;
+      }
+      .action-row button.danger:hover {
+        background: #2a1515;
+      }
+      .action-row button.success {
+        color: #5dde7a;
+        border-color: #1a4a2a;
+      }
+      .action-row button.success:hover {
+        background: #0f2a18;
+      }
+
+      .status-bar {
+        margin-top: auto;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.2);
+        display: flex;
+        justify-content: space-between;
+      }
+      .status-bar .connected {
+        color: #5dde7a;
+      }
+      .status-bar .disconnected {
+        color: #ff6b6b;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔭 Zoom Controls <small>popout</small></h1>
+
+    <div class="section">
+      <div class="section-title">Zoom</div>
+      <div class="control-row">
+        <label>Zoom</label>
+        <input type="range" id="zoom-slider" min="0.1" max="4" step="0.01" value="1" />
+        <span class="value" id="zoom-val">1.00×</span>
+      </div>
+      <div class="presets">
+        <button data-zoom="0.1">0.1×<br /><small>extreme</small></button>
+        <button data-zoom="0.25">0.25×<br /><small>wide</small></button>
+        <button data-zoom="0.5">0.5×<br /><small>half</small></button>
+        <button data-zoom="1" class="active">1×<br /><small>normal</small></button>
+        <button data-zoom="2">2×<br /><small>close</small></button>
+        <button data-zoom="4">4×<br /><small>max</small></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Horizon &amp; Depth</div>
+      <div class="num-row">
+        <label>Horizon <input type="number" id="horizon-input" min="0.5" max="20" step="0.5" value="3" /></label>
+        <label>Z-angle <input type="number" id="zangle-input" min="0" max="45" step="1" value="25" />°</label>
+        <label>Strength <input type="number" id="zstrength-input" min="0" max="3" step="0.1" value="0.8" /></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <div class="action-row">
+        <button class="primary" id="restart-btn">↻ Restart</button>
+        <button class="danger" id="stop-btn">■ Stop</button>
+        <button class="success" id="start-btn">▶ Start</button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="status-text"><span class="connected">●</span> Connected</span>
+      <span id="particle-count">— particles</span>
+    </div>
+
+    <script>
+      // ── Wait for opener and communicate via postMessage ──
+      const opener = window.opener;
+      if (!opener || opener === window) {
+        document.body.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;color:rgba(255,255,255,0.3);padding:20px;font-size:0.85rem">' +
+          'This window must be opened from the <a href="feature-demos.html" style="color:#ffd65a">Feature Demos</a> page.</div>';
+        throw new Error("Not a popup");
+      }
+
+      // ── DOM refs ──
+      const zoomSlider = document.getElementById("zoom-slider");
+      const zoomVal = document.getElementById("zoom-val");
+      const horizonInput = document.getElementById("horizon-input");
+      const zAngleInput = document.getElementById("zangle-input");
+      const zStrengthInput = document.getElementById("zstrength-input");
+      const restartBtn = document.getElementById("restart-btn");
+      const stopBtn = document.getElementById("stop-btn");
+      const startBtn = document.getElementById("start-btn");
+      const statusText = document.getElementById("status-text");
+      const particleCount = document.getElementById("particle-count");
+      const presetBtns = document.querySelectorAll(".presets button");
+
+      let lastZoom = 1;
+
+      // ── Send command to parent ──
+      function send(cmd) {
+        try { opener.postMessage({ type: "zoom-cmd", cmd }, "*"); } catch (e) {}
+      }
+
+      // ── Request state from parent ──
+      function requestState() {
+        try { opener.postMessage({ type: "zoom-req" }, "*"); } catch (e) {}
+      }
+
+      // ── Update UI from state ──
+      function applyState(state) {
+        if (!state) return;
+        zoomSlider.value = state.zoom;
+        zoomVal.textContent = state.zoom.toFixed(2) + "×";
+        lastZoom = state.zoom;
+        horizonInput.value = state.horizon;
+        zAngleInput.value = state.zAngle;
+        zStrengthInput.value = state.zStrength;
+        particleCount.textContent = (state.particles || 0) + " particles";
+        // Highlight preset
+        presetBtns.forEach((btn) => {
+          const pz = parseFloat(btn.dataset.zoom);
+          btn.classList.toggle("active", Math.abs(pz - state.zoom) < 0.02);
+        });
+        // Start/stop button state
+        if (state.running) {
+          stopBtn.disabled = false;
+          startBtn.disabled = true;
+        } else {
+          stopBtn.disabled = true;
+          startBtn.disabled = false;
+        }
+      }
+
+      // ── Listen for messages from parent ──
+      window.addEventListener("message", (e) => {
+        if (e.data && e.data.type === "zoom-state") {
+          applyState(e.data);
+          statusText.innerHTML = '<span class="connected">●</span> Connected';
+        }
+        if (e.data && e.data.type === "zoom-pong") {
+          // heartbeat response
+        }
+      });
+
+      // ── Send zoom changes ──
+      zoomSlider.addEventListener("input", () => {
+        const z = parseFloat(zoomSlider.value);
+        zoomVal.textContent = z.toFixed(2) + "×";
+        send({ action: "setZoom", value: z });
+        presetBtns.forEach((btn) => {
+          const pz = parseFloat(btn.dataset.zoom);
+          btn.classList.toggle("active", Math.abs(pz - z) < 0.02);
+        });
+      });
+
+      // ── Presets ──
+      presetBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const z = parseFloat(btn.dataset.zoom);
+          zoomSlider.value = z;
+          zoomVal.textContent = z.toFixed(2) + "×";
+          send({ action: "setZoom", value: z });
+          presetBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      });
+
+      // ── Horizon / Z controls ──
+      horizonInput.addEventListener("change", () => {
+        send({ action: "setHorizon", value: parseFloat(horizonInput.value) || 3 });
+      });
+      zAngleInput.addEventListener("change", () => {
+        send({ action: "restart", zAngle: parseFloat(zAngleInput.value) || 25, zStrength: parseFloat(zStrengthInput.value) || 0.8 });
+      });
+      zStrengthInput.addEventListener("change", () => {
+        send({ action: "restart", zAngle: parseFloat(zAngleInput.value) || 25, zStrength: parseFloat(zStrengthInput.value) || 0.8 });
+      });
+
+      // ── Action buttons ──
+      restartBtn.addEventListener("click", () => {
+        send({
+          action: "restart",
+          horizon: parseFloat(horizonInput.value) || 3,
+          zAngle: parseFloat(zAngleInput.value) || 25,
+          zStrength: parseFloat(zStrengthInput.value) || 0.8,
+          zoom: parseFloat(zoomSlider.value),
+        });
+      });
+      stopBtn.addEventListener("click", () => send({ action: "stop" }));
+      startBtn.addEventListener("click", () => send({ action: "start" }));
+
+      // ── Heartbeat / state polling ──
+      requestState();
+      setInterval(requestState, 2000);
+
+      // ── Pulse status on load ──
+      statusText.innerHTML = '<span class="connected">●</span> Connected';
+    </script>
+  </body>
+</html>

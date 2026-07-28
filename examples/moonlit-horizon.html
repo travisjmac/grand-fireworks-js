@@ -6,11 +6,11 @@
   <meta name="description" content="A moonlit horizon demo for Grand Fireworks JS.">
   <title>Moonlit Horizon — Grand Fireworks</title>
   <style>
-    :root { color-scheme: dark; --view-scale: 1; }
+    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100svh; overflow: hidden; background: #020617; color: #f8f4e8; font: 500 16px/1.45 system-ui, sans-serif; }
     .scene, .scene::before, .scene::after { position: fixed; inset: 0; overflow: hidden; }
-    .scene { isolation: isolate; background: radial-gradient(ellipse 58% 30% at 50% 80%, rgba(198, 132, 82, .10), transparent 30%), linear-gradient(#03091a 0%, #000000 58%, #1f0d17 100%); transform: scale(var(--view-scale)); transform-origin: 50% 84%; transition: transform .55s cubic-bezier(.2,.72,.16,1); }
+    .scene { isolation: isolate; background: radial-gradient(ellipse 58% 30% at 50% 80%, rgba(198, 132, 82, .10), transparent 30%), linear-gradient(#03091a 0%, #000000 58%, #1f0d17 100%); }
     .fireworks-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
     .scene::before { content: ""; z-index: 0; opacity: .85; background-image: radial-gradient(1.2px 1.2px at 9% 14%, #fff 96%, transparent), radial-gradient(1px 1px at 20% 31%, #d8e8ff 96%, transparent), radial-gradient(1px 1px at 31% 11%, #fff 96%, transparent), radial-gradient(1.4px 1.4px at 47% 28%, #fff6ce 96%, transparent), radial-gradient(1px 1px at 61% 12%, #fff 96%, transparent), radial-gradient(1.4px 1.4px at 77% 24%, #d7e7ff 96%, transparent), radial-gradient(1px 1px at 91% 9%, #fff 96%, transparent), radial-gradient(1px 1px at 83% 48%, #fff 96%, transparent); background-size: 310px 220px, 370px 270px, 430px 290px, 520px 330px, 460px 250px, 380px 250px, 600px 380px, 330px 210px; animation: starglide 36s linear infinite alternate; transition: transform 10s cubic-bezier(.2,.72,.16,1); }
     .scene::after { content: ""; z-index: 1; top: 45%; background: linear-gradient(180deg, transparent, rgba(244,161,100,.11) 35%, transparent 65%); filter: blur(18px); }
@@ -31,15 +31,42 @@
     .placard-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; margin-top: auto; }
     .placard-actions button { border-color: rgba(82,44,18,.38); background: rgba(255,247,230,.62); color: #321507; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
     .placard-actions button:hover, .placard-actions button:focus-visible { background: rgba(255,239,202,.9); }
+    .experience-choice { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: #000; color: #fff8e9; transition: opacity 1.25s ease, visibility 1.25s step-end; }
+    .experience-choice.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+    .experience-choice__inner { width: min(430px, 100%); text-align: center; }
+    .experience-choice p { margin: 0 0 8px; color: rgba(255,224,174,.68); font-size: .75rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    .experience-choice h1 { margin: 0 0 26px; font: 700 clamp(2rem, 7vw, 3.2rem)/1 Georgia, serif; }
+    .experience-choice__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; opacity: 1; transform: scale(1); transition: opacity .28s ease, transform .28s ease; }
+    .experience-choice__actions.is-dismissing { opacity: 0; transform: scale(.97); pointer-events: none; }
+    .global-sound-toggle { position: fixed; z-index: 35; top: 18px; right: 18px; padding: 10px 14px; background: rgba(5,11,22,.55); border-color: rgba(255,226,174,.28); backdrop-filter: blur(10px); font-size: .8rem; }
     .credit { position: fixed; z-index: 5; right: 20px; bottom: 17px; margin: 0; color: rgba(255,255,255,.5); font-size: .72rem; }
-    .demo-controls { position: fixed; z-index: 6; right: 18px; bottom: 56px; display: grid; gap: 10px; width: min(240px, calc(100vw - 36px)); padding: 14px; border: 1px solid rgba(255,226,174,.22); border-radius: 20px; background: linear-gradient(180deg, rgba(8,14,26,.72), rgba(4,8,15,.86)); box-shadow: 0 20px 60px rgba(0,0,0,.34); backdrop-filter: blur(10px); }
+    .demo-controls { position: fixed; z-index: 6; right: 18px; bottom: 56px; display: grid; gap: 10px; width: min(240px, calc(100vw - 36px)); padding: 14px; border: 1px solid rgba(255,226,174,.22); border-radius: 20px; background: linear-gradient(180deg, rgba(8,14,26,.46), rgba(4,8,15,.58)); box-shadow: 0 20px 60px rgba(0,0,0,.34); backdrop-filter: blur(10px); }
     .demo-controls strong { color: #ffd59b; font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; }
     .demo-controls button, .demo-controls a { width: 100%; background: rgba(255,255,255,.06); border-color: rgba(255,226,174,.24); }
     .demo-controls a { display: block; border: 1px solid; border-radius: 999px; padding: 14px 16px; color: #fff8e9; text-align: center; text-decoration: none; font-weight: 750; transition: transform .18s ease, background .18s ease; }
     .demo-controls a:hover, .demo-controls a:focus-visible { transform: translateY(-2px); background: rgba(255,203,128,.18); outline: none; }
     .view-distance { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: center; color: rgba(255,238,204,.82); font-size: .74rem; font-weight: 750; letter-spacing: .05em; }
     .view-distance input { grid-column: 1 / -1; width: 100%; accent-color: #ffd59b; }
+    .show-timeline { position: fixed; z-index: 7; left: 50%; bottom: 20px; width: min(520px, calc(100vw - 48px)); transform: translateX(-50%); color: rgba(255,239,211,.86); text-align: center; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; transition: opacity .35s ease; }
+    .show-timeline[hidden], .show-complete[hidden] { display: none; }
+    .show-timeline__track { height: 5px; margin-top: 8px; overflow: hidden; border: 1px solid rgba(255,222,165,.3); border-radius: 999px; background: rgba(0,0,0,.45); }
+    .show-timeline__fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffd37c, #ff7c73, #b984ff); box-shadow: 0 0 12px rgba(255,192,125,.75); }
+    .show-complete { position: fixed; z-index: 20; left: 50%; bottom: 24px; width: min(390px, calc(100vw - 36px)); transform: translateX(-50%); pointer-events: none; }
+    .show-complete__card { padding: 24px; border: 1px solid rgba(255,222,165,.28); border-radius: 24px; background: linear-gradient(145deg, rgba(14,25,46,.74), rgba(3,7,16,.78)); box-shadow: 0 28px 90px rgba(0,0,0,.4); backdrop-filter: blur(10px); pointer-events: auto; text-align: center; }
+    .show-complete h2 { margin: 0 0 8px; color: #ffda91; font: 700 clamp(2rem, 7vw, 3rem)/1 Georgia, serif; }
+    .show-complete p { margin: 0 0 22px; color: rgba(255,255,255,.68); }
+    .scene-credits { position: fixed; z-index: 9; top: 50%; left: 50%; width: min(560px, calc(100vw - 48px)); height: min(46vh, 360px); overflow: hidden; transform: translate(-50%, -50%); pointer-events: none; text-align: center; mask-image: linear-gradient(to top, transparent 0%, #000 13%, #000 70%, rgba(0,0,0,.42) 87%, transparent 100%); }
+    .scene-credits[hidden] { display: none; }
+    .scene-credits__inner { animation: feature-credits 48s linear 1 forwards; color: rgba(255,243,218,.9); font-size: clamp(.84rem, 2.2vw, 1.12rem); font-weight: 800; letter-spacing: .12em; line-height: 1.95; text-shadow: 0 3px 20px rgba(0,0,0,.9); text-transform: uppercase; }
+    .scene-credits__logo { display: block; width: min(330px, 82%); margin: 0 auto 22px; filter: drop-shadow(0 0 18px rgba(255,211,124,.4)); }
+    .scene-credits__by { display: block; margin-bottom: 26px; color: #ffdc94; font-size: .88em; }
+    .scene-credits__webgl { display: block; margin: 0 0 26px; color: #ffffff; font-size: 1.34em; font-weight: 900; line-height: 1.35; letter-spacing: .08em; }
+    .show-complete__actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .show-complete a, .show-complete button { border: 1px solid rgba(255,224,174,.28); border-radius: 999px; padding: 12px; color: #fff8e9; text-decoration: none; font: 750 .86rem/1 system-ui, sans-serif; background: rgba(255,255,255,.07); cursor: pointer; }
+    .show-complete a:hover, .show-complete button:hover { background: rgba(255,203,128,.2); }
+    @keyframes feature-credits { from { transform: translateY(100%); } to { transform: translateY(-100%); } }
     .demo-controls[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
+    .show-controls { position: fixed; z-index: 6; right: 18px; bottom: 56px; background: rgba(7,13,25,.6); backdrop-filter: blur(10px); }
     .reaper-flash { position: fixed; inset: 0; z-index: 18; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.96), rgba(255,255,255,.55) 12%, rgba(18,8,12,.16) 34%, rgba(0,0,0,0) 72%); mix-blend-mode: screen; transition: opacity 180ms ease; }
     .scene.reaper-strike + .reaper-flash { opacity: 1; }
     button { appearance: none; border: 1px solid rgba(255,225,176,.34); border-radius: 999px; padding: 14px 16px; background: rgba(255,255,255,.06); color: #fff8e9; cursor: pointer; font: inherit; font-weight: 750; transition: transform .18s ease, background .18s ease; }
@@ -54,7 +81,7 @@
     .scene.is-descending .near { transform: translateY(-9vh) scale(1.085); }
     .scene.is-descending .ground-glow { opacity: 1; transform: translateY(0); }
     .scene.is-descending .placard { bottom: clamp(-25vh, -20vw, -13vh); filter: brightness(1) saturate(1) drop-shadow(0 18px 17px rgba(0,0,0,.48)); }
-    .scene.is-exiting .placard { bottom: -108vh; transform: translate3d(-18vw, 38vh, 0) rotate(-9deg); transition-duration: 1.7s, 1.7s, .45s; }
+    .scene.is-exiting .placard { bottom: -108vh; transform: translate3d(-18vw, 38vh, 0) rotate(-9deg); transition: transform 10s cubic-bezier(.2,.72,.16,1), bottom 10s cubic-bezier(.2,.72,.16,1), filter .45s ease; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; } }
     @media (max-width: 600px) { .moon-frame { right: 8vw; top: 13vh; width: 48vw; } .placard { left: 50%; width: 88vw; min-width: 0; transform: translate3d(-50%, 0, 0) rotate(-1.5deg); } .scene.is-descending .placard { bottom: -15vh; } .scene.is-exiting .placard { transform: translate3d(-58%, 38vh, 0) rotate(-9deg); } .credit { left: 24px; right: auto; } }
   </style>
@@ -65,23 +92,32 @@
     <div class="moon-frame"><img class="moon" src="../assets/moonlit-demo/moon.png" alt="Full moon"></div>
     <div class="horizon" aria-hidden="true"><div class="layer far"></div><div class="layer mid"></div><div class="layer near"></div></div>
     <div class="ground-glow" aria-hidden="true"></div>
-    <section class="placard" aria-label="Sound prompt">
+    <section class="placard" aria-label="Welcome">
       <img src="../assets/moonlit-demo/horizon-placard.png" alt="Weathered wooden signpost">
       <div class="placard-copy">
-        <p>Set the atmosphere</p>
-        <h1>Would you like sound?</h1>
-        <div class="placard-actions">
-          <button id="sound-on" type="button">With sound</button>
-          <button id="sound-off" type="button">Without sound</button>
-        </div>
+        <p>Moonlit Horizon</p>
+        <h1>with WebGL<br>and love.</h1>
       </div>
     </section>
   </main>
+  <section class="experience-choice" id="experience-choice" aria-label="Choose your experience">
+    <div class="experience-choice__inner">
+      <p id="experience-eyebrow">Moonlit Horizon</p>
+      <h1 id="experience-title">Would you like sound?</h1>
+      <div class="experience-choice__actions" id="experience-actions">
+        <button id="sound-on" type="button">With sound</button>
+        <button id="sound-off" type="button">Without sound</button>
+      </div>
+    </div>
+  </section>
+  <button class="global-sound-toggle" id="global-sound-toggle" type="button">🔇 Sound off</button>
   <div class="reaper-flash" aria-hidden="true"></div>
   <p class="credit">Grand Fireworks JS v1.5.0</p>
   <div class="demo-controls" id="demo-controls" hidden aria-label="Demo controls">
     <strong>Demo controls</strong>
-    <label class="view-distance" for="view-distance">View distance <output id="view-distance-value">100%</output><input id="view-distance" type="range" min="0.55" max="1" value="1" step="0.01"></label>
+    <button id="hide-controls" type="button">Hide controls</button>
+    <label class="view-distance" for="view-distance">View distance <output id="view-distance-value">100%</output><input id="view-distance" type="range" min="0.25" max="1" value="1" step="0.01"></label>
+    <label class="view-distance" for="show-ramp">Show ramp <output id="show-ramp-value">2.5×</output><input id="show-ramp" type="range" min="1" max="3" value="2.5" step="0.1"></label>
     <button id="rainbow-theme" type="button">Full rainbow</button>
     <button id="text-burst" type="button">Launch text</button>
     <button id="more-fireworks" type="button">More fireworks</button>
@@ -90,6 +126,11 @@
     <button id="reset-demo" type="button">Reset demo</button>
     <a href="../index.html">Visit project home</a>
   </div>
+  <button class="show-controls" id="show-controls" type="button" hidden>Show controls</button>
+  <div class="show-timeline" id="show-timeline" hidden aria-live="polite"><span id="show-timeline-label">The show begins</span><div class="show-timeline__track"><div class="show-timeline__fill" id="show-timeline-fill"></div></div></div>
+  <section class="show-complete" id="show-complete" hidden aria-label="Show complete"><div class="show-complete__card"><h2>Thanks for watching.</h2><p>The night is still glowing.</p><div class="show-complete__actions"><button id="continue-show" type="button">Keep watching</button><a href="../index.html">Project home</a><a href="feature-demos.html">More demos</a></div></div></section>
+  <section class="scene-credits" id="scene-credits" hidden aria-label="Grand Fireworks credits"><div class="scene-credits__inner"><img class="scene-credits__logo" src="../assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS"><span class="scene-credits__by">By Travis MacDonald</span><span class="scene-credits__webgl">With WebGL, leave old sprites<br>and Canvas loops behind</span>15 custom shell types<br>Depth-staged launch horizon<br>World-space stereo sound<br>Close-field thunder booms<br>Text fireworks &amp; sequences<br>Mixed visual styles<br>Theme palettes<br>Super Grand Finale<br>World Ender chains<br>Adaptive performance<br>Canvas 2D fallback<br>Reduced-motion support<br>No dependencies<br><br>Public API<br>start · stop · pause · resume<br>clear · destroy · launch<br>launchText · launchTextSequence<br>cancelTextSequence<br>launchFinale · launchWorldEnder<br>finalize · setOptions · setOpacity<br>setZoom · setStyle · setColorTheme<br>enableSound · disableSound · setMuted<br>feelingLucky · getOptions · getStats</div></section>
+  <audio id="moonlit-music" src="../assets/Clair_de_lune.mp3" preload="auto"></audio>
   <script src="../GrandFireworks.js"></script>
   <script>
     const fireworks = new GrandFireworks({
@@ -99,19 +140,38 @@
       background: false,
       colorTheme: 'festival',
       performance: { preset: 'high', adaptive: true },
-      show: { intensity: .62, openingSalvo: 4, maxRockets: 5, launchInterval: 1120 },
-      sound: { enabled: false, volume: .72, ambience: .0005, stereo: true, whistleChance: .035, tuning: { whistleWobbleRate: 7, whistleWobbleDepth: .1 } }
+      show: { intensity: .62, openingSalvo: 4, maxRockets: 5, launchInterval: 1120, closeShellChance: .6 },
+      sound: { enabled: false, volume: .9, ambience: .0005, stereo: true, whistleChance: .035, nearBoomMultiplier: 8, tuning: { boomGain: 1.25, boomDuration: 1.8, boomCutoff: 115, whistleWobbleRate: 7, whistleWobbleDepth: .1 } }
     });
     const scene = document.querySelector('.scene');
+    const experienceChoice = document.querySelector('#experience-choice');
+    const experienceEyebrow = document.querySelector('#experience-eyebrow');
+    const experienceTitle = document.querySelector('#experience-title');
+    const experienceActions = document.querySelector('#experience-actions');
     const reaperFlash = document.querySelector('.reaper-flash');
     const placard = document.querySelector('.placard');
     const controls = document.querySelector('#demo-controls');
+    const showControlsButton = document.querySelector('#show-controls');
+    const showTimeline = document.querySelector('#show-timeline');
+    const showTimelineFill = document.querySelector('#show-timeline-fill');
+    const showTimelineLabel = document.querySelector('#show-timeline-label');
+    const showComplete = document.querySelector('#show-complete');
+    const sceneCredits = document.querySelector('#scene-credits');
+    const moonlitMusic = document.querySelector('#moonlit-music');
+    const globalSoundToggle = document.querySelector('#global-sound-toggle');
     let controlsTimer = 0;
+    let controlsMinimizeTimer = 0;
     let soundOn = false;
+    let showRampMax = 2.5;
+    let showTimelineTimer = 0;
+    const showTimers = new Set();
     const worldEnderTimers = new Set();
     let activeWorldEnderListener = null;
     function setViewDistance(scale) {
-      scene.style.setProperty('--view-scale', String(scale));
+      // Use GrandFireworks' depth-aware viewport zoom only. The environment
+      // remains a stable cinematic frame while the engine expands its launch
+      // horizon, positions, particle sizes, and audible depth correctly.
+      fireworks.setZoom(scale);
     }
     const worldEnderDefaults = {
       carrierFlightMs: 2350,
@@ -387,37 +447,188 @@
     }
     function revealControls() {
       window.clearTimeout(controlsTimer);
-      controlsTimer = window.setTimeout(() => { controls.hidden = false; }, 8000);
+      controlsTimer = window.setTimeout(() => {
+        controls.hidden = false;
+        window.clearTimeout(controlsMinimizeTimer);
+        controlsMinimizeTimer = window.setTimeout(hideControls, 7000);
+      }, 8000);
+    }
+    function hideControls() { controls.hidden = true; showControlsButton.hidden = false; }
+    function showControls() { controls.hidden = false; showControlsButton.hidden = true; }
+    function scheduleShow(delay, callback) {
+      const timer = window.setTimeout(() => { showTimers.delete(timer); callback(); }, delay);
+      showTimers.add(timer);
+    }
+    function resumeRegularFireworks() {
+      fireworks.setOptions({ show: { intensity: showRampMax, launchInterval: 410 } });
+      // The World Ender leaves rendering alive but turns off automatic
+      // launches. Re-arm that live loop instead of calling start(), which
+      // intentionally does nothing while the engine is already running.
+      fireworks.worldEnderResumeRequested = true;
+      fireworks.accepting = true;
+      fireworks.lastLaunch = performance.now() - fireworks.options.show.launchInterval;
+      if (fireworks.state !== 'running') fireworks.start();
+    }
+    function runShowTimeline() {
+      for (const timer of showTimers) window.clearTimeout(timer);
+      showTimers.clear();
+      window.clearInterval(showTimelineTimer);
+      const duration = 60000, rampEndsAt = 48000, quietEndsAt = 52000, started = performance.now();
+      showTimeline.hidden = false;
+      showComplete.hidden = true;
+      sceneCredits.hidden = true;
+      fireworks.setOptions({ show: { intensity: .55, launchInterval: 1350 } });
+      const showcase = (style, theme, label) => {
+        fireworks.setStyle(style);
+        fireworks.setColorTheme(theme);
+        fireworks.setOptions({ show: { closeShellChance: .6 } });
+        fireworks.launchText(label, {
+          renderMode: 'hybrid', exclusive: false, synchronizeExplosions: false,
+          fontFamily: 'Georgia, serif', fontWeight: 800, fontSize: 48,
+          particleSpacing: 4, particleSize: 2, colors: ['#FFFFFF', '#FFD700', '#78D7FF'],
+          holdDuration: 1100, dissolveDuration: 800, gravity: .018,
+        });
+      };
+      // Let the cinematic title and first shells breathe before the showcase
+      // labels begin; the opening is the experience, not a preset card.
+      fireworks.setStyle('medium');
+      fireworks.setColorTheme('festival');
+      scheduleShow(18000, () => showcase('classic', 'iceBlue', 'Classic · Ice Blue'));
+      scheduleShow(30000, () => showcase('thin', 'goldenSun', 'Thin · Golden Sun'));
+      scheduleShow(42000, () => showcase('spectacle', 'royalPurple', 'Spectacle · Royal Purple'));
+      showTimelineTimer = window.setInterval(() => {
+        const elapsed = performance.now() - started;
+        const progress = Math.min(1, elapsed / duration);
+        showTimelineFill.style.width = `${progress * 100}%`;
+        if (elapsed < rampEndsAt) {
+          const ramp = elapsed / rampEndsAt;
+          const intensity = .55 + (showRampMax - .55) * ramp;
+          fireworks.setOptions({ show: { intensity, launchInterval: Math.round(1350 - 940 * ramp) } });
+          showTimelineLabel.textContent = `Building the show · ${Math.round(intensity * 100)}%`;
+        } else if (elapsed < quietEndsAt) {
+          showTimelineLabel.textContent = 'A breath before the finale';
+        } else {
+          showTimelineLabel.textContent = 'World Ender';
+        }
+        if (progress >= 1) { showTimelineLabel.textContent = 'Finale clearing'; window.clearInterval(showTimelineTimer); }
+      }, 120);
+      scheduleShow(rampEndsAt, () => {
+        // Preserve fading particles, but stop every new automatic launch for
+        // a deliberate quiet beat before the final shell.
+        fireworks.accepting = false;
+        fireworks.pendingRockets.length = 0;
+        const zoomInput = document.querySelector('#view-distance');
+        const from = Number(zoomInput.value);
+        const zoomStarted = performance.now();
+        const easeZoom = () => {
+          const progress = Math.min(1, (performance.now() - zoomStarted) / (quietEndsAt - rampEndsAt));
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const value = from + (.75 - from) * eased;
+          zoomInput.value = String(value);
+          setViewDistance(value);
+          document.querySelector('#view-distance-value').value = `${Math.round(value * 100)}%`;
+          if (progress < 1) requestAnimationFrame(easeZoom);
+        };
+        requestAnimationFrame(easeZoom);
+      });
+      scheduleShow(quietEndsAt, () => {
+        fireworks.setStyle('medium');
+        fireworks.setColorTheme('default');
+        fireworks.launchWorldEnder({
+          carrierX: .5,
+          carrierBurstHeight: .10,
+          promotionChance: .06,
+        });
+      });
+      scheduleShow(duration, () => {
+        showTimeline.hidden = true;
+        showComplete.hidden = false;
+        sceneCredits.hidden = false;
+      });
+      // The credit roll takes 48 seconds; restart as its final API line fades
+      // through the top edge rather than competing with the first credits.
+      scheduleShow(duration + 48000, () => {
+        resumeRegularFireworks();
+      });
+    }
+    // Starts only from the visitor's sound choice. Do not pause or reset this
+    // track when the show finishes: it is allowed to play through naturally.
+    function playMoonlitIntro() {
+      moonlitMusic.volume = .42;
+      if (moonlitMusic.ended) moonlitMusic.currentTime = 0;
+      const playing = moonlitMusic.play();
+      if (playing && playing.catch) playing.catch(() => {});
+      return 0;
+    }
+    function setSoundState(enabled, startMusic = false) {
+      soundOn = enabled;
+      if (soundOn) {
+        fireworks.enableSound();
+        if (startMusic || moonlitMusic.paused) {
+          const playing = moonlitMusic.play();
+          if (playing && playing.catch) playing.catch(() => {});
+        }
+      } else {
+        fireworks.disableSound();
+        moonlitMusic.pause();
+      }
+      const label = soundOn ? '🔊 Sound on' : '🔇 Sound off';
+      globalSoundToggle.textContent = label;
+      document.querySelector('#sound-toggle').textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
     }
     function begin(withSound) {
-      soundOn = withSound;
-      if (soundOn) fireworks.enableSound();
-      document.querySelector('#sound-toggle').textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
-      scene.classList.add('is-exiting');
+      setSoundState(withSound);
+      // This call happens directly in the click gesture, which keeps browser
+      // audio permissions reliable while the scene is still black.
+      const introDelay = soundOn ? playMoonlitIntro() : 0;
+      experienceActions.classList.add('is-dismissing');
+      window.setTimeout(() => { experienceActions.hidden = true; }, 300);
+      experienceEyebrow.textContent = "I'm Travis.";
+      experienceTitle.textContent = "Relax… enjoy the show.";
       placard.setAttribute('aria-hidden', 'true');
       window.setTimeout(() => {
+        experienceChoice.classList.add('is-leaving');
+        scene.classList.add('is-descending');
+        placard.setAttribute('aria-hidden', 'false');
+      }, 1800);
+      // Let the panning sign deliver its welcome, then throw it out of frame.
+      // The music owns the quiet opening; the first launch lands on its fade.
+      window.setTimeout(() => {
+        scene.classList.add('is-exiting');
+        placard.setAttribute('aria-hidden', 'true');
+      }, 5200);
+      window.setTimeout(() => {
         fireworks.start();
+        runShowTimeline();
         revealControls();
         window.setTimeout(launchDemoText, 1200);
-      }, 900);
+      }, Math.max(5600, introDelay + 900));
     }
-    scene.classList.add('is-descending');
     setViewDistance(1);
     document.querySelector('#view-distance').addEventListener('input', (event) => {
       const scale = Number(event.currentTarget.value);
       setViewDistance(scale);
       document.querySelector('#view-distance-value').value = `${Math.round(scale * 100)}%`;
     });
+    document.querySelector('#show-ramp').addEventListener('input', (event) => {
+      showRampMax = Number(event.currentTarget.value);
+      document.querySelector('#show-ramp-value').value = `${showRampMax.toFixed(1)}×`;
+    });
+    document.querySelector('#hide-controls').addEventListener('click', hideControls);
+    showControlsButton.addEventListener('click', showControls);
+    document.querySelector('#continue-show').addEventListener('click', () => {
+      showComplete.hidden = true;
+      sceneCredits.hidden = true;
+      resumeRegularFireworks();
+    });
     document.querySelector('#rainbow-theme').addEventListener('click', () => fireworks.setColorTheme('festival'));
     document.querySelector('#text-burst').addEventListener('click', () => launchDemoText());
     document.querySelector('#more-fireworks').addEventListener('click', () => fireworks.launchFinale({ stopAfter: false }));
-    document.querySelector('#world-ender').addEventListener('click', () => launchWorldEnder());
+    document.querySelector('#world-ender').addEventListener('click', () => fireworks.launchWorldEnder());
     document.querySelector('#sound-toggle').addEventListener('click', (event) => {
-      soundOn = !soundOn;
-      if (soundOn) fireworks.enableSound();
-      else fireworks.disableSound();
-      event.currentTarget.textContent = `Sound: ${soundOn ? 'on' : 'off'}`;
+      setSoundState(!soundOn, !soundOn);
     });
+    globalSoundToggle.addEventListener('click', () => setSoundState(!soundOn, !soundOn));
     document.querySelector('#reset-demo').addEventListener('click', () => window.location.reload());
     document.querySelector('#sound-on').addEventListener('click', () => begin(true));
     document.querySelector('#sound-off').addEventListener('click', () => begin(false));

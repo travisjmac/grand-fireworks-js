@@ -1,0 +1,879 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Feature Demos — GrandFireworks</title>
+    <link rel="stylesheet" href="example.css" />
+    <style>
+      body {
+        overflow: hidden;
+        background: #02030a;
+      }
+      .scene {
+        min-height: 100vh;
+      }
+      .content h1 {
+        font-size: clamp(1rem, 2.5vw, 1.6rem);
+      }
+      .content p {
+        font-size: clamp(0.75rem, 1.5vw, 0.95rem);
+      }
+
+      /* Bigger control panel */
+      .panel {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        width: min(480px, calc(100% - 32px));
+        max-height: 55vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: rgba(3, 4, 14, 0.78);
+        border: 1px solid #5967ae;
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.78), inset 0 0 0 1px rgba(255,255,255,.04);
+        z-index: 10001;
+        cursor: grab;
+        user-select: none;
+        transition: box-shadow 0.15s;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .panel.dragging {
+        cursor: grabbing;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.8);
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 42px;
+        padding: 0 10px 0 12px;
+        margin: 0;
+        border-bottom: 1px solid rgba(141, 158, 238, 0.34);
+        background: linear-gradient(180deg, #313d78 0%, #1b2450 46%, #121a3e 100%);
+        box-shadow: inset 0 1px rgba(255,255,255,.13), 0 4px 12px rgba(0,0,0,.24);
+        cursor: grab;
+      }
+      .panel-header::before {
+        content: "";
+        width: 18px;
+        height: 16px;
+        margin-right: 9px;
+        opacity: .72;
+        background: radial-gradient(circle, #cbd4ff 1.2px, transparent 1.8px) 0 0 / 6px 6px;
+      }
+      .panel-header h2 {
+        flex: 1;
+        font-size: 1rem;
+        margin: 0;
+        color: #fff4c5;
+        letter-spacing: .01em;
+        text-shadow: 0 1px 1px rgba(0,0,0,.65);
+        pointer-events: none;
+      }
+      .panel-header .panel-actions {
+        display: flex;
+        gap: 6px;
+        pointer-events: auto;
+      }
+      .panel-header .panel-actions button {
+        background: rgba(7, 10, 31, .48);
+        border: 1px solid rgba(217,225,255,.28);
+        color: rgba(255,255,255,.88);
+        border-radius: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        line-height: 1.4;
+        transition: background 0.15s, color 0.15s;
+      }
+      .panel-header .panel-actions button:hover {
+        background: #5666ac;
+        color: #fff;
+      }
+      .panel .panel-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 12px 16px 16px;
+        cursor: auto;
+        user-select: auto;
+        pointer-events: auto;
+      }
+      .feature-section {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(111, 130, 218, .48);
+        border-radius: 9px;
+        background: linear-gradient(135deg, rgba(37, 49, 108, .66), rgba(10, 14, 39, .9));
+      }
+      .feature-section label {
+        display: block;
+        color: #ffd65a;
+        font: 700 11px/1.3 system-ui, sans-serif;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+      }
+      .feature-section select {
+        width: 100%;
+        margin-top: 6px;
+        padding: 7px 9px;
+        border: 1px solid #6979c8;
+        border-radius: 6px;
+        background: #0a1030;
+        color: #fff;
+        font: 600 12px/1.2 system-ui, sans-serif;
+      }
+      .feature-section p {
+        min-height: 30px;
+        margin: 8px 0;
+        color: rgba(224, 231, 255, .72);
+        font: 11px/1.35 system-ui, sans-serif;
+      }
+      .feature-controls { display: none; }
+      .feature-controls.active { display: block; }
+      .feature-controls .feature-section { margin-top: 0; }
+      #run-feature-btn {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid #ffe090;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #ffd866, #bd8c19);
+        color: #201300;
+        font: 800 12px/1 system-ui, sans-serif;
+        cursor: pointer;
+      }
+
+      /* Zoom slider — prominent */
+      .zoom-section {
+        margin: 14px 0 10px;
+        padding: 12px 14px;
+        background: #0c0f24;
+        border: 1px solid #3d4780;
+        border-radius: 10px;
+      }
+      .zoom-section label {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font: 600 13px/1.4 system-ui, sans-serif;
+        color: #ffd65a;
+        margin-bottom: 6px;
+      }
+      .zoom-section label span {
+        color: #fff;
+        font-size: 15px;
+      }
+      .zoom-section input[type="range"] {
+        width: 100%;
+        accent-color: #ffd700;
+        height: 6px;
+        cursor: grab;
+      }
+      .zoom-section input[type="range"]:active {
+        cursor: grabbing;
+      }
+
+      /* Quick presets */
+      .presets {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 10px 0 0;
+      }
+      .presets button {
+        flex: 1;
+        min-width: 60px;
+        font-size: 11px;
+        padding: 6px 8px;
+        border: 1px solid #4b579c;
+        background: #1a2150;
+        color: rgba(255, 255, 255, 0.8);
+        border-radius: 7px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .presets button:hover {
+        background: #2b3670;
+        color: #fff;
+      }
+      .presets button.active {
+        background: #ffd700;
+        color: #000;
+        border-color: #ffd700;
+        font-weight: 600;
+      }
+
+      /* Stats row */
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 12px;
+        margin: 10px 0 0;
+        font: 11px/1.5 system-ui, sans-serif;
+        color: #aab6e8;
+      }
+      .stats .val {
+        color: #fff;
+        text-align: right;
+      }
+
+      /* Horizon toggle row */
+      .option-row {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin: 8px 0;
+        font-size: 12px;
+        color: #aab6e8;
+      }
+      .option-row label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+      }
+      .option-row input[type="number"] {
+        width: 60px;
+        background: #0c0f24;
+        border: 1px solid #3d4780;
+        border-radius: 5px;
+        color: #fff;
+        padding: 3px 6px;
+        font-size: 12px;
+      }
+
+      /* Grid overlay for zoom reference */
+      #grid-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.12;
+      }
+
+      /* Hide the default scene background so fireworks pop */
+      .scene.scene-bg-off {
+        background: #02030a;
+      }
+      .scene.scene-bg-off::before {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="back-row">
+      <a class="back" href="../index.html">← Documentation</a>
+      <button id="sound-btn" class="sound-btn">🔇 Sound</button>
+      <button id="toggle-panel-btn" class="sound-btn" style="font-size:15px" title="Toggle controls panel">🔭</button>
+    </div>
+
+    <!-- Reference grid canvas -->
+    <canvas id="grid-canvas"></canvas>
+
+    <div class="scene scene-bg-off">
+      <div class="content">
+          <h1>🔭 Grand Fireworks Feature Demos</h1>
+        <p>
+          Drag the slider to zoom in/out. Watch how the launch horizon expands
+          and contracts.
+        </p>
+      </div>
+    </div>
+
+    <aside class="panel" id="control-panel">
+      <div class="panel-header" title="Drag this title bar to move the controls">
+        <h2>🔭 Feature Demos Controls</h2>
+        <div class="panel-actions">
+          <button id="popout-btn" title="Open controls in a separate window">⤴ Pop out</button>
+        </div>
+      </div>
+      <div class="panel-body">
+
+      <div class="feature-section">
+        <label for="feature-select">Feature demo</label>
+        <select id="feature-select">
+          <option value="depth">Depth-staged horizon</option>
+          <option value="shells">Shell showcase</option>
+          <option value="themes">Themes &amp; styles</option>
+          <option value="text">Text fireworks</option>
+          <option value="showstoppers">Show Stoppers</option>
+          <option value="sound">Sound staging</option>
+        </select>
+        <p id="feature-description">Near, middle, and far launches with a tunable horizon, zoom, and depth drift.</p>
+        <button id="run-feature-btn" type="button">Run Depth Demo</button>
+      </div>
+
+      <div class="feature-controls active" data-feature-controls="depth">
+      <div class="zoom-section">
+        <label>
+          Zoom
+          <span id="zoom-val">1.00×</span>
+        </label>
+        <input
+          type="range"
+          id="zoom-slider"
+          min="0.1"
+          max="4"
+          step="0.01"
+          value="1"
+        />
+        <div class="presets">
+          <button data-zoom="0.1">0.1×<br /><small>extreme wide</small></button>
+          <button data-zoom="0.25">0.25×<br /><small>wide</small></button>
+          <button data-zoom="0.5">0.5×<br /><small>default</small></button>
+          <button data-zoom="1" class="active">1×<br /><small>normal</small></button>
+          <button data-zoom="2">2×<br /><small>close</small></button>
+          <button data-zoom="4">4×<br /><small>extreme</small></button>
+        </div>
+      </div>
+
+      <div class="option-row">
+        <label>
+          Horizon:
+          <input type="number" id="horizon-input" min="0.5" max="20" step="0.5" value="3" />
+          sw
+        </label>
+        <label>
+          Z-angle:
+          <input type="number" id="zangle-input" min="0" max="45" step="1" value="25" />
+          °
+        </label>
+        <label>
+          Z-strength:
+          <input type="number" id="zstrength-input" min="0" max="3" step="0.1" value="0.8" />
+        </label>
+        <label>
+          <input type="checkbox" id="grid-toggle" checked />
+          Grid
+        </label>
+      </div>
+
+      <div class="stats">
+        <span>World width</span>
+        <span class="val" id="stat-worldw">—</span>
+        <span>Visible % of horizon</span>
+        <span class="val" id="stat-vis">—</span>
+        <span>Rocket density</span>
+        <span class="val" id="stat-density">—</span>
+        <span>Particles</span>
+        <span class="val" id="stat-particles">—</span>
+        <span style="color:#ffd65a;grid-column:1/-1;margin-top:4px">Z-Depth (dof)</span>
+        <span>Min</span>
+        <span class="val" id="stat-dof-min">—</span>
+        <span>Max</span>
+        <span class="val" id="stat-dof-max">—</span>
+        <span>Avg</span>
+        <span class="val" id="stat-dof-avg">—</span>
+      </div>
+      </div>
+
+      <div class="feature-controls" data-feature-controls="shells"><div class="feature-section"><label>Shell controls</label><p>Control the live shell catalogue and show intensity.</p><div class="option-row"><label>Intensity <input id="shell-intensity" type="range" min="0.2" max="3" step="0.1" value="1.25"></label><span id="shell-intensity-value">1.25×</span></div><div class="option-row"><label>Catalogue <select id="shell-catalogue"><option value="all">All shell types</option><option value="classic-only">Classic shells</option></select></label></div></div></div>
+      <div class="feature-controls" data-feature-controls="themes"><div class="feature-section"><label>Theme controls</label><p>Choose a visual style and a colour theme, then run the show.</p><div class="option-row"><label>Style <select id="lab-style"><option value="classic">Classic</option><option value="oldSchool">Old School</option><option value="thin">Thin</option><option value="medium">Medium</option><option value="bold">Bold</option><option value="spectacle" selected>Spectacle</option><option value="mixed">Mixed styles</option></select></label></div><div class="option-row"><label>Theme <select id="lab-theme"><option value="default">Default</option><option value="iceBlue">Ice Blue</option><option value="emberRed">Ember Red</option><option value="neonGreen">Neon Green</option><option value="goldenSun">Golden Sun</option><option value="royalPurple">Royal Purple</option><option value="festival" selected>Festival</option></select></label></div></div></div>
+      <div class="feature-controls" data-feature-controls="text"><div class="feature-section"><label>Text controls</label><p>Write the message that the rocket will assemble in the sky.</p><input id="lab-text" type="text" value="GRAND FIREWORKS" style="width:100%"><div class="option-row"><label>Mode <select id="lab-text-mode"><option value="hybrid">Hybrid</option><option value="crisp">Crisp</option><option value="particles">Particles</option></select></label></div></div></div>
+      <div class="feature-controls" data-feature-controls="showstoppers"><div class="feature-section"><label>Show Stopper controls</label><p>Super Grand Finale is the compact staged finale. World Ender is its branching, mixed-warhead cousin.</p><div class="option-row"><label>Effect <select id="showstopper-type"><option value="finale">Super Grand Finale</option><option value="world-ender">World Ender</option></select></label></div><div class="option-row"><label>Trails <input id="finale-trails" type="range" min="3" max="20" step="1" value="10"></label><span id="finale-trails-value">10</span></div><div class="option-row"><label>Burst scale <input id="finale-scale" type="range" min="0.4" max="2" step="0.1" value="1"></label><span id="finale-scale-value">1.0×</span></div><div class="option-row"><label>World Ender recursion <input id="world-ender-chance" type="range" min="0" max="0.1" step="0.01" value="0.02"></label><span id="world-ender-chance-value">2%</span></div></div></div>
+      <div class="feature-controls" data-feature-controls="sound"><div class="feature-section"><label>Sound controls</label><p>Balance the soundscape before launching a shell.</p><div class="option-row"><label>Volume <input id="sound-volume" type="range" min="0" max="1" step="0.05" value="1"></label><span id="sound-volume-value">100%</span></div><div class="option-row"><label>Ambience <input id="sound-ambience" type="range" min="0" max="0.02" step="0.001" value="0.005"></label><span id="sound-ambience-value">0.005</span></div></div></div>
+
+      <div class="controls">
+        <button onclick="restartFW()">↻ Restart</button>
+        <button onclick="fw.clear()">Clear</button>
+        <button id="start-stop-btn" onclick="toggleStartStop()" style="background:#c0392b;border-color:#e74c3c">■ Stop</button>
+      </div>
+
+      <pre style="margin-top:10px">const fw = new GrandFireworks({
+  show: { launchHorizon: 3 },
+  visuals: { zoom: 1 }
+});
+fw.start();
+
+// Try: fw.setZoom(0.25)  // see all 3 horizons
+// Try: fw.setZoom(2)     // zoom in close</pre>
+      </div><!-- end panel-body -->
+    </aside>
+
+    <script src="../GrandFireworks.js"></script>
+    <script>
+      // ── Init fireworks at 1× zoom ──
+      let fw = new GrandFireworks({
+        show: { launchHorizon: 3 },
+        visuals: { zoom: 1 },
+      });
+      fw.start();
+
+      // ── Sound toggle ──
+      let soundOn = false;
+      document.querySelector("#sound-btn").addEventListener("click", () => {
+        soundOn = !soundOn;
+        if (soundOn) fw.enableSound();
+        else fw.disableSound();
+        event.target.textContent = soundOn ? "🔊 Sound" : "🔇 Sound";
+      });
+
+      // ── DOM refs ──
+      const zoomSlider = document.getElementById("zoom-slider");
+      const zoomVal = document.getElementById("zoom-val");
+      const featureSelect = document.getElementById("feature-select");
+      const featureDescription = document.getElementById("feature-description");
+      const runFeatureBtn = document.getElementById("run-feature-btn");
+      const horizonInput = document.getElementById("horizon-input");
+      const zAngleInput = document.getElementById("zangle-input");
+      const zStrengthInput = document.getElementById("zstrength-input");
+      const gridToggle = document.getElementById("grid-toggle");
+      const gridCanvas = document.getElementById("grid-canvas");
+      const gctx = gridCanvas.getContext("2d");
+      const panel = document.getElementById("control-panel");
+      const panelBody = panel.querySelector(".panel-body");
+      const popoutBtn = document.getElementById("popout-btn");
+      const togglePanelBtn = document.getElementById("toggle-panel-btn");
+      let popoutWindow = null;
+      let popoutHeartbeat = null;
+
+      const FEATURE_DEMOS = {
+        depth: {
+          label: "Run Depth Demo",
+          description: "Near, middle, and far launches with a tunable horizon, zoom, and depth drift.",
+          run() { restartFW(); if (fw.state !== "running") fw.start(); },
+        },
+        shells: {
+          label: "Run Shell Showcase",
+          description: "Turns up the live show and cycles the engine through its full shell catalogue.",
+          run() { fw.setOptions({ show: { enabledTypes: document.querySelector('#shell-catalogue').value, intensity: Number(document.querySelector('#shell-intensity').value) } }); fw.start(); },
+        },
+        themes: {
+          label: "Run Theme Demo",
+          description: "Applies the Spectacle style with the Festival palette for an immediate colour test.",
+          run() { const style=document.querySelector('#lab-style').value; if(style === 'mixed') fw.setOptions({baseStyle:'mixed'}); else fw.setStyle(style); fw.setColorTheme(document.querySelector('#lab-theme').value); fw.start(); },
+        },
+        text: {
+          label: "Launch Text Firework",
+          description: "Launches a hybrid text firework without interrupting the running show.",
+          run() { fw.launchText(document.querySelector('#lab-text').value || 'GRAND FIREWORKS', { renderMode: document.querySelector('#lab-text-mode').value, colors: ["#FFD700", "#FFFFFF", "#78D7FF"] }); },
+        },
+        showstoppers: {
+          label: "Launch Show Stopper",
+          description: "Choose a compact Super Grand Finale or the branching World Ender effect.",
+          run() { const trails=Number(document.querySelector('#finale-trails').value), scale=Number(document.querySelector('#finale-scale').value); if (document.querySelector('#showstopper-type').value === 'world-ender') fw.launchWorldEnder({ firstSplitCount: trails, secondSplitCount: trails, promotionChance: Number(document.querySelector('#world-ender-chance').value) }); else { fw.setOptions({finale:{trails,burstScale:scale}}); fw.launchFinale(); } },
+        },
+        sound: {
+          label: "Enable Sound & Launch",
+          description: "Unlocks browser audio from this click, then launches a shell so near and far sound staging is audible.",
+          run() {
+            if (!soundOn) {
+              soundOn = true;
+              fw.enableSound();
+              document.querySelector("#sound-btn").textContent = "🔊 Sound";
+            }
+            fw.setOptions({sound:{volume:Number(document.querySelector('#sound-volume').value),ambience:Number(document.querySelector('#sound-ambience').value)}}); fw.launch();
+          },
+        },
+      };
+
+      function syncFeatureDemo() {
+        const demo = FEATURE_DEMOS[featureSelect.value];
+        featureDescription.textContent = demo.description;
+        runFeatureBtn.textContent = demo.label;
+        document.querySelectorAll('[data-feature-controls]').forEach(panel => panel.classList.toggle('active', panel.dataset.featureControls === featureSelect.value));
+      }
+
+      function bindLabRange(inputId, outputId, format) {
+        const input = document.getElementById(inputId), output = document.getElementById(outputId);
+        input.addEventListener('input', () => output.textContent = format(input.value));
+      }
+      bindLabRange('shell-intensity', 'shell-intensity-value', v => `${Number(v).toFixed(2)}×`);
+      bindLabRange('finale-trails', 'finale-trails-value', v => v);
+      bindLabRange('finale-scale', 'finale-scale-value', v => `${Number(v).toFixed(1)}×`);
+      bindLabRange('world-ender-chance', 'world-ender-chance-value', v => `${Math.round(Number(v) * 100)}%`);
+      bindLabRange('sound-volume', 'sound-volume-value', v => `${Math.round(Number(v) * 100)}%`);
+      bindLabRange('sound-ambience', 'sound-ambience-value', v => Number(v).toFixed(3));
+
+      featureSelect.addEventListener("change", () => {
+        syncFeatureDemo();
+        // Theme selection is a live preview, not a separate action: entering
+        // this feature group applies its current style and palette at once.
+        if (featureSelect.value === 'themes') FEATURE_DEMOS.themes.run();
+      });
+      ['lab-style', 'lab-theme'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+        if (featureSelect.value === 'themes') FEATURE_DEMOS.themes.run();
+      }));
+      runFeatureBtn.addEventListener("click", () => FEATURE_DEMOS[featureSelect.value].run());
+
+      // ── Stats ──
+      const statWorldW = document.getElementById("stat-worldw");
+      const statVis = document.getElementById("stat-vis");
+      const statDensity = document.getElementById("stat-density");
+      const statParticles = document.getElementById("stat-particles");
+      const statDofMin = document.getElementById("stat-dof-min");
+      const statDofMax = document.getElementById("stat-dof-max");
+      const statDofAvg = document.getElementById("stat-dof-avg");
+
+      // ── Start/Stop toggle ──
+      const startStopBtn = document.getElementById("start-stop-btn");
+
+      function syncStartStopBtn() {
+        if (!fw) return;
+        const running = fw.state === "running" || fw.state === "paused";
+        startStopBtn.textContent = running ? "■ Stop" : "▶ Start";
+        startStopBtn.style.background = running ? "#c0392b" : "#27ae60";
+        startStopBtn.style.borderColor = running ? "#e74c3c" : "#2ecc71";
+        startStopBtn.disabled = fw.state === "finishing" || fw.state === "fading";
+      }
+
+      function toggleStartStop() {
+        if (!fw || fw.state === "finishing" || fw.state === "fading") return;
+        if (fw.state === "running" || fw.state === "paused") {
+          fw.stop();
+        } else {
+          fw.start();
+        }
+        // Optimistic update — events + poll will catch final state
+        syncStartStopBtn();
+        updateStats();
+      }
+
+      // Keep button synced with fireworks state changes
+      function watchFW(instance) {
+        if (!instance) return;
+        instance.addEventListener("stop", syncStartStopBtn);
+        instance.addEventListener("start", syncStartStopBtn);
+      }
+      watchFW(fw);
+      // Poll as fallback in case events don't fire (e.g. paused state)
+      setInterval(syncStartStopBtn, 1000);
+
+      // ── Restart: destroy + recreate with current options ──
+      function restartFW() {
+        const curOpts = fw.userOptions;
+        const horizon = parseFloat(horizonInput.value) || 3;
+        const zoom = parseFloat(zoomSlider.value);
+        const zAngle = parseFloat(zAngleInput.value) || 25;
+        const zStrength = parseFloat(zStrengthInput.value) || 0.8;
+        const wasRunning = fw.state === "running";
+        try { fw.destroy(); } catch (e) {}
+        fw = new GrandFireworks({
+          ...curOpts,
+          show: { ...curOpts.show, launchHorizon: horizon, zAngleRange: zAngle, zAngleStrength: zStrength },
+          visuals: { ...curOpts.visuals, zoom },
+        });
+        watchFW(fw);
+        if (wasRunning) fw.start();
+        if (soundOn) fw.enableSound();
+        syncStartStopBtn();
+        updateStats();
+      }
+
+      // ── Preset buttons ──
+      const presetBtns = document.querySelectorAll(".presets button");
+
+      // ── Resize grid canvas ──
+      function resizeGrid() {
+        gridCanvas.width = window.innerWidth;
+        gridCanvas.height = window.innerHeight;
+        drawGrid();
+      }
+
+      // ── Draw reference grid and horizon ──
+      function drawGrid() {
+        const w = gridCanvas.width;
+        const h = gridCanvas.height;
+        gctx.clearRect(0, 0, w, h);
+
+        // ── Ground gradient: dark green strip at the bottom ──
+        const groundY = h - Math.max(50, h * 0.15);
+        const grad = gctx.createLinearGradient(0, groundY, 0, h);
+        grad.addColorStop(0, "rgba(10, 30, 15, 0)");
+        grad.addColorStop(0.3, "rgba(8, 25, 12, 0.4)");
+        grad.addColorStop(1, "rgba(3, 15, 8, 0.85)");
+        gctx.fillStyle = grad;
+        gctx.fillRect(0, groundY, w, h - groundY);
+
+        if (!gridToggle.checked) return;
+
+        // ── Horizon line ──
+        gctx.strokeStyle = "rgba(120, 180, 255, 0.15)";
+        gctx.lineWidth = 1.5;
+        gctx.beginPath();
+        gctx.moveTo(0, groundY);
+        gctx.lineTo(w, groundY);
+        gctx.stroke();
+
+        // ── Soft glow above the horizon ──
+        const glow = gctx.createRadialGradient(w / 2, groundY, 0, w / 2, groundY, 180);
+        glow.addColorStop(0, "rgba(80, 140, 255, 0.06)");
+        glow.addColorStop(1, "rgba(80, 140, 255, 0)");
+        gctx.fillStyle = glow;
+        gctx.fillRect(0, groundY - 180, w, 180);
+
+        const zoom = fw.zoom || 0.5;
+        const worldW = fw.worldWidth || w / zoom;
+        const horizon = fw.options?.show?.launchHorizon || 3;
+        const fullHorizonPx = horizon * w;
+
+        gctx.strokeStyle = "rgba(100, 180, 255, 0.25)";
+        gctx.lineWidth = 1;
+        gctx.font = "10px system-ui, sans-serif";
+        gctx.fillStyle = "rgba(100, 180, 255, 0.3)";
+
+        // Visible area center
+        const cx = w / 2;
+
+        // Draw screen-width markers (each = 1 screen-width at current zoom)
+        const sw = worldW;
+        const startX = cx - sw / 2;
+        const count = Math.ceil(sw / w) + 2;
+
+        for (let i = -1; i <= count; i++) {
+          const x = startX + i * w;
+          gctx.beginPath();
+          gctx.moveTo(x, 0);
+          gctx.lineTo(x, groundY);
+          gctx.stroke();
+
+          const label = i + 1;
+          gctx.fillText(label + "sw", x + 4, 16);
+        }
+
+        // Horizon boundary lines (full launchHorizon extent)
+        const hw = fullHorizonPx / 2;
+        const hLeft = cx - hw;
+        const hRight = cx + hw;
+
+        gctx.strokeStyle = "rgba(255, 200, 50, 0.15)";
+        gctx.lineWidth = 2;
+        gctx.setLineDash([6, 8]);
+        gctx.beginPath();
+        gctx.moveTo(hLeft, 0);
+        gctx.lineTo(hLeft, groundY);
+        gctx.moveTo(hRight, 0);
+        gctx.lineTo(hRight, groundY);
+        gctx.stroke();
+        gctx.setLineDash([]);
+
+        // Center crosshair
+        gctx.strokeStyle = "rgba(255, 200, 50, 0.06)";
+        gctx.beginPath();
+        gctx.moveTo(cx, 0);
+        gctx.lineTo(cx, h);
+        gctx.stroke();
+
+        // Horizon label
+        gctx.fillStyle = "rgba(255, 200, 50, 0.15)";
+        gctx.fillText("← horizon (" + horizon + " screen-widths) →", hLeft + 8, groundY - 6);
+      }
+
+      // ── Update stats ──
+      function updateStats() {
+        if (!fw || !fw.zoom) return;
+        const zoom = fw.zoom;
+        const w = window.innerWidth;
+        const worldW = fw.worldWidth || w / zoom;
+        const horizon = fw.options?.show?.launchHorizon || 3;
+
+        statWorldW.textContent = Math.round(worldW) + "px (" + (worldW / w).toFixed(2) + " screens)";
+        const visPct = Math.min(100, (100 / zoom / horizon) * 100);
+        statVis.textContent = Math.min(100, visPct).toFixed(1) + "%";
+        const density = Math.min(horizon, 1 / zoom);
+        statDensity.textContent = Math.max(1, Math.round(density * 10) / 10) + "×";
+        statParticles.textContent = fw.particles?.length || 0;
+
+        // Z-depth stats from active rockets (each has a dof that updates
+        // as it flies toward or away from the viewer).
+        const dofs = (fw.rockets || []).map((r) => r.dof).filter((d) => d > 0);
+        if (dofs.length) {
+          const min = Math.min(...dofs);
+          const max = Math.max(...dofs);
+          const avg = dofs.reduce((a, b) => a + b, 0) / dofs.length;
+          statDofMin.textContent = min.toFixed(3);
+          statDofMax.textContent = max.toFixed(3);
+          statDofAvg.textContent = avg.toFixed(3);
+        } else {
+          statDofMin.textContent = "—";
+          statDofMax.textContent = "—";
+          statDofAvg.textContent = "—";
+        }
+        drawGrid();
+      }
+
+      // ── Zoom slider ──
+      zoomSlider.addEventListener("input", () => {
+        const z = parseFloat(zoomSlider.value);
+        fw.setZoom(z);
+        zoomVal.textContent = z.toFixed(2) + "×";
+
+        // Highlight closest preset
+        presetBtns.forEach((btn) => {
+          const pz = parseFloat(btn.dataset.zoom);
+          btn.classList.toggle("active", Math.abs(pz - z) < 0.02);
+        });
+
+        updateStats();
+      });
+
+      // ── Presets ──
+      presetBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const z = parseFloat(btn.dataset.zoom);
+          zoomSlider.value = z;
+          fw.setZoom(z);
+          zoomVal.textContent = z.toFixed(2) + "×";
+          presetBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          updateStats();
+        });
+      });
+
+      // ── Horizon input ──
+      horizonInput.addEventListener("change", () => {
+        fw.setOptions({ show: { launchHorizon: parseFloat(horizonInput.value) || 3 } });
+        updateStats();
+      });
+
+      // ── Z-angle / Z-strength controls (need restart to apply) ──
+      zAngleInput.addEventListener("change", restartFW);
+      zStrengthInput.addEventListener("change", restartFW);
+
+      // ── Grid toggle ──
+      gridToggle.addEventListener("change", drawGrid);
+
+      // ── Window resize ──
+      window.addEventListener("resize", () => {
+        resizeGrid();
+        setTimeout(updateStats, 50);
+      });
+
+      // ── Poll stats periodically ──
+      setInterval(updateStats, 500);
+
+      // ── Init ──
+      resizeGrid();
+      updateStats();
+
+      // ── Draggable panel ──
+      let panelDrag = false, panelOffsetX, panelOffsetY;
+      panel.addEventListener("mousedown", (e) => {
+        if (!e.target.closest(".panel-header") || e.target.closest("button")) return;
+        panelDrag = true;
+        panel.classList.add("dragging");
+        const rect = panel.getBoundingClientRect();
+        panelOffsetX = e.clientX - rect.left;
+        panelOffsetY = e.clientY - rect.top;
+        e.preventDefault();
+      });
+      document.addEventListener("mousemove", (e) => {
+        if (!panelDrag) return;
+        panel.style.left = (e.clientX - panelOffsetX) + "px";
+        panel.style.top = (e.clientY - panelOffsetY) + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+      });
+      document.addEventListener("mouseup", () => {
+        panelDrag = false;
+        panel.classList.remove("dragging");
+      });
+
+      // ── Toggle panel visibility ──
+      togglePanelBtn.addEventListener("click", () => {
+        const hidden = panel.style.display === "none";
+        panel.style.display = hidden ? "" : "none";
+      });
+
+      // ── Pop out panel ──
+      popoutBtn.addEventListener("click", () => {
+        // If a popup is already open, focus it
+        if (popoutWindow && !popoutWindow.closed) {
+          popoutWindow.focus();
+          return;
+        }
+        // Try to open popout control panel
+        popoutWindow = window.open(
+          "zoom-popout-controls.html",
+          "zoom-playground-popout",
+          "width=420,height=520,scrollbars=no,resizable=yes");
+
+        if (!popoutWindow || popoutWindow.closed) {
+          alert("⚠️ Popup was blocked. Please allow popups for this page to use the pop-out feature, or just use the controls here.");
+          return;
+        }
+        // Hide the in-page panel while popout is open
+        panel.style.display = "none";
+        // Send state to popout every 2s (heartbeat + state sync)
+        if (popoutHeartbeat) clearInterval(popoutHeartbeat);
+        popoutHeartbeat = setInterval(() => {
+          if (popoutWindow && !popoutWindow.closed) {
+            try {
+              popoutWindow.postMessage({
+                type: "zoom-state",
+                zoom: fw.zoom,
+                horizon: fw.options?.show?.launchHorizon || 3,
+                zAngle: fw.options?.show?.zAngleRange || 25,
+                zStrength: fw.options?.show?.zAngleStrength || 0.8,
+                particles: fw.particles?.length || 0,
+                running: fw.state === "running" || fw.state === "paused",
+              }, "*");
+            } catch (e) { /* not ready */ }
+          } else {
+            clearInterval(popoutHeartbeat);
+            popoutHeartbeat = null;
+            popoutWindow = null;
+            panel.style.display = "";
+            updateStats();
+          }
+        }, 2000);
+      });
+
+      // ── Listen for commands from the popout control panel ──
+      window.addEventListener("message", (e) => {
+        if (!e.data || e.data.type !== "zoom-cmd") return;
+        const cmd = e.data.cmd;
+        if (!cmd) return;
+        switch (cmd.action) {
+          case "setZoom":
+            fw.setZoom(cmd.value);
+            zoomSlider.value = cmd.value;
+            zoomVal.textContent = Number(cmd.value).toFixed(2) + "×";
+            updateStats();
+            break;
+          case "setHorizon":
+            fw.setOptions({ show: { launchHorizon: cmd.value } });
+            updateStats();
+            break;
+          case "restart":
+            // Apply Z settings then restart
+            fw.setOptions({ show: { zAngleRange: cmd.zAngle, zAngleStrength: cmd.zStrength } });
+            restartFW();
+            break;
+          case "stop":
+            fw.stop();
+            break;
+          case "start":
+            fw.start();
+            break;
+        }
+      });
+    </script>
+    <footer
+      class="grand-fireworks-creator-credit"
+      style="
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 6px;
+        z-index: 2147483646;
+        text-align: center;
+        font: 400 11px/1 system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.12);
+        pointer-events: none;
+        user-select: none;
+      "
+    >
+      Grand Fireworks JS v1.6.0 ·
+      <a
+        href="http://travisandjoelyweareaperfect.fit/"
+        style="color: rgba(255, 255, 255, 0.12); text-decoration: none"
+        >Travis MacDonald</a
+      >
+    </footer>
+  </body>
+</html>

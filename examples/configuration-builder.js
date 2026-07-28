@@ -224,6 +224,13 @@
           "Adds delayed micro-explosions to supported shells.",
           "Turn off first when reducing secondary particle work.",
         ],
+        [
+          "visuals.zoom",
+          "number",
+          1,
+          "Viewport scale: lower values pull back to reveal a wider field of view.",
+          "Range 0.1–4; use 0.5 for a broad horizon view.",
+        ],
       ],
     ],
     [
@@ -270,6 +277,27 @@
           0.55,
           "Horizontal launch area as a fraction of the display.",
           "Default 0.55.",
+        ],
+        [
+          "show.launchHorizon",
+          "number",
+          1,
+          "Total launch area in screen widths; zoom out to reveal more of it.",
+          "Range 0.5–20; use 3 for a staged multi-screen horizon.",
+        ],
+        [
+          "show.zAngleRange",
+          "number",
+          25,
+          "Maximum depth drift for a shell as it climbs, in degrees.",
+          "Range 0–45; 25° gives gentle near/far variation.",
+        ],
+        [
+          "show.zAngleStrength",
+          "number",
+          0.8,
+          "Multiplier for depth drift and the near/far staging effect.",
+          "Range 0–3; 0 disables depth drift.",
         ],
         [
           "show.angleRange",

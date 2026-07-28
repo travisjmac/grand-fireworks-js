@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.6.0
+ * Version: 1.6.1
  *
  * @author Travis MacDonald
- * @version 1.6.0
+ * @version 1.6.1
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -336,6 +336,7 @@
     zIndex: 9999,
     autoStart: false,
     baseStyle: "medium",
+    mixedStyles: { classic: 20, oldSchool: 10, thin: 20, medium: 25, bold: 15, spectacle: 10 },
     colorTheme: "default",
     showFps: false,
     duration: 0,
@@ -363,6 +364,10 @@
       starChance: 0.08,
       groupedSalvos: true,
       secondaryCrackle: true,
+      // Viewport zoom: 1 = normal, < 1 = zoomed out (smaller, wider view),
+      // > 1 = zoomed in (larger, closer view). Scales from screen center.
+      zoom: 1,
+
     },
     sound: {
       enabled: false,
@@ -370,6 +375,9 @@
       ambience: 0.005,
       stereo: true,
       whistleChance: 0.03,
+      // Multiplier applied only to shells staged in front of the viewer.
+      // The master compressor keeps dramatic close booms from clipping.
+      nearBoomMultiplier: 1,
       finaleRhythm: true,
       maxVoices: 36,
       tuning: {
@@ -404,11 +412,21 @@
       maxParticles: null,
       launchInterval: null,
       launchSpread: 0.55,
+      // Portion of regular shells deliberately staged near the viewer.
+      closeShellChance: 0.25,
       angleRange: 14,
       angleStrength: 1,
       textRocketAngle: 0,
       enabledTypes: "all",
       palettes: "default",
+      // Total launch area in screen-width units. At zoom 1.0 the visible
+      // area is 1 screen-width; launchHorizon determines how many
+      // screen-widths of launchers exist. Zoom out to see more of them.
+      launchHorizon: 1,
+      // Per-shell depth drift. These make the staged horizon feel less flat
+      // without changing the public 2D coordinate system.
+      zAngleRange: 25,
+      zAngleStrength: 0.8,
     },
     finale: {
       enabled: false,
@@ -422,6 +440,28 @@
       particleScale: 1,
       finishDelay: 800,
       maxDuration: 9000,
+    },
+    // A staged, branching finale built from the same carrier and satellite
+    // primitives as launchFinale(). These are intentionally exposed so a
+    // host can tune the spectacle without reimplementing the effect.
+    worldEnder: {
+      carrierX: 0.5,
+      carrierFlightMs: 2350,
+      carrierBurstHeight: 0.384,
+      firstSplitCount: 8,
+      firstSplitSpreadDegrees: 300,
+      secondSplitDelayMs: 3000,
+      secondSplitCount: 8,
+      secondSplitSpeed: [130, 220],
+      promotionChance: 0.02,
+      recursionDurationMs: 20000,
+      maxChainDepth: 8,
+      maxParticles: Infinity,
+      maxRockets: Infinity,
+      soundBoost: 2.1,
+      // Manual World Enders should layer into a live show by default. Set
+      // true for an intentional, exclusive end-of-show sequence.
+      stopAfter: false,
     },
     textFirework: {
       enabled: true,
@@ -594,8 +634,8 @@
       this.program = this._program(
         `#version 300 es
         in vec2 a_position; in float a_size; in vec4 a_color; in float a_star;
-        uniform vec2 u_resolution; out vec4 v_color; out float v_star;
-        void main(){ vec2 z=a_position/u_resolution; vec2 clip=z*2.0-1.0; gl_Position=vec4(clip.x,-clip.y,0,1); gl_PointSize=a_size; v_color=a_color; v_star=a_star; }`,
+        uniform vec2 u_resolution; uniform float u_zoom; out vec4 v_color; out float v_star;
+        void main(){ vec2 p=(a_position/u_resolution)*u_zoom; vec2 clip=p*2.0-1.0; gl_Position=vec4(clip.x,-clip.y,0,1); gl_PointSize=a_size*u_zoom; v_color=a_color; v_star=a_star; }`,
         `#version 300 es
         precision mediump float; in vec4 v_color; in float v_star; out vec4 outColor;
         void main(){ vec2 q=(gl_PointCoord-vec2(.5))*2.0; float d=length(q); float halo=pow(max(0.0,1.0-d),2.1); float core=smoothstep(.25,0.0,d); float ray=max(smoothstep(.10,0.0,abs(q.x)),smoothstep(.10,0.0,abs(q.y)))*(1.0-d)*v_star; float a=(halo*.72+core+ray*.8)*v_color.a; if(a<.012)discard; outColor=vec4(v_color.rgb*a,a); }`,
@@ -615,6 +655,7 @@
       this.aColor = gl.getAttribLocation(this.program, "a_color");
       this.aStar = gl.getAttribLocation(this.program, "a_star");
       this.uRes = gl.getUniformLocation(this.program, "u_resolution");
+      this.uZoom = gl.getUniformLocation(this.program, "u_zoom");
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.disable(gl.DEPTH_TEST);
@@ -650,7 +691,7 @@
     // them in a single draw call. Each particle = 8 floats:
     // [x, y, size, r, g, b, a, isStar]. The fade program draws a full-screen
     // quad to decay trails when trailFade < 1 (additive fade, no clear).
-    render(items, w, h, trailFade) {
+    render(items, w, h, trailFade, zoom = 1) {
       const g = this.gl;
       // Trail decay without clearing: draw a full-screen black quad with
       // alpha = trailFade using ZERO/ONE_MINUS_SRC_ALPHA blend. This
@@ -686,6 +727,7 @@
       }
       g.useProgram(this.program);
       g.uniform2f(this.uRes, w * this.dpr, h * this.dpr);
+      g.uniform1f(this.uZoom, zoom);
       g.bindBuffer(g.ARRAY_BUFFER, this.buffer);
       g.bufferData(g.ARRAY_BUFFER, this.data.subarray(0, o), g.DYNAMIC_DRAW);
       const s = this.stride * 4;
@@ -775,9 +817,12 @@
     }
     // Draws all particles with additive blending. Trail fade is handled
     // via destination-out composite — a semi-transparent black rectangle
-    // is drawn over the previous frame to fade trails.
-    render(items, w, h, fade) {
+    // is drawn over the previous frame to fade trails. Trail fade always
+    // covers the full canvas regardless of zoom. Particles are drawn with
+    // the zoom transform applied (scaled from screen center).
+    render(items, w, h, fade, zoom = 1) {
       const x = this.ctx;
+      // Trail fade at full scale — always covers the entire canvas
       x.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (fade >= 1) x.clearRect(0, 0, w, h);
       else {
@@ -787,6 +832,17 @@
         x.fillRect(0, 0, w, h);
         x.restore();
       }
+      // All engine positions live in a virtual world whose width grows as
+      // zoom decreases. Scale that world from its origin; its calculated
+      // centre remains at the physical canvas centre without an extra offset.
+      x.setTransform(
+        this.dpr * zoom,
+        0,
+        0,
+        this.dpr * zoom,
+        0,
+        0,
+      );
       x.globalCompositeOperation = "lighter";
       for (const p of items) {
         const pulse =
@@ -839,8 +895,13 @@
       this.autoPauseReasons = new Set();
       this.reducedMotion = false;
       this.quality = 1;
+      this.zoom = this.options.visuals.zoom;
+      this.worldWidth = this.width / this.zoom;
       this.contextLossCount = 0;
       this.finalePlayed = false;
+      this.worldEnderTimers = new Set();
+      this.worldEnderListener = null;
+      this.worldEnderResumeRequested = false;
       this.lastLaunch = 0;
       this.elapsed = 0;
       this.raf = 0;
@@ -866,7 +927,7 @@
     // like preserveDrawingBuffer from mode/trails.
     _resolve(input = {}) {
       const styleName = input.baseStyle || "medium",
-        style = STYLES[styleName] || STYLES.medium;
+        style = styleName === "mixed" ? STYLES.medium : STYLES[styleName] || STYLES.medium;
       let o = merge(merge(DEFAULTS, style), input);
       const themeName = o.colorTheme || "default",
         theme = COLOR_THEMES[themeName];
@@ -891,6 +952,11 @@
       );
       o.visuals.bloom = clamp(Number(o.visuals.bloom) || 1, 0.5, 2);
       o.visuals.starChance = clamp(Number(o.visuals.starChance) || 0, 0, 0.3);
+      o.visuals.zoom = clamp(Number(o.visuals.zoom ?? 1), 0.1, 4);
+
+      o.show.zAngleRange = clamp(Number(o.show.zAngleRange ?? 25), 0, 45);
+      o.show.zAngleStrength = clamp(Number(o.show.zAngleStrength ?? 0.8), 0, 3);
+
       o.renderer.preserveDrawingBuffer =
         o.renderer.preserveDrawingBuffer === "auto"
           ? o.mode === "contained" || Boolean(o.visuals.trails)
@@ -905,9 +971,12 @@
           : clamp(Number(o.show.maxRockets || p.maxRockets), 1, 25);
       o.show.launchInterval = Number(o.show.launchInterval || p.launchInterval);
       o.show.launchSpread = clamp(Number(o.show.launchSpread), 0, 1);
+      o.show.closeShellChance = clamp(Number(o.show.closeShellChance ?? 0.25), 0, 0.8);
+      o.sound.nearBoomMultiplier = clamp(Number(o.sound.nearBoomMultiplier ?? 1), 0.2, 10);
       o.show.angleRange = clamp(Number(o.show.angleRange), 0, 45);
       o.show.angleStrength = clamp(Number(o.show.angleStrength), 0, 3);
       o.show.textRocketAngle = clamp(Number(o.show.textRocketAngle), -45, 45);
+      o.show.launchHorizon = clamp(Number(o.show.launchHorizon ?? 1), 0.5, 20);
       const fps = Number(o.performance.fps),
         dprCap = Number(o.performance.dprCap),
         particleScale = Number(o.performance.particleScale),
@@ -923,7 +992,7 @@
       )
         o.show.maxParticles = Math.round(o.show.maxParticles / 2);
       o.finale.type =
-        o.finale.type === "super-grand-finale"
+        o.finale.type === "world-ender" || o.finale.type === "super-grand-finale"
           ? o.finale.type
           : "super-grand-finale";
       o.finale.trails = clamp(Math.round(Number(o.finale.trails) || 10), 3, 20);
@@ -1292,6 +1361,7 @@
       cancelAnimationFrame(this.raf);
       clearTimeout(this.fadeTimer);
       this.cancelTextSequence({ clear: false });
+      this._clearWorldEnder();
       window.removeEventListener("resize", this.onResize);
       document.removeEventListener("visibilitychange", this.onVisibility);
       if (this.resizeObserver) this.resizeObserver.disconnect();
@@ -1379,10 +1449,13 @@
      * Launches the Super Grand Finale — a carrier shell that bursts into
      * satellite rockets, each producing its own multi-layered explosion.
      * @param {Object} [options={}]
-     * @param {boolean} [options.stopAfter=true] - Keep accepting rockets after
+     * @param {boolean} [options.stopAfter=false] - Stop automatic launches
+     * after the finale; manual finales keep the show running by default.
      * @returns {GrandFireworks}
      */
     launchFinale(options = {}) {
+      if (this.options.finale.type === "world-ender" && !options.forceSuper)
+        return this.launchWorldEnder(options.worldEnder || {});
       const standalone = this._activateManual("finale");
       this.finalePlayed = true;
       this.finaleStarted = performance.now();
@@ -1397,7 +1470,7 @@
         finale: true,
         colors: ["#FFFFFF", "#FFD700", "#00FFFF"],
       });
-      if (standalone || options.stopAfter !== false) {
+      if (standalone || options.stopAfter === true) {
         this.accepting = false;
         this.state = "finale";
       }
@@ -1406,6 +1479,113 @@
           detail: { stage: "carrier", type: this.options.finale.type },
         }),
       );
+      return this;
+    }
+    // Schedules a World Ender step and tracks it so a new launch or destroy()
+    // can cancel the effect cleanly.
+    _scheduleWorldEnder(delay, callback) {
+      const timer = window.setTimeout(() => {
+        this.worldEnderTimers.delete(timer);
+        callback();
+      }, Math.max(0, Number(delay) || 0));
+      this.worldEnderTimers.add(timer);
+      return timer;
+    }
+    _clearWorldEnder() {
+      for (const timer of this.worldEnderTimers) window.clearTimeout(timer);
+      this.worldEnderTimers.clear();
+      if (this.worldEnderListener) {
+        this.removeEventListener("finalestage", this.worldEnderListener);
+        this.worldEnderListener = null;
+      }
+    }
+    _worldEnderColors() {
+      const palettes = this.options.show.palettes;
+      if (Array.isArray(palettes) && palettes.length) {
+        const colors = palettes[Math.floor(Math.random() * palettes.length)];
+        if (Array.isArray(colors) && colors.length) return colors.slice();
+      }
+      return ["#FF1744", "#FF9100", "#FFD700", "#00E676", "#00B0FF", "#AA00FF", "#FFFFFF"];
+    }
+    _spawnWorldEnderShells(origin, count, options = {}) {
+      const now = performance.now(),
+        colors = options.colors || this._worldEnderColors(),
+        startAngle = options.startAngle ?? -Math.PI / 2,
+        spread = options.spread ?? TAU,
+        speed = options.speed || [130, 220],
+        flight = options.flight || [3000, 3700];
+      for (let i = 0; i < count; i++) {
+        const angle = startAngle + (spread * i) / count + (Math.random() - 0.5) * (options.jitter ?? 0.08),
+          velocity = speed[0] + Math.random() * (speed[1] - speed[0]),
+          lifetime = flight[0] + Math.random() * (flight[1] - flight[0]),
+          type = typeof options.type === "function" ? options.type(i) : options.type || "grand-finale-burst";
+        this.rockets.push({
+          x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity,
+          type, colors, finale: true, satellite: true,
+          detonateAt: now + lifetime, sparkClock: 0, angle,
+          audioGain: options.audioGain || 1.1, soundType: "launch",
+          worldEnderBranch: true,
+          worldEnderDepth: options.worldEnderDepth || 0,
+        });
+      }
+    }
+    /**
+     * Launches the World Ender: one carrier splits into a radial group of
+     * finale shells, then each shell becomes a mixed warhead. A small,
+     * configurable chance allows a branch to repeat for a limited time.
+     * @param {Object} [overrides={}] - Overrides for the `worldEnder` options.
+     * @returns {GrandFireworks}
+     */
+    launchWorldEnder(overrides = {}) {
+      const cfg = merge(this.options.worldEnder, overrides);
+      this._clearWorldEnder();
+      this.worldEnderResumeRequested = false;
+      const previous = {
+        accepting: this.accepting,
+        finale: { ...this.options.finale },
+        show: { maxParticles: this.options.show.maxParticles, maxRockets: this.options.show.maxRockets, enabledTypes: this.options.show.enabledTypes },
+        sound: { volume: this.options.sound.volume, tuning: { launchGain: this.options.sound.tuning.launchGain } },
+      };
+      this.setOptions({
+        show: { maxParticles: cfg.maxParticles, maxRockets: cfg.maxRockets, enabledTypes: "all" },
+        finale: { trails: cfg.firstSplitCount, trailFlight: cfg.secondSplitDelayMs, trailSpread: cfg.firstSplitSpreadDegrees, burstScale: 1.25, particleScale: 1.2 },
+        sound: { volume: 1, tuning: { launchGain: previous.sound.tuning.launchGain * cfg.soundBoost } },
+      });
+      // Keep the engine in its manually-launchable state for the carrier;
+      // unlike launchFinale(), this effect manages its own completion timer.
+      this._activateManual("manual");
+      if (cfg.stopAfter !== false) this.accepting = false;
+      this.pendingRockets.length = 0;
+      this.rockets.length = 0;
+      let primaryBursts = 0;
+      const randomWarhead = () => Math.random() < 0.5 ? "thunder_clap" : TYPES[Math.floor(Math.random() * TYPES.length)];
+      const onFinaleStage = (event) => {
+        const detail = event.detail || {};
+        if (detail.stage !== "secondary-burst") return;
+        const source = detail.source || {};
+        if (!source.worldEnderBranch && ++primaryBursts > cfg.firstSplitCount) return;
+        const depth = source.worldEnderDepth || 0;
+        this._spawnWorldEnderShells({ x: detail.x, y: detail.y }, cfg.secondSplitCount, {
+          type: () => depth < cfg.maxChainDepth && Math.random() < cfg.promotionChance ? "grand-finale-burst" : randomWarhead(),
+          spread: (cfg.firstSplitSpreadDegrees / 360) * TAU,
+          speed: cfg.secondSplitSpeed,
+          flight: [cfg.secondSplitDelayMs, cfg.secondSplitDelayMs + 700],
+          worldEnderDepth: depth + 1,
+        });
+      };
+      this.worldEnderListener = onFinaleStage;
+      this.addEventListener("finalestage", onFinaleStage);
+      this._scheduleWorldEnder(cfg.recursionDurationMs, () => {
+        if (this.worldEnderListener === onFinaleStage) {
+          this.removeEventListener("finalestage", onFinaleStage);
+          this.worldEnderListener = null;
+        }
+        // Let in-flight shells finish; only restore the normal launch limits.
+        this.setOptions({ finale: previous.finale, show: previous.show, sound: previous.sound });
+        this.accepting = this.worldEnderResumeRequested || previous.accepting;
+      });
+      this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: performance.now() + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0 });
       return this;
     }
     /**
@@ -2009,30 +2189,30 @@
         this._trackVoice(tone);
       }
     }
-    _playSound(type, position = 0.5, accent = 1) {
+    _playSound(type, position = 0.5, accent = 1, delay = 0) {
       if (
         !this.options.sound.enabled ||
         clamp(Number(this.options.sound.volume), 0, 1) <= 0
       )
         return;
       if (type === "launch" || type === "whistle") {
-        this._playNoise(type, position, 0, accent);
+        this._playNoise(type, position, delay, accent);
         return;
       }
       if (type === "crackle") {
         const now = performance.now();
         if (now - this.lastCrackleSound < 45) return;
         this.lastCrackleSound = now;
-        this._playNoise("crackle", position, 0, accent);
+        this._playNoise("crackle", position, delay, accent);
         return;
       }
       if (type === "finale") {
-        this._playNoise("explode", position, 0, 1.2 * accent);
+        this._playNoise("explode", position, delay, 1.2 * accent);
         return;
       }
       if (type === "explode") {
-        this._playNoise("explode", position, 0, accent);
-        this._playNoise("crackle", position, 0.012, 0.6 * accent);
+        this._playNoise("explode", position, delay, accent);
+        this._playNoise("crackle", position, delay + 0.012, 0.6 * accent);
       }
     }
     _scheduleFinaleRhythm(position) {
@@ -2046,6 +2226,30 @@
           i === beats.length - 1 ? 1.35 : 0.56 + i * 0.1,
         );
     }
+    _worldPosition(x) {
+      return clamp(x / Math.max(1, this.worldWidth), 0, 1);
+    }
+    _depthScale(z) {
+      const depth = Math.max(1, this.worldWidth / 2);
+      const safeZ = Number.isFinite(z) ? z : 0;
+      return clamp(1 - (safeZ / depth) * 0.45, 0.3, 1.4);
+    }
+    _depthSoundDelay(z) {
+      const safeZ = Number.isFinite(z) ? z : 0;
+      return Math.max(0, safeZ / Math.max(1, this.worldWidth / 2)) * 0.12;
+    }
+    _mixedStyle() {
+      const weights = this.options.mixedStyles || {};
+      const choices = Object.keys(STYLES).map(name => [name, Math.max(0, Number(weights[name]) || 0)]);
+      const total = choices.reduce((sum, [, weight]) => sum + weight, 0);
+      if (!total) return "medium";
+      let roll = Math.random() * total;
+      for (const [name, weight] of choices) {
+        roll -= weight;
+        if (roll <= 0) return name;
+      }
+      return "medium";
+    }
     /* ── Internal: Rocket & Particle Creation ───────────────────────── */
 
     // Creates a rocket with randomized or specified trajectory. Handles
@@ -2053,25 +2257,71 @@
     // is calculated backward from the desired detonation time).
     _createRocket(o = {}) {
       if (this.rockets.length >= this.options.show.maxRockets) return;
-      const show = this.options.show,
-        colors = o.colors || this._palette(),
-        type = o.type || this._type(),
-        x =
-          o.x === undefined
-            ? 0.5 + (Math.random() - 0.5) * show.launchSpread
+      const mixedStyleName = this.options.baseStyle === "mixed" && !o.text && !o.finale ? this._mixedStyle() : null,
+        mixedStyle = mixedStyleName ? STYLES[mixedStyleName] : null,
+        show = mixedStyle ? merge(this.options.show, mixedStyle.show) : this.options.show,
+        styleVisuals = mixedStyle ? mixedStyle.visuals : null,
+        worldW = this.worldWidth,
+        // Launch zone: the portion of the launch horizon currently visible.
+        // At zoom 1.0 you see 1 screen-width; launchHorizon=3 means you see
+        // the middle 1/3. Zoom out to see more (or all) of the horizon.
+        launchHW = Math.min(show.launchHorizon * this.width, worldW) / 2,
+        // Launch depth: rockets spawn at random Z distances from the viewer.
+        // The depth range equals half the world width — so a rocket can be
+        // up to half a screen closer or further, giving real 3D positioning.
+        launchDepth = worldW / 2,
+        colors = o.colors || this._palette(show.palettes),
+        type = o.type || this._type(show.enabledTypes),
+        // World-coordinate X: spread across the visible launch zone, centered
+        x = o.x === undefined
+            ? worldW / 2 + (Math.random() - 0.5) * launchHW * 2
             : o.x,
-        burstY =
-          this.height *
+        // World-coordinate Z: a mix of close, middle, and distant shells.
+        // Negative Z is closer to the viewer; positive Z is further away.
+        z = (() => {
+          if (o.z !== undefined) return o.z;
+          const roll = Math.random();
+          if (roll < show.closeShellChance) return -launchDepth * (0.25 + Math.random() * 0.3);
+          if (roll < show.closeShellChance + 0.3) return 0;
+          if (roll < show.closeShellChance + 0.55) return launchDepth * (0.45 + Math.random() * 0.35);
+          return launchDepth * (1.05 + Math.random() * 0.35);
+        })(),
+        // Depth scale is separate from viewport zoom, which the renderer
+        // already applies. Closer shells become larger; distant ones smaller.
+        dof =
+          o.dof === undefined
+            ? clamp(1 - (z / launchDepth) * 0.45, 0.3, 1.4)
+            : o.dof,
+        // World-coordinate Y: burst height scales with zoom and dof so
+        // that closer rockets burst taller and further ones burst lower.
+        worldH = this.height / this.zoom,
+        burstHeightRatio =
           (o.burstHeight === undefined
             ? 0.12 + Math.random() * 0.38
-            : o.burstHeight),
-        startY = this.height + 24,
+            : o.burstHeight) * Math.pow(dof, 0.5),
+        burstY = worldH * burstHeightRatio,
+        startY = worldH + 24 / this.zoom,
+        // Rocket velocity: scales with dof — closer rockets (bigger dof)
+        // fly faster and burst higher, further rockets (smaller dof) are
+        // slower and burst lower.
+        styleScale = styleVisuals ? clamp(styleVisuals.bloom / 1.25, 0.5, 1.8) : 1,
+        vyScale = o.syncAt ? 1 : Math.pow(dof, 0.5),
         remaining = o.syncAt
           ? Math.max(0.2, (o.syncAt - performance.now()) / 1000)
           : 0,
         vy = o.syncAt
           ? -(startY - burstY) / remaining
-          : -(560 + Math.random() * 180),
+          : -(560 + Math.random() * 180) / this.zoom * vyScale,
+        // Z-drift: each rocket has a configurable random Z-angle so it drifts
+        // slightly toward/away from the viewer during flight. Creates
+        // subtle 3D parallax — rockets aren't perfectly straight up.
+        zAngle =
+          o.syncAt
+            ? 0
+            : ((Math.random() * 2 - 1) * show.zAngleRange * Math.PI) / 180,
+        vz = o.vz === undefined
+          ? Math.tan(zAngle) * Math.abs(vy) * 0.08 * show.zAngleStrength
+          : o.vz,
         range = o.finale ? 18 : show.angleRange,
         angle =
           o.angle === undefined
@@ -2081,26 +2331,37 @@
             : Number(o.angle) || 0,
         vx =
           Math.abs(vy) * Math.tan((angle * Math.PI) / 180) * show.angleStrength,
-        position = x <= 1 ? x : x / this.width,
+        position = clamp(x <= 1 ? x : x / worldW, 0, 1),
+        // Audio volume: base random gain multiplied by distance falloff.
+        // Rockets closer to viewer (negative z) sound louder, further
+        // away (positive z) sound quieter. Maps Z range [-depth, +depth]
+        // to a 0.3-1.0 multiplier on the base gain.
+        zFalloff = clamp(1 - (z / launchDepth) * 0.5, 0.3, 1),
         depth =
-          o.audioGain === undefined
+          (o.audioGain === undefined
             ? o.finale
               ? 0.9
               : 0.5 + Math.random() * 0.45
-            : clamp(Number(o.audioGain), 0.2, 1),
+            : clamp(Number(o.audioGain), 0.2, 1)) * zFalloff,
         soundType =
           !o.text &&
           !o.finale &&
           Math.random() < clamp(Number(this.options.sound.whistleChance), 0, 1)
             ? "whistle"
             : "launch";
-      this._playSound(soundType, position, depth);
+      this._playSound(soundType, position, depth, Math.max(0, z / launchDepth) * 0.12);
       this.rockets.push({
-        x: x <= 1 ? this.width * x : x,
+        // x is in world coords; the renderer maps to screen via zoom
+        x: x <= 1 ? worldW * x : x,
         y: startY,
+        z,
         vx,
         vy,
+        vz,
         burstY,
+        dof,
+        styleScale,
+        styleName: mixedStyleName,
         type,
         colors,
         finale: o.finale,
@@ -2113,16 +2374,15 @@
       });
     }
     // Picks a random shell type from the enabled list.
-    _type() {
-      const e = this.options.show.enabledTypes;
+    _type(enabledTypes = this.options.show.enabledTypes) {
+      const e = enabledTypes;
       const list = e === "all" ? TYPES : e;
       return list[Math.floor(Math.random() * list.length)];
     }
     // Selects a palette: either from the user-defined array (with
     // normalizePalette), from the built-in PALETTES list, or via a
     // user-supplied function that returns colors dynamically.
-    _palette() {
-      const p = this.options.show.palettes;
+    _palette(p = this.options.show.palettes) {
 
       if (p === "default" || !p) {
         return PALETTES[Math.floor(Math.random() * PALETTES.length)];
@@ -2206,6 +2466,7 @@
           this.width,
           this.height,
           trailFade,
+          this.zoom,
         );
         this._drawText(now);
         if (this.fpsEl)
@@ -2225,6 +2486,7 @@
           : this.container.getBoundingClientRect();
       this.width = Math.max(1, r.width);
       this.height = Math.max(1, r.height);
+      this.worldWidth = this.width / this.zoom;
       this.dpr = Math.min(
         devicePixelRatio || 1,
         this.options.performance.dprCap,
@@ -2291,7 +2553,16 @@
             !this._motionReduced() && this.options.visuals.groupedSalvos,
           count =
             grouped && load < 0.58 ? 1 + Math.floor(Math.random() * 3) : 1;
-        for (let i = 0; i < count; i++) this._createRocket();
+        // Scale rocket count by visible launch horizon. When zoomed out,
+        // the wider visible area needs proportionally more rockets to
+        // maintain density. Capped by launchHorizon so empty edges don't
+        // waste rockets when zoomed far out.
+        const horizonScale = Math.min(
+          this.options.show.launchHorizon,
+          1 / this.zoom,
+        );
+        for (let i = 0; i < Math.max(1, Math.round(count * horizonScale)); i++)
+          this._createRocket();
         if (grouped && load < 0.48 && Math.random() < 0.5) {
           this._queueRocket(now + 300 + Math.random() * 450);
           if (Math.random() < 0.45)
@@ -2304,6 +2575,10 @@
         r.x += r.vx * dt;
         r.y += r.vy * dt;
         r.vy += (r.satellite ? 28 : 45) * dt;
+        // Z-drift: rocket moves toward or away from viewer. Update Z
+        // position and recalculate dof — closer = bigger, further = smaller.
+        if (r.vz) r.z += r.vz * dt;
+        r.dof = this._depthScale(r.z);
         r.sparkClock += dt;
         // Rocket exhaust: spawn small trailing sparks behind the rocket.
         // Satellites produce exhaust more frequently and with larger particles.
@@ -2323,6 +2598,9 @@
             life: 520 + Math.random() * 480,
             gravity: 0.045,
             friction: 0.965,
+            z: r.z,
+            vz: r.vz || 0,
+            dof: r.dof,
             sparkle: true,
             star: r.satellite && Math.random() < 0.12,
             exhaust: true,
@@ -2435,15 +2713,18 @@
           p.vy *= Math.pow(friction, dt * 60);
           p.x += p.vx * dt * 60;
           p.y += p.vy * dt * 60;
+          p.z += p.vz * dt * 60;
+          p.dof = this._depthScale(p.z);
+          p.size = p.baseSize * p.dof;
           p.alpha =
             clamp(1 - age / p.life, 0, 1) *
             (p.twinkle ? 0.5 + 0.5 * Math.sin(p.phase + age * 0.02) : 1);
         }
         if (
           age >= p.life ||
-          p.y > this.height + 120 ||
+          p.y > this.height / this.zoom + 120 ||
           p.x < -120 ||
-          p.x > this.width + 120
+          p.x > this.worldWidth + 120
         ) {
           this.pool.push(p);
           this.particles.splice(i, 1);
@@ -2482,10 +2763,14 @@
       p.friction = o.friction || 0.985;
       p.gravity = o.gravity === undefined ? 0.12 : o.gravity;
       p.life = o.life || 2200;
-      p.size =
+      p.baseSize =
         (o.size || 2) *
         this.options.performance.particleScale *
         this.options.visuals.bloom;
+      p.z = Number(o.z) || 0;
+      p.vz = Number(o.vz) || 0;
+      p.dof = o.dof === undefined ? this._depthScale(p.z) : o.dof;
+      p.size = p.baseSize * p.dof;
       p.text = Boolean(o.text);
       p.hybrid = Boolean(o.hybrid);
       p.twinkle = Boolean(o.twinkle);
@@ -2513,7 +2798,7 @@
         Math.floor(count * this.options.performance.secondary),
       );
       if (opts.crackle) {
-        const origin = r.x / this.width,
+        const origin = this._worldPosition(r.x),
           crackles = Math.max(
             1,
             Math.round(
@@ -2532,6 +2817,7 @@
             0.3 + Math.random() * 0.35,
           );
       }
+      const dof = (r.dof || 1) * (r.styleScale || 1);
       for (let i = 0; i < count; i++) {
         const a = opts.randomAngles
             ? Math.random() * TAU
@@ -2552,6 +2838,9 @@
               (opts.minSize || opts.size || 1.2) +
               Math.random() *
                 ((opts.maxSize || 4) - (opts.minSize || opts.size || 1.2)),
+            dof,
+            z: r.z,
+            vz: (Math.random() - 0.5) * Math.max(0.08, max * 0.025),
             life: opts.life || 2200,
             gravity: opts.gravity,
             friction: opts.friction,
@@ -2725,7 +3014,7 @@
     // pattern. Each satellite has its own trajectory and detonates
     // independently, creating a layered multi-burst effect.
     _launchFinaleTrails(r, now) {
-      this._scheduleFinaleRhythm(r.x / this.width);
+      this._scheduleFinaleRhythm(this._worldPosition(r.x));
       const cfg = this.options.finale,
         count = clamp(Math.round(cfg.trails || 10), 3, 20),
         flight = Math.max(500, Number(cfg.trailFlight) || 1100);
@@ -2800,8 +3089,11 @@
     _explode(r, now) {
       this._playSound(
         r.finale ? "finale" : "explode",
-        r.x / this.width,
-        (r.audioGain || 0.75) * (r.soundType === "whistle" ? 1.35 : 1),
+        this._worldPosition(r.x),
+        (r.audioGain || 0.75) *
+          (r.soundType === "whistle" ? 1.35 : 1) *
+          (r.z < 0 ? this.options.sound.nearBoomMultiplier : 1),
+        this._depthSoundDelay(r.z || 0),
       );
       if (r.type === "text") {
         const cfg = r.cfg,
@@ -2817,6 +3109,12 @@
         if (cfg.renderMode !== "crisp")
           for (let i = 0; i < r.textPlan.points.length; i++) {
             const q = r.textPlan.points[i],
+              // Text plans are sampled in screen pixels, while particles are
+              // rendered through the zoomed world camera. Invert that camera
+              // transform so the assembled text stays locked to its intended
+              // screen position at any viewport zoom.
+              textX = q.x / this.zoom,
+              textY = q.y / this.zoom,
               releaseStart = now + cfg.revealDuration + cfg.holdDuration,
               fraction =
                 cfg.dissolveStyle === "left-to-right"
@@ -2830,12 +3128,12 @@
               releaseAt = releaseStart + fraction * cfg.dissolveDuration;
             if (
               !this._spawn({
-                x: q.x,
-                y: q.y,
+                x: textX,
+                y: textY,
                 sx: r.x,
                 sy: r.y,
-                tx: q.x,
-                ty: q.y,
+                tx: textX,
+                ty: textY,
                 vx: (Math.random() - 0.5) * 0.32,
                 vy: -0.08 - Math.random() * 0.18,
                 color: cfg.colors[i % cfg.colors.length],
@@ -3221,8 +3519,13 @@
      */
     setOptions(partial = {}) {
       const previous = this.options;
+      const previousZoom = this.zoom || (previous && previous.visuals && previous.visuals.zoom) || 1;
       this.userOptions = merge(this.userOptions, partial);
       this.options = this._resolve(this.userOptions);
+      this.zoom = this.options.visuals.zoom;
+      if (previous && previousZoom !== this.zoom)
+        this._recenterActiveWorld(previousZoom, this.zoom);
+      this.worldWidth = this.width / this.zoom;
       if (this.root)
         this.root.style.opacity = String(
           clamp(Number(this.options.visuals.opacity ?? 1), 0, 1),
@@ -3239,6 +3542,29 @@
         this._resumeFor("offscreen");
       return this;
     }
+    // Zoom changes alter the size of the virtual world. Shift all active
+    // world-space coordinates by the centre delta so in-flight rockets and
+    // particles continue to orbit the visual centre instead of sliding left.
+    _recenterActiveWorld(fromZoom, toZoom) {
+      const dx = this.width / (2 * toZoom) - this.width / (2 * fromZoom),
+        dy = this.height / (2 * toZoom) - this.height / (2 * fromZoom),
+        shift = (item) => {
+          if (!item) return;
+          if (Number.isFinite(item.x)) item.x += dx;
+          if (Number.isFinite(item.y)) item.y += dy;
+          if (Number.isFinite(item.sx)) item.sx += dx;
+          if (Number.isFinite(item.sy)) item.sy += dy;
+          if (Number.isFinite(item.tx)) item.tx += dx;
+          if (Number.isFinite(item.ty)) item.ty += dy;
+          if (Number.isFinite(item.centerX)) item.centerX += dx;
+          if (Number.isFinite(item.centerY)) item.centerY += dy;
+          if (Number.isFinite(item.burstY)) item.burstY += dy;
+        };
+      this.rockets.forEach(shift);
+      this.pendingRockets.forEach(shift);
+      this.particles.forEach(shift);
+      this.flashes.forEach(shift);
+    }
     /**
      * Sets the overall opacity of the fireworks layer.
      * @param {number} level - 0 to 1
@@ -3248,6 +3574,17 @@
       return this.setOptions({
         visuals: { opacity: clamp(Number(level), 0, 1) },
       });
+    }
+    /**
+     * Sets the viewport zoom level, scaling from the screen center.
+     * < 1 = zoomed out (smaller fireworks, wider field of view).
+     * > 1 = zoomed in (larger fireworks, closer look).
+     * @param {number} level - 0.1 to 4 (default 1)
+     * @returns {GrandFireworks}
+     */
+    setZoom(level) {
+      const z = clamp(Number(level), 0.1, 4);
+      return this.setOptions({ visuals: { zoom: z } });
     }
     /**
      * Switches to a named visual style preset (e.g. "bold", "spectacle").
@@ -3489,7 +3826,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.6.0";
+  GrandFireworks.VERSION = "1.6.1";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;
