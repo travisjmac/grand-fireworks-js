@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.6.3
+ * Version: 1.6.4
  *
  * @author Travis MacDonald
- * @version 1.6.3
+ * @version 1.6.4
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -3889,18 +3889,30 @@
      * @returns {GrandFireworks}
      */
     setStyle(name) {
-      const s = STYLES[name];
-      if (!s) return this;
-      this.setOptions({
-        baseStyle: name,
-        ...s,
-        colorTheme: this.options.colorTheme,
-      });
-      if (this.root)
-        this.root.style.opacity = String(
-          clamp(Number(this.options.visuals.opacity ?? 1), 0, 1),
-        );
-      return this;
+      if (name !== "mixed" && !STYLES[name]) return this;
+
+      // Style presets own only the keys they declare. Remove every style-owned
+      // key from the accumulated user options before resolving the new style.
+      // Without this reset, cinematic-only effects such as shimmer and wind
+      // could survive a later switch back to bold, classic, or another preset.
+      const cleanOptions = merge({}, this.userOptions);
+      const styleSections = ["performance", "visuals", "show"];
+
+      for (const section of styleSections) {
+        if (!cleanOptions[section]) continue;
+
+        for (const style of Object.values(STYLES)) {
+          const styleValues = style[section];
+          if (!styleValues) continue;
+
+          for (const key of Object.keys(styleValues)) {
+            delete cleanOptions[section][key];
+          }
+        }
+      }
+
+      this.userOptions = cleanOptions;
+      return this.setOptions({ baseStyle: name });
     }
     /**
      * Switches to a named color theme and recolorizes all existing
@@ -4123,7 +4135,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.6.3";
+  GrandFireworks.VERSION = "1.6.4";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

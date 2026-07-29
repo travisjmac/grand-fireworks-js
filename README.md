@@ -1,11 +1,11 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.6.3** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.6.4** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.6.3
+## Version 1.6.4
 
-This patch release adds cinematic fireworks, global speed and depth controls, a richer homepage playground, and a unified Feature Demo and Configuration Workbench with visual shell selection. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
+This patch fixes style switching so every preset reliably restores its own defaults instead of retaining effects from the previously selected style. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
 Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-style bloom, star cores, rocket exhaust, explosion flashes, secondary crackles, specialized shell geometry, grouped salvos, and a Canvas 2D fallback. The class also includes graceful stopping, an optional finale, fullscreen or contained placement, timed shows, performance presets, and synchronized multi-line hybrid text fireworks.
 

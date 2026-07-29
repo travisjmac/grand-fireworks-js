@@ -177,6 +177,38 @@ test('honors explicit performance and live visual options', () => {
   fireworks.destroy();
 });
 
+test('resets style-owned settings when switching styles', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    container: '#stage',
+    baseStyle: 'bold',
+    colorTheme: 'iceBlue',
+    visuals: { zoom: .75 },
+    sound: { volume: .4 }
+  });
+
+  fireworks.setStyle('cinematic');
+  assert.equal(fireworks.options.visuals.shimmerChance, .82);
+  assert.equal(fireworks.options.visuals.trails, false);
+
+  fireworks.setStyle('bold');
+  assert.equal(fireworks.options.visuals.shimmerChance, 0);
+  assert.equal(fireworks.options.visuals.sparkleChance, 0);
+  assert.equal(fireworks.options.visuals.windStrength, 0);
+  assert.equal(fireworks.options.visuals.sphereBurst, false);
+  assert.equal(fireworks.options.visuals.trails, true);
+  assert.equal(fireworks.options.visuals.bloom, 1.9);
+  assert.equal(fireworks.options.show.intensity, 1.6);
+
+  // Settings unrelated to the selected visual style remain untouched.
+  assert.equal(fireworks.options.colorTheme, 'iceBlue');
+  assert.equal(fireworks.options.visuals.zoom, .75);
+  assert.equal(fireworks.options.sound.volume, .4);
+
+  fireworks.setStyle('mixed');
+  assert.equal(fireworks.options.baseStyle, 'mixed');
+});
+
 test('keeps one apparent scale across a rocket and its burst', () => {
   const { GrandFireworks } = createRuntime();
   const fireworks = new GrandFireworks({

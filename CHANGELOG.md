@@ -2,6 +2,15 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.6.4] — July 29, 2026
+
+### Fixed
+
+- Style switching now clears values owned by the previous preset before applying the next preset.
+- Cinematic-only shimmer, sparkle, wind, spherical bursts, flash effects, and particle settings no longer leak into Bold, Classic, or other styles.
+- The public `setStyle()` method now accepts the supported Mixed style.
+- Colour theme, zoom, sound, placement, and other unrelated user settings remain intact while switching styles.
+
 ## [1.6.3] — July 29, 2026
 
 ### Added
