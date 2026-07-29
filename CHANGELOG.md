@@ -2,6 +2,27 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.6.3] — July 29, 2026
+
+### Added
+
+- Added a cinematic fireworks style with shimmer, varied particle persistence, bright flash bursts, and consistent wind.
+- Added global speed control and randomized per-shell apparent depth and scale.
+- Added a richer draggable homepage playground with live style, colour, speed, zoom, intensity, sound, and fullscreen controls.
+- Added visual multi-selection for individual shell types.
+
+### Changed
+
+- Unified Feature Demos and the Configuration Workbench into one query-selectable studio.
+- Replaced the studio's side hide arrow with a title-bar minimize control and a WebGL2 melt/morph animation.
+- Made the cinematic style the primary showcase style and added safe periodic Grand Finale bombs to the homepage.
+
+### Fixed
+
+- Preserved moved configuration-window positions while minimizing and restoring.
+- Prevented standalone show-stopper demonstrations from unintentionally stopping the running display.
+- Corrected depth-aware launch scaling, height, sound, and text placement.
+
 ## [1.6.2] — July 28, 2026
 
 ### Added

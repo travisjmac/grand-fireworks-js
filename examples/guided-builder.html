@@ -40,8 +40,16 @@
 #restart-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:5px;padding:3px 8px;cursor:pointer;font:600 11px/1 system-ui,sans-serif;white-space:nowrap;transition:.15s;margin-left:auto}
 #restart-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
-/* Toggle tab */
-#controls-toggle{position:fixed;top:50%;left:0;z-index:10001;transform:translateY(-50%);background:#03040e;border:1px solid rgba(255,255,255,.08);border-left:none;border-radius:0 8px 8px 0;padding:12px 5px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.5);transition:.25s;line-height:1;box-shadow:2px 0 8px rgba(0,0,0,.3);display:none}#controls-toggle:hover{color:#ffdc68;padding-right:8px}#controls-toggle.visible{display:block}
+/* Minimized window button and WebGL morph layer */
+#controls-toggle{position:fixed;left:18px;bottom:18px;z-index:10002;display:none;align-items:center;gap:7px;border:1px solid rgba(255,215,0,.32);border-radius:999px;padding:10px 16px;background:linear-gradient(135deg,rgba(20,26,66,.94),rgba(6,8,24,.96));color:#ffe27a;box-shadow:0 10px 34px rgba(0,0,0,.5),0 0 22px rgba(92,116,255,.16);backdrop-filter:blur(12px);cursor:pointer;font:700 12px/1 system-ui,sans-serif;opacity:0;transform:translateY(12px) scale(.9);transition:opacity .22s,transform .3s cubic-bezier(.2,.8,.2,1),border-color .2s}
+#controls-toggle:hover{border-color:rgba(255,215,0,.65);transform:translateY(-2px) scale(1.02)}
+#controls-toggle.visible{display:inline-flex;opacity:1;transform:none}
+#panel-morph-canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:10003;display:none;pointer-events:none}
+#builder-drawer.panel-minimized{display:none}
+#builder-drawer.panel-morphing{pointer-events:none;transform-origin:left bottom;animation:panel-soft-collapse .52s cubic-bezier(.55,0,.2,1) forwards}
+#builder-drawer.panel-restoring{pointer-events:none;transform-origin:left bottom;animation:panel-soft-restore .5s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes panel-soft-collapse{0%{opacity:1;filter:blur(0) saturate(1)}55%{opacity:.72;filter:blur(1px) saturate(1.35)}100%{opacity:0;filter:blur(7px) saturate(1.7);transform:scale(.72,.18) skewX(-8deg)}}
+@keyframes panel-soft-restore{0%{opacity:0;filter:blur(7px) saturate(1.7);transform:scale(.72,.18) skewX(-8deg)}55%{opacity:.76;filter:blur(1px) saturate(1.3)}100%{opacity:1;filter:none;transform:none}}
 
 /* Preset bar */
 #preset-bar{display:none}
@@ -192,6 +200,37 @@
 #tab-content::-webkit-scrollbar{width:4px}
 #tab-content::-webkit-scrollbar-track{background:transparent}
 #tab-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}
+#workbench-panel{display:flex;flex:1;min-height:0;flex-direction:column}
+#feature-demo-panel{flex:1;min-height:0;overflow-y:auto;padding:12px;scrollbar-color:#8ea0f5 rgba(255,255,255,.08)}
+#feature-demo-panel[hidden],#workbench-panel[hidden]{display:none}
+.feature-mode-intro{display:grid;gap:6px;margin-bottom:12px}
+.feature-mode-intro label,.studio-feature-card h2{color:#ffd65a;font-weight:700}
+.feature-mode-intro select,.studio-feature-card select,.studio-feature-card input[type=text],.studio-feature-card input[type=number]{width:100%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:8px;padding:8px}
+.studio-feature-card{display:grid;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(0,0,0,.16)}
+.studio-feature-card h2,.studio-feature-card p{margin:0}
+.studio-feature-card p{color:rgba(255,255,255,.6);font-size:12px;line-height:1.45}
+.studio-feature-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(130px,2fr) auto;align-items:center;gap:10px}
+.studio-feature-row input[type=range]{width:100%;accent-color:#ffd65a}
+.studio-feature-value{min-width:48px;color:#ffe68d;text-align:right;font:600 12px/1 ui-monospace,monospace}
+.studio-feature-actions{display:flex;flex-wrap:wrap;gap:8px}
+.studio-feature-actions button,#studio-mode-btn{border:1px solid rgba(255,215,0,.25);background:rgba(255,215,0,.1);color:#ffdc68;border-radius:8px;padding:7px 11px;cursor:pointer;font:600 12px/1 system-ui,sans-serif}
+.studio-feature-actions button:hover,#studio-mode-btn:hover{background:rgba(255,215,0,.2)}
+.studio-mode-feature .drawer-header h1{color:#b9d9ff}
+.shell-picker{display:grid;gap:9px;width:100%}
+.shell-picker-actions{display:flex;flex-wrap:wrap;gap:6px}
+.shell-picker-actions button{border:1px solid rgba(255,215,0,.2);background:rgba(255,215,0,.08);color:#ffe27b;border-radius:7px;padding:6px 9px;cursor:pointer;font:600 11px/1 system-ui,sans-serif}
+.shell-picker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.shell-card{position:relative;display:grid!important;grid-template-rows:62px auto;min-width:0!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:9px;padding:6px!important;background:rgba(255,255,255,.025);cursor:pointer!important;overflow:hidden}
+.shell-card:hover{border-color:rgba(255,215,0,.32)!important;background:rgba(255,215,0,.05)}
+.shell-card.selected{border-color:rgba(255,215,0,.58)!important;background:rgba(255,215,0,.09);box-shadow:inset 0 0 16px rgba(255,215,0,.05)}
+.shell-card canvas{display:block;width:100%;height:62px;border-radius:6px;background:radial-gradient(circle at 50% 46%,rgba(28,38,72,.5),rgba(2,3,13,.9))}
+.shell-card span{padding-top:6px;color:#e9ecff;font-size:10px;line-height:1.2;text-align:center;white-space:normal}
+.shell-card input{position:absolute;top:7px;right:7px;width:16px!important;height:16px!important}
+.option-row.shell-picker-row{display:grid;align-items:start}
+.option-row.shell-picker-row>label{min-width:0}
+.option-row.shell-picker-row .opt-control{width:100%}
+@media(max-width:600px){.studio-feature-row{grid-template-columns:1fr}.studio-feature-value{text-align:left}}
+@media(max-width:600px){.shell-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body>
 
 <section id="preview" role="img" aria-label="Live fireworks preview">
@@ -210,14 +249,17 @@
       <button class="playback-btn" id="play-btn" title="Start">▶</button>
       <button class="playback-btn" id="pause-btn" title="Pause">⏸</button>
       <button class="playback-btn" id="stop-btn" title="Stop">⏹</button>
+      <button class="playback-btn" id="minimize-panel-btn" title="Minimize control panel">—</button>
       <span id="countdown-timer"></span>
     </div>
   </div>
   <div class="drawer-subhead">
     <a class="back" href="../index.html" style="color:rgba(255,255,255,.6);background:rgba(8,10,25,.85);border:1px solid rgba(255,255,255,.15);padding:5px 10px;border-radius:8px;text-decoration:none;font-size:12px">← Documentation</a>
     <button id="sound-btn" style="color:rgba(255,255,255,.6);background:rgba(8,10,25,.85);border:1px solid rgba(255,255,255,.15);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12px">🔇 Sound</button>
+    <button id="studio-mode-btn" title="Switch control panel">🔭 Feature Demo</button>
     <button id="restart-btn">↻ Restart</button>
   </div>
+  <div id="workbench-panel">
   <div id="preset-bar" role="radiogroup" aria-label="Quick-start presets"></div>
   <nav id="tab-bar" role="tablist" aria-label="Configuration sections"></nav>
   <div id="tab-content"></div>
@@ -229,9 +271,25 @@
     <button class="bottom-btn" id="undo-btn" title="Undo last change">↩ Undo</button>
     <button class="bottom-btn" id="reset-btn" title="Reset to starting preset">⟲ Reset</button>
   </div>
+  </div>
+  <div id="feature-demo-panel" hidden>
+    <div class="feature-mode-intro">
+      <label for="studio-feature-select">Feature demo</label>
+      <select id="studio-feature-select">
+        <option value="depth">Depth-staged horizon</option>
+        <option value="shells">Shell showcase</option>
+        <option value="themes">Themes and styles</option>
+        <option value="text">Text fireworks</option>
+        <option value="showstoppers">Show Stoppers</option>
+        <option value="sound">Sound staging</option>
+      </select>
+    </div>
+    <div id="studio-feature-content"></div>
+  </div>
 </div>
 
-<div id="controls-toggle" class="visible" title="Toggle controls panel">◀</div>
+<button id="controls-toggle" type="button" title="Restore controls">🎛 Show control panel</button>
+<canvas id="panel-morph-canvas" aria-hidden="true"></canvas>
 
 <div id="toast"></div>
 <div id="live-announcer" class="sr-only" aria-live="polite"></div>
@@ -434,6 +492,7 @@ const PRESET_DEFS = [
   { id: 'balanced',    label: 'Balanced',       icon: '⚖️',  config: { baseStyle: 'medium',   performance: { preset: 'high' } } },
   { id: 'subtle',      label: 'Subtle',         icon: '🌙',  config: { baseStyle: 'thin',     performance: { preset: 'low' }, visuals: { opacity: .6 } } },
   { id: 'classic',     label: 'Classic',        icon: '🕰️', config: { baseStyle: 'classic',  performance: { preset: 'medium' } } },
+  { id: 'cinematic',   label: 'Cinematic realism', icon: '🌙', config: { baseStyle: 'cinematic', performance: { preset: 'high' } } },
   { id: 'bold',        label: 'Bold',           icon: '💪',  config: { baseStyle: 'bold',     performance: { preset: 'high' } } },
   { id: 'spectacle',   label: 'Spectacle',      icon: '🎆',  config: { baseStyle: 'spectacle', performance: { preset: 'ultra' } } },
   { id: 'mobile',      label: 'Mobile Friendly', icon: '📱', config: { baseStyle: 'medium',   performance: { preset: 'low' }, show: { maxParticles: 1000, maxRockets: 3 } } }
@@ -447,7 +506,7 @@ const SECTIONS = {
     desc: 'Pick one thing to change, preview it, then keep or revert.',
     options: [
       { id: 'style',       label: 'Style',           type: 'select', updateMode: 'live',
-        choices: ['Classic','Old School','Thin','Medium','Bold','Spectacle','Mixed'].map(v => ({ label: v === 'Mixed' ? '🎲 Mixed styles' : v, value: v.toLowerCase().replace(/\s+/g,'') })),
+        choices: ['Classic','Old School','Thin','Medium','Cinematic','Bold','Spectacle','Mixed'].map(v => ({ label: v === 'Mixed' ? '🎲 Mixed styles' : v === 'Cinematic' ? '🌙 Cinematic realism' : v, value: v.toLowerCase().replace(/\s+/g,'') })),
         apply: (c, v, fw) => { if (v === 'mixed') fw.setOptions({baseStyle:v}); else fw.setStyle(v); c.baseStyle = v; },
         summary: v => `${PRESET_MAP[v] ? PRESET_MAP[v].icon + ' ' : ''}${v.charAt(0).toUpperCase()+v.slice(1)} style`,
         tooltip: 'Overall look and feel — changes visuals and show behavior together' },
@@ -488,6 +547,15 @@ const SECTIONS = {
         apply: (c, v, fw) => { const n = Number(v); c.show = deepMerge(c.show||{}, {launchInterval:n}); fw.setOptions({show:{launchInterval:n}}); },
         summary: v => `Speed: ${v}ms interval`,
         tooltip: 'How fast rockets launch — lower = faster' },
+      { id: 'speedMultiplier', label: 'Overall speed', type: 'select', updateMode: 'live',
+        choices: [
+          { label: '🌙 Slow motion (60%)', value: '.6' }, { label: '🎬 Cinematic (80%)', value: '.8' },
+          { label: '⚖️ Normal (100%)', value: '1' }, { label: '⚡ Quick (125%)', value: '1.25' },
+          { label: '🔥 Fast (150%)', value: '1.5' }
+        ],
+        apply: (c, v, fw) => { const n = Number(v); c.speedMultiplier = n; fw.setOptions({speedMultiplier:n}); },
+        summary: v => `Overall speed: ${Math.round(Number(v) * 100)}%`,
+        tooltip: 'Scales rocket flight, bursts, particles, shimmer, flashes, and secondary effects together' },
       { id: 'trails',      label: 'Trails',         type: 'toggle', updateMode: 'live',
         apply: (c, v, fw) => { c.visuals = deepMerge(c.visuals||{}, {trails:v}); fw.setOptions({visuals:{trails:v}}); },
         summary: v => v ? 'Trails on' : 'Trails off',
@@ -605,6 +673,15 @@ const SECTIONS = {
       { id: 'show.launchHorizon',  label: 'Launch horizon',  type: 'number', min: .5, max: 20, step: .5, def: 1, slider: true, unit: ' sw', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchHorizon:v}); fw.setOptions({show:{launchHorizon:v}}); },
         tooltip: 'Total launch area in screen widths; zoom out to reveal more of it' },
+      { id: 'show.minShellScale', label: 'Smallest shell', type: 'number', min: .25, max: 2, step: .05, def: 1, slider: true, unit: '×', updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {minShellScale:v}); fw.setOptions({show:{minShellScale:v}}); },
+        tooltip: 'Smallest random apparent scale used for an individual firework' },
+      { id: 'show.maxShellScale', label: 'Largest shell', type: 'number', min: .25, max: 2, step: .05, def: 1, slider: true, unit: '×', updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {maxShellScale:v}); fw.setOptions({show:{maxShellScale:v}}); },
+        tooltip: 'Largest random apparent scale used for an individual firework' },
+      { id: 'show.grandFinaleShellChance', label: 'Finale bomb chance', type: 'number', min: 0, max: .25, step: .01, def: 0, slider: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {grandFinaleShellChance:v}); fw.setOptions({show:{grandFinaleShellChance:v}}); },
+        tooltip: 'Probability from 0 to .25; .05 means 5%. Never launches the World Ender' },
       { id: 'show.zAngleRange',    label: 'Depth angle',     type: 'number', min: 0, max: 45, step: 1, def: 25, slider: true, unit: '°', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {zAngleRange:v}); fw.setOptions({show:{zAngleRange:v}}); },
         tooltip: 'Maximum near/far drift while a shell climbs, in degrees' },
@@ -617,10 +694,10 @@ const SECTIONS = {
       { id: 'show.angleStrength',  label: 'Angle strength',  type: 'number', min: 0, max: 3, step: .1, def: 1, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleStrength:v}); fw.setOptions({show:{angleStrength:v}}); },
         tooltip: 'How strongly angle affects horizontal motion' },
-      { id: 'show.enabledTypes',   label: 'Shell types',     type: 'select', updateMode: 'live',
-        choices: [{label:'🎆 All 15 types',value:'all'},{label:'🌸 Classic only',value:'classic-only'}],
-        apply: (c,v,fw) => { const types = v === 'all' ? 'all' : ['grand_peony','starburst','imperial_chrysanthemum']; c.show = deepMerge(c.show||{}, {enabledTypes:types}); fw.setOptions({show:{enabledTypes:types}}); },
-        tooltip: 'Which shell varieties can launch' }
+      { id: 'show.enabledTypes',   label: 'Shell types',     type: 'shell-picker', updateMode: 'live',
+        apply: (c,v,fw) => { const types = Array.isArray(v) && v.length ? v : ['grand_peony']; c.show = deepMerge(c.show||{}, {enabledTypes:types}); fw.setOptions({show:{enabledTypes:types}}); },
+        summary: v => `Shell types: ${Array.isArray(v) ? v.length : 15} selected`,
+        tooltip: 'Choose any combination of shell varieties using the visual previews' }
     ]
   },
   performance: {
@@ -781,14 +858,14 @@ const CORE_CONFIG = {
   sound: { enabled: false, volume: .3 }
 };
 
-const DEFAULT_CONFIG = deepMerge(deepMerge({}, CORE_CONFIG), PRESET_MAP.balanced.config);
+const DEFAULT_CONFIG = deepMerge(deepMerge({}, CORE_CONFIG), PRESET_MAP.cinematic.config);
 
 const state = {
   committedConfig: deepMerge({}, DEFAULT_CONFIG),
   history: [],
   historyIndex: -1,
-  startingPreset: 'balanced',
-  currentPreset: 'balanced',
+  startingPreset: 'cinematic',
+  currentPreset: 'cinematic',
   activeTab: 'guided',
   guidedOption: null,
   guidedValue: null,
@@ -980,7 +1057,7 @@ function buildGuidedTab(sec) {
 /* ---------- guided value controls ---------- */
 function getCurrentGuidedValue(opt) {
   // Read current committed value for the option to pre-select it
-  if (opt.id === 'style') return state.committedConfig.baseStyle || 'medium';
+  if (opt.id === 'style') return state.committedConfig.baseStyle || 'cinematic';
   if (opt.id === 'colorTheme') return state.committedConfig.colorTheme || 'default';
   if (opt.id === 'fireworks') {
     const r = getDeep(state.committedConfig, 'show.maxRockets');
@@ -1058,6 +1135,76 @@ function buildGuidedValueControl(optionId) {
   }
 }
 
+const SHELL_CATALOGUE = [
+  ['grand_peony','Grand Peony'],['imperial_chrysanthemum','Imperial Chrysanthemum'],
+  ['weeping_willow','Weeping Willow'],['royal_palm','Royal Palm'],
+  ['diamond_ring','Diamond Ring'],['crossette_supreme','Crossette Supreme'],
+  ['golden_brocade','Golden Brocade'],['dragon_fish','Dragon Fish'],
+  ['majestic_comet','Majestic Comet'],['cascading_horsetail','Cascading Horsetail'],
+  ['starburst','Starburst'],['glitter_nova','Glitter Nova'],
+  ['crown_jewel','Crown Jewel'],['thunder_clap','Thunder Clap'],
+  ['galactic_spiral','Galactic Spiral']
+];
+const CLASSIC_SHELLS = ['grand_peony','starburst','imperial_chrysanthemum'];
+
+function drawShellPreview(canvas,type) {
+  const x=canvas.getContext('2d'),w=180,h=124,cx=90,cy=55;
+  canvas.width=w;canvas.height=h;x.clearRect(0,0,w,h);
+  const colors=['#fff8c8','#ffd54f','#ff6ea8','#63d9ff','#9d7bff'];
+  x.lineCap='round';x.globalCompositeOperation='lighter';x.shadowBlur=8;
+  const stroke=(color,width=2)=>{x.strokeStyle=color;x.shadowColor=color;x.lineWidth=width};
+  const ray=(a,r1,r2,color,width=2)=>{stroke(color,width);x.beginPath();x.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);x.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);x.stroke()};
+  if(type==='diamond_ring'){
+    stroke('#ffe27a',3);x.beginPath();for(let i=0;i<=8;i++){const a=-Math.PI/2+i*Math.PI/4,px=cx+Math.cos(a)*35,py=cy+Math.sin(a)*35;i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();
+  }else if(type==='galactic_spiral'){
+    for(let arm=0;arm<4;arm++){stroke(colors[arm+1],2);x.beginPath();for(let i=0;i<34;i++){const r=i*1.15,a=arm*Math.PI/2+i*.27,px=cx+Math.cos(a)*r,py=cy+Math.sin(a)*r;i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke()}
+  }else if(type==='weeping_willow'||type==='cascading_horsetail'||type==='golden_brocade'){
+    const count=type==='cascading_horsetail'?9:15;for(let i=0;i<count;i++){const a=-Math.PI*.92+i/(count-1)*Math.PI*.84,ex=cx+Math.cos(a)*42,ey=cy+Math.sin(a)*30;stroke(type==='golden_brocade'?'#ffd54f':'#ffe6a0',2);x.beginPath();x.moveTo(cx,cy);x.quadraticCurveTo(ex,ey,ex+(i-count/2)*1.2,104);x.stroke()}
+  }else if(type==='royal_palm'){
+    for(let i=0;i<9;i++){const a=-Math.PI*.95+i/8*Math.PI*.9;stroke(colors[i%colors.length],3);x.beginPath();x.moveTo(cx,cy);x.quadraticCurveTo(cx+Math.cos(a)*25,cy+Math.sin(a)*25,cx+Math.cos(a)*48,cy+Math.sin(a)*38+12);x.stroke()}
+  }else if(type==='crossette_supreme'){
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,ex=cx+Math.cos(a)*36,ey=cy+Math.sin(a)*36;ray(a,3,32,colors[i%colors.length],2);ray(a-.25,34,45,'#fff3bc',2);ray(a+.25,34,45,'#fff3bc',2)}
+  }else if(type==='dragon_fish'){
+    for(let i=0;i<7;i++){stroke(colors[(i+2)%colors.length],2);x.beginPath();for(let n=0;n<22;n++){const px=35+n*5,py=24+i*10+Math.sin(n*.65+i)*5;n?x.lineTo(px,py):x.moveTo(px,py)}x.stroke()}
+  }else if(type==='majestic_comet'){
+    stroke('#fff4b0',6);x.beginPath();x.moveTo(30,100);x.quadraticCurveTo(68,70,cx,cy);x.stroke();stroke('#ff9b42',2);for(let i=0;i<7;i++){x.beginPath();x.moveTo(25+i*4,104-i*2);x.lineTo(68+i*2,68);x.stroke()}
+  }else if(type==='thunder_clap'){
+    const g=x.createRadialGradient(cx,cy,1,cx,cy,43);g.addColorStop(0,'#fff');g.addColorStop(.18,'#fff9b0');g.addColorStop(.5,'rgba(255,170,60,.35)');g.addColorStop(1,'transparent');x.fillStyle=g;x.fillRect(35,0,110,110);for(let i=0;i<16;i++)ray(i*Math.PI/8,12,46,'#fff4c2',3);
+  }else if(type==='crown_jewel'){
+    for(let i=0;i<11;i++)ray(-Math.PI*.9+i/10*Math.PI*.8,5,38+i%2*8,colors[i%colors.length],3);stroke('#ffd54f',3);x.beginPath();x.arc(cx,cy+24,28,Math.PI,Math.PI*2);x.stroke();
+  }else{
+    const count=type==='starburst'?12:type==='glitter_nova'?28:type==='imperial_chrysanthemum'?24:18;
+    for(let i=0;i<count;i++){const a=i/count*Math.PI*2,r=type==='starburst'?(i%2?30:48):32+(i%5)*3;ray(a,4,r,colors[i%colors.length],type==='starburst'?3:2)}
+    if(type==='glitter_nova')for(let i=0;i<24;i++){x.fillStyle=colors[i%colors.length];x.fillRect(24+(i*37)%132,12+(i*53)%88,2,2)}
+  }
+  x.globalCompositeOperation='source-over';x.shadowBlur=0;
+}
+
+function buildShellPicker(value,onChange) {
+  const chosen = new Set(value==='all'||!Array.isArray(value)?SHELL_CATALOGUE.map(s=>s[0]):value);
+  const root=document.createElement('div');root.className='shell-picker';
+  const actions=document.createElement('div');actions.className='shell-picker-actions';
+  const grid=document.createElement('div');grid.className='shell-picker-grid';
+  const update=()=>{
+    grid.querySelectorAll('.shell-card').forEach(card=>card.classList.toggle('selected',card.querySelector('input').checked));
+    const selected=[...grid.querySelectorAll('input:checked')].map(input=>input.value);
+    if(!selected.length){const first=grid.querySelector('input');first.checked=true;selected.push(first.value);grid.querySelector('.shell-card').classList.add('selected')}
+    onChange(selected);
+  };
+  [['Select all',SHELL_CATALOGUE.map(s=>s[0])],['Classic shells',CLASSIC_SHELLS]].forEach(([text,list])=>{
+    const button=document.createElement('button');button.type='button';button.textContent=text;
+    button.onclick=()=>{grid.querySelectorAll('input').forEach(input=>input.checked=list.includes(input.value));update()};actions.appendChild(button);
+  });
+  for(const [type,label] of SHELL_CATALOGUE){
+    const card=document.createElement('label');card.className='shell-card'+(chosen.has(type)?' selected':'');
+    const canvas=document.createElement('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`${label} shell preview`);
+    const input=document.createElement('input');input.type='checkbox';input.value=type;input.checked=chosen.has(type);
+    const name=document.createElement('span');name.textContent=label;
+    input.onchange=update;card.append(canvas,input,name);grid.appendChild(card);drawShellPreview(canvas,type);
+  }
+  root.append(actions,grid);return root;
+}
+
 /* ---------- category tab ---------- */
 function buildCategoryTab(sec) {
   const frag = document.createDocumentFragment();
@@ -1069,6 +1216,7 @@ function buildCategoryTab(sec) {
   for (const o of sec.options) {
     const row = document.createElement('div');
     row.className = 'option-row';
+    if (o.type === 'shell-picker') row.classList.add('shell-picker-row');
 
     const label = document.createElement('label');
     label.htmlFor = `opt-${o.id}`;
@@ -1126,6 +1274,11 @@ function buildCategoryTab(sec) {
       inp.value = getDeep(state.committedConfig, o.id) ?? o.def ?? '';
       inp.addEventListener('change', () => applyDirectOption(o.id, inp.value));
       ctrl.appendChild(inp);
+    } else if (o.type === 'shell-picker') {
+      ctrl.appendChild(buildShellPicker(
+        getDeep(state.committedConfig, o.id) ?? 'all',
+        value => applyDirectOption(o.id, value)
+      ));
     }
 
     row.appendChild(ctrl);
@@ -1452,8 +1605,7 @@ function refreshSavedConfigs(){const sel=document.getElementById('load-saved-sel
 function dismissWizard() {
   document.getElementById('wizard-overlay').classList.add('hidden');
   document.getElementById('builder-drawer').classList.add('open');
-  document.getElementById('controls-toggle').classList.add('visible');
-  document.getElementById('controls-toggle').textContent = '◀';
+  document.getElementById('controls-toggle').classList.remove('visible');
   document.getElementById('preview').classList.remove('fullscreen');
 }
 
@@ -1482,19 +1634,186 @@ function enableWorkbenchDrag() {
   });
 }
 
-function toggleControlsPanel() {
+function runPanelMorph(fromRect,toRect,duration=560) {
+  return new Promise(resolve => {
+    const canvas=document.getElementById('panel-morph-canvas');
+    const gl=canvas.getContext('webgl2',{alpha:true,antialias:false,premultipliedAlpha:true});
+    if(!gl){resolve(false);return}
+    const dpr=Math.min(devicePixelRatio||1,2),w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);
+    canvas.width=w;canvas.height=h;canvas.style.display='block';gl.viewport(0,0,w,h);
+    const vertex=`#version 300 es
+      void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.0-1.0,0,1);}`;
+    const fragment=`#version 300 es
+      precision highp float;
+      uniform vec2 uResolution;
+      uniform vec4 uFrom;
+      uniform vec4 uTo;
+      uniform float uT;
+      out vec4 outColor;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      void main(){
+        vec2 p=gl_FragCoord.xy;
+        float e=uT*uT*(3.0-2.0*uT);
+        vec4 r=mix(uFrom,uTo,e);
+        vec2 c=r.xy+r.zw*.5;
+        vec2 q=abs(p-c)-r.zw*.5;
+        float d=length(max(q,0.0))+min(max(q.x,q.y),0.0);
+        float wave=sin(p.y*.055+uT*22.0)*5.0+sin(p.x*.035-uT*17.0)*3.0;
+        float grain=(hash(floor(p/5.0)+uT)-.5)*9.0;
+        float melt=sin(3.14159*uT)*(wave+grain);
+        float body=1.0-smoothstep(-2.0,5.0,d+melt);
+        float glow=(1.0-smoothstep(2.0,28.0,abs(d+melt)))*.5;
+        vec3 color=mix(vec3(.22,.34,1.0),vec3(1.0,.72,.18),clamp(p.y/uResolution.y+.15*sin(uT*6.28),0.0,1.0));
+        float flicker=.78+.22*sin(p.x*.08+p.y*.05+uT*38.0);
+        outColor=vec4(color*(body*1.15+glow)*flicker,(body*.7+glow*.55)*(1.0-abs(uT-.5)*.34));
+      }`;
+    const compile=(type,source)=>{const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(shader));return shader};
+    let program;
+    try{program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program))}
+    catch(error){canvas.style.display='none';resolve(false);return}
+    gl.useProgram(program);gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+    const rect=r=>new Float32Array([r.left*dpr,(innerHeight-r.bottom)*dpr,r.width*dpr,r.height*dpr]);
+    gl.uniform2f(gl.getUniformLocation(program,'uResolution'),w,h);
+    gl.uniform4fv(gl.getUniformLocation(program,'uFrom'),rect(fromRect));
+    gl.uniform4fv(gl.getUniformLocation(program,'uTo'),rect(toRect));
+    const t0=performance.now(),loc=gl.getUniformLocation(program,'uT');
+    const frame=now=>{const t=Math.min(1,(now-t0)/duration);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(loc,t);gl.drawArrays(gl.TRIANGLES,0,3);if(t<1)requestAnimationFrame(frame);else{canvas.style.display='none';gl.deleteProgram(program);resolve(true)}};
+    requestAnimationFrame(frame);
+  });
+}
+
+let lastPanelRect=null,panelTransitioning=false;
+async function minimizeControlsPanel() {
+  if(panelTransitioning)return;
   const drawer = document.getElementById('builder-drawer');
-  const preview = document.getElementById('preview');
   const tog = document.getElementById('controls-toggle');
-  const open = drawer.classList.toggle('open');
-  tog.textContent = open ? '◀' : '▶';
-  preview.classList.toggle('fullscreen', !open);
+  if(!drawer.classList.contains('open'))return;
+  panelTransitioning=true;lastPanelRect=drawer.getBoundingClientRect();
+  tog.style.display='inline-flex';tog.style.visibility='hidden';
+  const target=tog.getBoundingClientRect();tog.style.display='';tog.style.visibility='';
+  drawer.classList.add('panel-morphing');
+  const morphed=await runPanelMorph(lastPanelRect,target);
+  if(!morphed)await new Promise(resolve=>setTimeout(resolve,520));
+  drawer.classList.add('panel-minimized');
+  drawer.classList.remove('panel-morphing','open');
+  tog.classList.add('visible');
+  panelTransitioning=false;
   setTimeout(() => {
     if (fw) try {
-      if(!open){fw.destroy();initFireworks(effectiveConfig());}
-      else fw.resizePending = true;
+      fw.resizePending = true;
     } catch(e) {}
-  }, 500);
+  }, 80);
+}
+
+async function restoreControlsPanel() {
+  if(panelTransitioning)return;
+  const drawer=document.getElementById('builder-drawer'),tog=document.getElementById('controls-toggle');
+  if(drawer.classList.contains('open'))return;
+  panelTransitioning=true;
+  const from=tog.getBoundingClientRect();
+  tog.classList.remove('visible');
+  drawer.classList.remove('panel-minimized');
+  drawer.classList.add('open','panel-restoring');
+  const target=lastPanelRect||drawer.getBoundingClientRect();
+  const morphed=await runPanelMorph(from,target,520);
+  if(!morphed)await new Promise(resolve=>setTimeout(resolve,500));
+  drawer.classList.remove('panel-restoring');
+  if(fw)fw.resizePending=true;
+  panelTransitioning=false;
+}
+
+function toggleControlsPanel() {
+  const drawer=document.getElementById('builder-drawer');
+  return drawer.classList.contains('open')?minimizeControlsPanel():restoreControlsPanel();
+}
+
+const studioQuery = new URLSearchParams(location.search);
+let studioMode = ['features','feature','feature-demo'].includes(studioQuery.get('mode')) ? 'features' : 'workbench';
+
+function applyStudioConfig(partial) {
+  state.committedConfig = deepMerge(state.committedConfig, partial);
+  if (fw) fw.setOptions(partial);
+  renderSummary();
+}
+
+function studioRow(label, control, value='') {
+  return `<label class="studio-feature-row"><span>${label}</span>${control}<span class="studio-feature-value">${value}</span></label>`;
+}
+
+function renderStudioFeature(name=document.getElementById('studio-feature-select').value) {
+  const host = document.getElementById('studio-feature-content');
+  const o = fw ? fw.getOptions() : effectiveConfig();
+  const card = (title, desc, body, actions) => `<section class="studio-feature-card"><h2>${title}</h2><p>${desc}</p>${body}<div class="studio-feature-actions">${actions}</div></section>`;
+  if (name === 'depth') {
+    host.innerHTML = card('Depth-staged horizon','Mix near and distant launches, then change the live camera view.',
+      studioRow('Zoom','<input id="studio-zoom" type="range" min=".1" max="4" step=".05" value="'+(o.visuals?.zoom||1)+'">','<output id="studio-zoom-v">'+(o.visuals?.zoom||1).toFixed?.(2)+'×</output>')+
+      studioRow('Horizon','<input id="studio-horizon" type="range" min=".5" max="20" step=".5" value="'+(o.show?.launchHorizon||1)+'">','<output id="studio-horizon-v">'+(o.show?.launchHorizon||1)+' sw</output>')+
+      studioRow('Shell scale','<input id="studio-shell-max" type="range" min=".5" max="2" step=".05" value="'+(o.show?.maxShellScale||1)+'">','<output id="studio-shell-max-v">'+(o.show?.maxShellScale||1)+'×</output>'),
+      '<button id="studio-depth-wide">Wide view</button><button id="studio-depth-reset">Reset view</button>');
+    const zoom=$('#studio-zoom'), horizon=$('#studio-horizon'), shell=$('#studio-shell-max');
+    zoom.oninput=()=>{const v=Number(zoom.value);$('#studio-zoom-v').value=v.toFixed(2)+'×';applyStudioConfig({visuals:{zoom:v}});fw.setZoom(v)};
+    horizon.oninput=()=>{const v=Number(horizon.value);$('#studio-horizon-v').value=v+' sw';applyStudioConfig({show:{launchHorizon:v}})};
+    shell.oninput=()=>{const v=Number(shell.value);$('#studio-shell-max-v').value=v.toFixed(2)+'×';applyStudioConfig({show:{minShellScale:.5,maxShellScale:v}})};
+    $('#studio-depth-wide').onclick=()=>{zoom.value=.5;zoom.dispatchEvent(new Event('input'));horizon.value=3;horizon.dispatchEvent(new Event('input'))};
+    $('#studio-depth-reset').onclick=()=>{zoom.value=1;zoom.dispatchEvent(new Event('input'));horizon.value=1;horizon.dispatchEvent(new Event('input'))};
+  } else if (name === 'shells') {
+    host.innerHTML = card('Shell showcase','Change show pressure and compare the full catalogue with traditional shell forms.',
+      studioRow('Intensity','<input id="studio-intensity" type="range" min=".2" max="3" step=".1" value="'+(o.show?.intensity||1)+'">','<output id="studio-intensity-v">'+(o.show?.intensity||1)+'×</output>')+
+      '<div id="studio-shell-picker"></div>',
+      '<button id="studio-launch-shell">Launch shell</button><button id="studio-clear">Clear</button>');
+    $('#studio-intensity').oninput=e=>{const v=Number(e.target.value);$('#studio-intensity-v').value=v.toFixed(1)+'×';applyStudioConfig({show:{intensity:v}})};
+    $('#studio-shell-picker').appendChild(buildShellPicker(o.show?.enabledTypes||'all',types=>applyStudioConfig({show:{enabledTypes:types}})));
+    $('#studio-launch-shell').onclick=()=>fw.launch();
+    $('#studio-clear').onclick=()=>fw.clear();
+  } else if (name === 'themes') {
+    host.innerHTML = card('Themes and styles','Switch the renderer look and colour system without rebuilding the preview.',
+      '<label class="studio-feature-row"><span>Style</span><select id="studio-style"><option>classic</option><option>oldSchool</option><option>thin</option><option>medium</option><option>cinematic</option><option>bold</option><option>spectacle</option><option>mixed</option></select><span></span></label>'+
+      '<label class="studio-feature-row"><span>Colours</span><select id="studio-theme"><option>default</option><option>iceBlue</option><option>emberRed</option><option>neonGreen</option><option>goldenSun</option><option>royalPurple</option><option>festival</option></select><span></span></label>',
+      '<button id="studio-theme-launch">Launch themed shell</button>');
+    $('#studio-style').value=o.baseStyle||'cinematic';$('#studio-theme').value=o.colorTheme||'default';
+    $('#studio-style').onchange=e=>{state.committedConfig.baseStyle=e.target.value;fw.setStyle(e.target.value);renderSummary()};
+    $('#studio-theme').onchange=e=>{state.committedConfig.colorTheme=e.target.value;fw.setColorTheme(e.target.value);renderSummary()};
+    $('#studio-theme-launch').onclick=()=>fw.launch();
+  } else if (name === 'text') {
+    host.innerHTML = card('Text fireworks','Send a live message into the same preview without stopping the show.',
+      '<label class="studio-feature-row"><span>Message</span><input id="studio-text" type="text" value="GRAND FIREWORKS"><span></span></label>'+
+      '<label class="studio-feature-row"><span>Render mode</span><select id="studio-text-mode"><option value="hybrid">Hybrid</option><option value="crisp">Crisp</option><option value="particles">Particles</option></select><span></span></label>',
+      '<button id="studio-fire-text">Launch text</button>');
+    $('#studio-fire-text').onclick=()=>fw.launchText($('#studio-text').value,{renderMode:$('#studio-text-mode').value,exclusive:false});
+  } else if (name === 'showstoppers') {
+    host.innerHTML = card('Show Stoppers','Launch either the compact staged finale or the deliberately dangerous branching demonstration.',
+      '<p>The Super Grand Finale does not stop the regular show. World Ender is manual only and remains clearly separated.</p>',
+      '<button id="studio-finale">Super Grand Finale</button><button id="studio-world-ender">World Ender</button>');
+    $('#studio-finale').onclick=()=>fw.launchFinale();
+    $('#studio-world-ender').onclick=()=>fw.launchWorldEnder({stopAfter:false,promotionChance:.02,maxChainDepth:2});
+  } else {
+    host.innerHTML = card('Sound staging','Tune the shared preview sound system.',
+      studioRow('Volume','<input id="studio-volume" type="range" min="0" max="1" step=".05" value="'+(o.sound?.volume??1)+'">','<output id="studio-volume-v">'+Math.round((o.sound?.volume??1)*100)+'%</output>')+
+      studioRow('Ambience','<input id="studio-ambience" type="range" min="0" max=".02" step=".001" value="'+(o.sound?.ambience??.005)+'">','<output id="studio-ambience-v">'+(o.sound?.ambience??.005)+'</output>'),
+      '<button id="studio-enable-sound">Enable sound and launch</button>');
+    $('#studio-volume').oninput=e=>{const v=Number(e.target.value);$('#studio-volume-v').value=Math.round(v*100)+'%';applyStudioConfig({sound:{volume:v}})};
+    $('#studio-ambience').oninput=e=>{const v=Number(e.target.value);$('#studio-ambience-v').value=v.toFixed(3);applyStudioConfig({sound:{ambience:v}})};
+    $('#studio-enable-sound').onclick=()=>{fw.enableSound();soundOn=true;$('#sound-btn').textContent='🔊 Sound';fw.launch()};
+  }
+}
+
+function switchStudioMode(mode, updateUrl=true) {
+  studioMode = mode === 'features' ? 'features' : 'workbench';
+  const featureMode = studioMode === 'features';
+  const drawer = document.getElementById('builder-drawer');
+  document.getElementById('workbench-panel').hidden = featureMode;
+  document.getElementById('feature-demo-panel').hidden = !featureMode;
+  drawer.classList.toggle('studio-mode-feature', featureMode);
+  drawer.querySelector('.drawer-header h1').textContent = featureMode ? '🔭 Feature Demo' : '🎆 Configuration Workbench';
+  document.title = featureMode ? 'Feature Demo — Grand Fireworks Studio' : 'Configuration Workbench — Grand Fireworks Studio';
+  document.getElementById('studio-mode-btn').textContent = featureMode ? '🎛 Config Workbench' : '🔭 Feature Demo';
+  if (featureMode) renderStudioFeature();
+  else { renderSummary(); rebuildCategoryTabs(); }
+  if (updateUrl) {
+    const url = new URL(location.href);
+    url.searchParams.set('mode', studioMode);
+    history.replaceState(null,'',url);
+  }
 }
 
 function init() {
@@ -1506,6 +1825,9 @@ function init() {
   document.getElementById('pause-btn').onclick=()=>{if(fw)try{fw.pause();document.getElementById('play-btn').classList.add('paused')}catch(e){}};
   document.getElementById('stop-btn').onclick=()=>{if(fw)try{fw.stop();document.getElementById('play-btn').classList.remove('paused')}catch(e){}};
   document.getElementById('restart-btn').onclick=()=>{restartFireworks(effectiveConfig());showToast('↻ Restarted preview');};
+  document.getElementById('minimize-panel-btn').onclick=minimizeControlsPanel;
+  document.getElementById('studio-mode-btn').onclick=()=>switchStudioMode(studioMode==='features'?'workbench':'features');
+  document.getElementById('studio-feature-select').onchange=e=>renderStudioFeature(e.target.value);
   document.getElementById('controls-toggle').onclick=toggleControlsPanel;
   document.getElementById('save-btn').onclick=()=>{document.getElementById('save-overlay').classList.remove('hidden');document.getElementById('save-name-input').value='';document.getElementById('save-error').style.display='none';document.getElementById('save-name-input').focus();};
   document.getElementById('save-confirm').onclick=()=>{const n=document.getElementById('save-name-input').value;if(!n.trim()){document.getElementById('save-error').style.display='block';return;}if(saveConfig(n)){document.getElementById('save-overlay').classList.add('hidden');showToast('💾 Saved "'+n+'"');}};
@@ -1520,8 +1842,9 @@ function init() {
   document.getElementById('load-cancel').onclick=()=>{document.getElementById('load-overlay').classList.add('hidden');document.getElementById('load-error').style.display='none';};
   document.getElementById('undo-btn').onclick=undo;
   document.getElementById('reset-btn').onclick=resetToStart;
-  document.getElementById('controls-toggle').onclick=toggleControlsPanel;
   initWizard();
+  switchStudioMode(studioMode,false);
+  if(studioMode==='features') dismissWizard();
   // Countdown timer
   setInterval(updateCountdown, 500);
   document.onkeydown=e=>{
@@ -1573,6 +1896,7 @@ const WIZARD_THEMES = [
 const WIZARD_STYLES = [
   { label: '⚖️ Balanced', value: 'medium' },
   { label: '🌙 Subtle', value: 'thin' },
+  { label: '🌙 Cinematic realism', value: 'cinematic' },
   { label: '🕰️ Classic', value: 'classic' },
   { label: '💪 Bold', value: 'bold' },
   { label: '🎆 Spectacle', value: 'spectacle' },
@@ -1727,6 +2051,7 @@ function initWizard() {
       medium: 'balanced',
       oldSchool: 'classic',
       thin: 'subtle',
+      cinematic: 'cinematic',
       classic: 'classic',
       bold: 'bold',
       spectacle: 'spectacle',
@@ -1808,6 +2133,6 @@ function applyLoadedConfig() {
   showToast('📂 Configuration loaded!');
 }
 init();
-let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',()=>{soundOn=!soundOn;if(soundOn&&fw)fw.enableSound();else if(fw)fw.disableSound();event.target.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
+let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',event=>{soundOn=!soundOn;if(soundOn&&fw)fw.enableSound();else if(fw)fw.disableSound();event.currentTarget.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
 </script>
 </body></html>

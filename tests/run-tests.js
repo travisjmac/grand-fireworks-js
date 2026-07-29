@@ -170,9 +170,24 @@ test('honors explicit performance and live visual options', () => {
   fireworks.setOptions({ performance: { dprCap: 1 } });
   assert.equal(fireworks.dpr, 1);
   fireworks.setOpacity(.25);
-  fireworks.setOptions({ show: { launchSpread: .4 } });
+  fireworks.setOptions({ show: { launchSpread: .4 }, speedMultiplier: .8 });
   assert.equal(fireworks.options.visuals.opacity, .25);
+  assert.equal(fireworks.options.speedMultiplier, .8);
   assert.equal(Number(fireworks.root.style.opacity), .25);
+  fireworks.destroy();
+});
+
+test('keeps one apparent scale across a rocket and its burst', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    show: { minShellScale: .5, maxShellScale: 1.5, grandFinaleShellChance: .05 }
+  });
+  assert.equal(fireworks.options.show.grandFinaleShellChance, .05);
+  fireworks._createRocket({ apparentScale: .5 });
+  assert.equal(fireworks.rockets[0].apparentScale, .5);
+  fireworks._burst(fireworks.rockets[0], 1, 3, 3);
+  assert.equal(fireworks.particles[0].depthScale, .5);
   fireworks.destroy();
 });
 

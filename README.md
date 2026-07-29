@@ -1,11 +1,11 @@
 # GrandFireworks
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.6.2** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.6.3** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.6.2
+## Version 1.6.3
 
-This patch release adds two release-ready interactive showcases: Fireworks Command, a Mars defence game, and Starlight Intercept, a space-action game. Both now live in self-contained example folders with readable, commented source. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
+This patch release adds cinematic fireworks, global speed and depth controls, a richer homepage playground, and a unified Feature Demo and Configuration Workbench with visual shell selection. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
 Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-style bloom, star cores, rocket exhaust, explosion flashes, secondary crackles, specialized shell geometry, grouped salvos, and a Canvas 2D fallback. The class also includes graceful stopping, an optional finale, fullscreen or contained placement, timed shows, performance presets, and synchronized multi-line hybrid text fireworks.
 
@@ -20,8 +20,8 @@ After GitHub Pages is enabled for the repository, the complete interactive docum
 **[View the source repository](https://github.com/travisjmac/grand-fireworks-js)** · **[Download the latest source ZIP](https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip)**
 
 - [Moonlit Horizon](https://travisjmac.github.io/grand-fireworks-js/examples/moonlit-horizon.html) — the cinematic parallax showcase.
-- [Feature Demos](https://travisjmac.github.io/grand-fireworks-js/examples/feature-demos.html) — one draggable control panel for depth, shells, themes, text, finale, and sound.
-- [Config Maker & Loader](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html) — build, preview, save, load, and copy reusable configurations.
+- [Feature Demo](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=features) — the shared draggable studio opened directly in feature-testing mode.
+- [Config Workbench](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=workbench) — the same studio opened with build, preview, save, load, and copy controls.
 - [Fireworks Command](https://travisjmac.github.io/grand-fireworks-js/examples/fireworks-command/) — a tactical Mars defence game showing the engine in an arcade setting.
 - [Starlight Intercept](https://travisjmac.github.io/grand-fireworks-js/examples/starlight-intercept/) — a space-action showcase with ember fields, ship combat, and a warp ending.
 
@@ -38,6 +38,8 @@ The same files can be browsed directly inside the repository through the relativ
 `duration: 0` runs indefinitely. `stop()` is graceful by default: it stops new launches, finishes active fireworks, optionally plays the configured finale, then fades out.
 
 The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `launchWorldEnder`, `finalize`, `setOptions`, `setOpacity`, `setZoom`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, and `getStats`.
+
+Use `setStyle('cinematic')` for a restrained, realistic show with warm pyrotechnic colours, longer ember trails, softer bloom, slower launches, and fewer simultaneous shells.
 
 `launch()`, `launchText()`, and `launchFinale()` are standalone-safe: they wake the renderer when the regular show is idle, stopped, paused, or fading, play only the requested effect, then fade away automatically. They do not restart automatic launches.
 
@@ -85,6 +87,7 @@ Rocket paths fan naturally by default. Ordinary rockets launch within the middle
 
 ```js
 const fireworks = new GrandFireworks({
+  speedMultiplier: 0.8, // run the complete firework simulation at 80% speed
   visuals: {
     trails: true,
     trailFade: 0.115,
@@ -102,6 +105,9 @@ const fireworks = new GrandFireworks({
     angleStrength: 1,
     textRocketAngle: 0,
     launchHorizon: 1, // total launch area, in screen widths
+    minShellScale: 0.5, // each shell receives its own apparent scale
+    maxShellScale: 1.5,
+    grandFinaleShellChance: 0.05, // occasional layered finale shell, never a World Ender
     zAngleRange: 25, // 0–45° depth drift
     zAngleStrength: 0.8 // 0–3 depth drift multiplier
   }
@@ -110,8 +116,8 @@ const fireworks = new GrandFireworks({
 
 ### Depth-staged horizon
 
-`visuals.zoom` controls the visible field of view: values below `1` pull back to reveal more of the horizon, while values above `1` move closer. `show.launchHorizon` sets the total launch area in screen widths.
+`visuals.zoom` controls the visible field of view: values below `1` pull back to reveal more of the horizon, while values above `1` move closer. `show.launchHorizon` sets the total launch area in screen widths. `show.minShellScale` and `show.maxShellScale` give every firework its own apparent scale while keeping its rocket, exhaust, burst, and particles together.
 
-Shells are staged as near, middle, or far. Distance affects apparent size, flight speed, burst height, stereo position, loudness, and a slight delay on distant launch and boom sounds. Tune depth drift with `zAngleRange` and `zAngleStrength`, or call `fireworks.setZoom(0.5)` to update the view live. See the [Feature Demos](https://travisjmac.github.io/grand-fireworks-js/examples/feature-demos.html) for a live reference.
+Shells are staged as near, middle, or far. Distance affects apparent size, flight speed, burst height, stereo position, loudness, and a slight delay on distant launch and boom sounds. Tune depth drift with `zAngleRange` and `zAngleStrength`, or call `fireworks.setZoom(0.5)` to update the view live. See the [Feature Demo panel](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=features) for a live reference.
 
 Run the dependency-free regression suite with `npm test`.

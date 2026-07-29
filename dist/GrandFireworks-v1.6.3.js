@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.6.2
+ * Version: 1.6.3
  *
  * @author Travis MacDonald
- * @version 1.6.2
+ * @version 1.6.3
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -205,6 +205,66 @@
         palettes: "default",
       },
     },
+    // A restrained, realistic show: fewer launches, natural shell forms,
+    // warmer pyrotechnic colours, crisp shimmer, and no persistent trails.
+    cinematic: {
+      performance: {
+        // Pack each cinematic shell with twice the normal number of stars.
+        secondary: 2,
+      },
+      visuals: {
+        opacity: 1,
+        trails: false,
+        trailFade: 1,
+        bloom: 1.45,
+        rocketExhaust: true,
+        explosionFlashes: true,
+        // A brief white-hot ignition before the coloured stars take over.
+        flashColor: "#FFF9E8",
+        flashScale: 1.9,
+        flashAlpha: 0.78,
+        flashLife: 180,
+        // Rare camera-overload bursts briefly light the whole scene.
+        flashBangChance: 0.1,
+        flashBangAlpha: 0.72,
+        flashBangDuration: 260,
+        flashBangCooldown: 2800,
+        burstVelocity: 1.25,
+        shimmerChance: 0.82,
+        sparkleChance: 0.58,
+        pyroBurn: true,
+        sphereBurst: true,
+        windStrength: 0.06,
+        starChance: 0.085,
+        groupedSalvos: false,
+        secondaryCrackle: true,
+      },
+      show: {
+        // Leave enough room for the denser shells to coexist on screen.
+        maxParticles: 10000,
+        intensity: 0.72,
+        openingSalvo: 2,
+        launchInterval: 1650,
+        launchSpread: 0.38,
+        angleRange: 7,
+        angleStrength: 0.55,
+        enabledTypes: [
+          "grand_peony",
+          "imperial_chrysanthemum",
+          "weeping_willow",
+          "royal_palm",
+          "diamond_ring",
+          "crossette_supreme",
+        ],
+        palettes: [
+          ["#FF6A35", "#FFB347", "#FFF2C2", "#FFFFFF"],
+          ["#D72638", "#FF665A", "#FFE0C2", "#FFFFFF"],
+          ["#3F8CFF", "#78B8FF", "#D7ECFF", "#FFFFFF"],
+          ["#47A447", "#8DD17E", "#E8F6D0", "#FFFFFF"],
+          ["#D69B25", "#F3CF74", "#FFF3C8", "#FFFFFF"],
+        ],
+      },
+    },
     bold: {
       visuals: {
         opacity: 1,
@@ -335,7 +395,9 @@
     clip: true,
     zIndex: 9999,
     autoStart: false,
-    baseStyle: "medium",
+    baseStyle: "cinematic",
+    // Global simulation rate. 0.8 runs every firework motion and effect at 80%.
+    speedMultiplier: 1,
     mixedStyles: { classic: 20, oldSchool: 10, thin: 20, medium: 25, bold: 15, spectacle: 10 },
     colorTheme: "default",
     showFps: false,
@@ -361,6 +423,20 @@
       bloom: 1.25,
       rocketExhaust: true,
       explosionFlashes: true,
+      flashColor: null,
+      flashScale: 1,
+      flashAlpha: 0.34,
+      flashLife: 420,
+      flashBangChance: 0,
+      flashBangAlpha: 0.55,
+      flashBangDuration: 240,
+      flashBangCooldown: 3000,
+      burstVelocity: 1,
+      shimmerChance: 0,
+      sparkleChance: 0,
+      pyroBurn: false,
+      sphereBurst: false,
+      windStrength: 0,
       starChance: 0.08,
       groupedSalvos: true,
       secondaryCrackle: true,
@@ -414,6 +490,11 @@
       launchSpread: 0.55,
       // Portion of regular shells deliberately staged near the viewer.
       closeShellChance: 0.25,
+      // Per-shell apparent scale, independent of the global camera zoom.
+      minShellScale: 1,
+      maxShellScale: 1,
+      // Chance that a normal automatic launch becomes one layered finale bomb.
+      grandFinaleShellChance: 0,
       angleRange: 14,
       angleStrength: 1,
       textRocketAngle: 0,
@@ -638,7 +719,7 @@
         void main(){ vec2 p=(a_position/u_resolution)*u_zoom; vec2 clip=p*2.0-1.0; gl_Position=vec4(clip.x,-clip.y,0,1); gl_PointSize=a_size*u_zoom; v_color=a_color; v_star=a_star; }`,
         `#version 300 es
         precision mediump float; in vec4 v_color; in float v_star; out vec4 outColor;
-        void main(){ vec2 q=(gl_PointCoord-vec2(.5))*2.0; float d=length(q); float halo=pow(max(0.0,1.0-d),2.1); float core=smoothstep(.25,0.0,d); float ray=max(smoothstep(.10,0.0,abs(q.x)),smoothstep(.10,0.0,abs(q.y)))*(1.0-d)*v_star; float a=(halo*.72+core+ray*.8)*v_color.a; if(a<.012)discard; outColor=vec4(v_color.rgb*a,a); }`,
+        void main(){ vec2 q=(gl_PointCoord-vec2(.5))*2.0; float d=length(q); float edge=max(0.0,1.0-d); float halo=.85*pow(edge,3.0)+.15*pow(edge,1.2); float core=smoothstep(.25,0.0,d); float ray=max(smoothstep(.10,0.0,abs(q.x)),smoothstep(.10,0.0,abs(q.y)))*edge*v_star; float a=(halo*.72+core+ray*.8)*v_color.a; if(a<.012)discard; outColor=vec4(v_color.rgb*a,a); }`,
       );
       this.fadeProgram = this._program(
         `#version 300 es
@@ -845,12 +926,7 @@
       );
       x.globalCompositeOperation = "lighter";
       for (const p of items) {
-        const pulse =
-            p.sparkle &&
-            Math.sin(performance.now() * 0.026 + (p.phase || 0)) > 0.72
-              ? 1.55
-              : 1,
-          z = p.flash ? p.size : Math.max(4.5, p.size * 5.2 * pulse),
+        const z = p.flash ? p.size : Math.max(4.5, p.size * 5.2),
           s = this._sprite(p.r, p.g, p.b, Boolean(p.star));
         x.globalAlpha = clamp(p.alpha, 0, 1);
         x.drawImage(s, p.x - z, p.y - z, z * 2, z * 2);
@@ -888,6 +964,9 @@
       this.particles = [];
       this.pool = [];
       this.flashes = [];
+      // A show-wide breeze changes direction slowly. Individual particles
+      // still retain their own ballistic path, so it reads as air movement.
+      this.wind = { current: 0, target: 0, nextRetarget: 0 };
       this.textBlocks = [];
       this.textSequence = null;
       this.textSequenceId = 0;
@@ -904,6 +983,7 @@
       this.worldEnderResumeRequested = false;
       this.lastLaunch = 0;
       this.elapsed = 0;
+      this.effectTime = performance.now();
       this.raf = 0;
       this.stopPromise = null;
       this.resizePending = true;
@@ -914,6 +994,8 @@
       this.audioAmbience = null;
       this.audioVoices = [];
       this.lastCrackleSound = 0;
+      this.lastFlashBang = -Infinity;
+      this.flashBangAnimation = null;
       this.container = cssTarget(this.options.container) || document.body;
       this._buildLayers();
       this._initRenderer();
@@ -926,7 +1008,7 @@
     // Clamps all numeric values to safe ranges and derives computed fields
     // like preserveDrawingBuffer from mode/trails.
     _resolve(input = {}) {
-      const styleName = input.baseStyle || "medium",
+      const styleName = input.baseStyle || "cinematic",
         style = styleName === "mixed" ? STYLES.medium : STYLES[styleName] || STYLES.medium;
       let o = merge(merge(DEFAULTS, style), input);
       const themeName = o.colorTheme || "default",
@@ -951,8 +1033,36 @@
         1,
       );
       o.visuals.bloom = clamp(Number(o.visuals.bloom) || 1, 0.5, 2);
+      o.visuals.flashScale = clamp(Number(o.visuals.flashScale) || 1, 0.5, 3);
+      o.visuals.flashAlpha = clamp(Number(o.visuals.flashAlpha) || 0.34, 0.05, 1);
+      o.visuals.flashLife = clamp(Number(o.visuals.flashLife) || 420, 80, 900);
+      o.visuals.flashBangChance = clamp(
+        Number(o.visuals.flashBangChance) || 0,
+        0,
+        1,
+      );
+      o.visuals.flashBangAlpha = clamp(
+        Number(o.visuals.flashBangAlpha) || 0.55,
+        0.1,
+        1,
+      );
+      o.visuals.flashBangDuration = clamp(
+        Number(o.visuals.flashBangDuration) || 240,
+        100,
+        700,
+      );
+      o.visuals.flashBangCooldown = clamp(
+        Number(o.visuals.flashBangCooldown) || 3000,
+        800,
+        15000,
+      );
+      o.visuals.burstVelocity = clamp(Number(o.visuals.burstVelocity) || 1, 0.4, 2.5);
+      o.visuals.shimmerChance = clamp(Number(o.visuals.shimmerChance) || 0, 0, 1);
+      o.visuals.sparkleChance = clamp(Number(o.visuals.sparkleChance) || 0, 0, 1);
+      o.visuals.windStrength = clamp(Number(o.visuals.windStrength) || 0, 0, 0.25);
       o.visuals.starChance = clamp(Number(o.visuals.starChance) || 0, 0, 0.3);
       o.visuals.zoom = clamp(Number(o.visuals.zoom ?? 1), 0.1, 4);
+      o.speedMultiplier = clamp(Number(o.speedMultiplier) || 1, 0.1, 3);
 
       o.show.zAngleRange = clamp(Number(o.show.zAngleRange ?? 25), 0, 45);
       o.show.zAngleStrength = clamp(Number(o.show.zAngleStrength ?? 0.8), 0, 3);
@@ -972,6 +1082,18 @@
       o.show.launchInterval = Number(o.show.launchInterval || p.launchInterval);
       o.show.launchSpread = clamp(Number(o.show.launchSpread), 0, 1);
       o.show.closeShellChance = clamp(Number(o.show.closeShellChance ?? 0.25), 0, 0.8);
+      o.show.minShellScale = clamp(Number(o.show.minShellScale) || 1, 0.25, 2);
+      o.show.maxShellScale = clamp(Number(o.show.maxShellScale) || 1, 0.25, 2);
+      o.show.grandFinaleShellChance = clamp(
+        Number(o.show.grandFinaleShellChance) || 0,
+        0,
+        0.5,
+      );
+      if (o.show.minShellScale > o.show.maxShellScale)
+        [o.show.minShellScale, o.show.maxShellScale] = [
+          o.show.maxShellScale,
+          o.show.minShellScale,
+        ];
       o.sound.nearBoomMultiplier = clamp(Number(o.sound.nearBoomMultiplier ?? 1), 0.2, 10);
       o.show.angleRange = clamp(Number(o.show.angleRange), 0, 45);
       o.show.angleStrength = clamp(Number(o.show.angleStrength), 0, 3);
@@ -1064,7 +1186,24 @@
         alpha: true,
         desynchronized: true,
       });
-      this.root.append(this.backdrop, this.textCanvas, this.canvas);
+      this.flashBangLayer = document.createElement("div");
+      this.flashBangLayer.className = "grand-fireworks-flash-bang";
+      Object.assign(this.flashBangLayer.style, {
+        position: "absolute",
+        inset: "0",
+        background:
+          "radial-gradient(circle at var(--flash-x, 50%) var(--flash-y, 50%), #fff 0%, #fff8dd 24%, rgba(255,244,207,.82) 48%, rgba(255,255,255,.18) 100%)",
+        mixBlendMode: "screen",
+        opacity: "0",
+        pointerEvents: "none",
+        willChange: "opacity",
+      });
+      this.root.append(
+        this.backdrop,
+        this.textCanvas,
+        this.canvas,
+        this.flashBangLayer,
+      );
       if (o.placement === "background") c.insertBefore(this.root, c.firstChild);
       else c.appendChild(this.root);
       if (o.showFps) {
@@ -1203,7 +1342,7 @@
       this.userPaused = false;
       this.state = "running";
       this.lastTime = performance.now();
-      this.lastLaunch = this.lastTime;
+      this.lastLaunch = this.effectTime;
       this.root.style.display = "block";
       this.root.style.opacity = String(
         clamp(Number(this.options.visuals.opacity ?? 1), 0, 1),
@@ -1221,7 +1360,7 @@
         ? Math.max(1, Math.round(this.options.show.openingSalvo * 0.35))
         : this.options.show.openingSalvo;
       for (let i = 0; i < opening; i++)
-        this._queueRocket(this.lastTime + i * 180);
+        this._queueRocket(this.effectTime + i * 180);
       if (this.autoPauseReasons.size) {
         this.pausedState = "running";
         this.state = "paused";
@@ -1372,6 +1511,10 @@
         else if (this.motionQuery.removeListener)
           this.motionQuery.removeListener(this.onMotionChange);
       }
+      if (this.flashBangAnimation) {
+        this.flashBangAnimation.cancel();
+        this.flashBangAnimation = null;
+      }
       this.renderer.destroy();
       this.root.remove();
       if (this.fpsEl) {
@@ -1508,7 +1651,7 @@
       return ["#FF1744", "#FF9100", "#FFD700", "#00E676", "#00B0FF", "#AA00FF", "#FFFFFF"];
     }
     _spawnWorldEnderShells(origin, count, options = {}) {
-      const now = performance.now(),
+      const now = this.effectTime,
         colors = options.colors || this._worldEnderColors(),
         startAngle = options.startAngle ?? -Math.PI / 2,
         spread = options.spread ?? TAU,
@@ -1585,7 +1728,7 @@
         this.setOptions({ finale: previous.finale, show: previous.show, sound: previous.sound });
         this.accepting = this.worldEnderResumeRequested || previous.accepting;
       });
-      this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: performance.now() + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0 });
+      this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: this.effectTime + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0 });
       return this;
     }
     /**
@@ -1606,7 +1749,7 @@
         value = value.slice(0, cfg.maxCharacters - 1) + "…";
       const lines = this._wrapText(value, cfg);
       if (cfg.exclusive) this.accepting = false;
-      const now = performance.now(),
+      const now = this.effectTime,
         plans = this._textPlans(lines, cfg),
         sync = now + 1800,
         total = plans.reduce((n, p) => n + p.points.length, 0),
@@ -2286,11 +2429,19 @@
           if (roll < show.closeShellChance + 0.55) return launchDepth * (0.45 + Math.random() * 0.35);
           return launchDepth * (1.05 + Math.random() * 0.35);
         })(),
+        apparentScale =
+          o.apparentScale === undefined
+            ? o.textPlan || o.finale
+              ? 1
+              : show.minShellScale +
+                Math.random() * (show.maxShellScale - show.minShellScale)
+            : clamp(Number(o.apparentScale) || 1, 0.25, 2),
         // Depth scale is separate from viewport zoom, which the renderer
         // already applies. Closer shells become larger; distant ones smaller.
         dof =
           o.dof === undefined
-            ? clamp(1 - (z / launchDepth) * 0.45, 0.3, 1.4)
+            ? clamp(1 - (z / launchDepth) * 0.45, 0.3, 1.4) *
+              apparentScale
             : o.dof,
         // World-coordinate Y: burst height scales with zoom and dof so
         // that closer rockets burst taller and further ones burst lower.
@@ -2307,7 +2458,7 @@
         styleScale = styleVisuals ? clamp(styleVisuals.bloom / 1.25, 0.5, 1.8) : 1,
         vyScale = o.syncAt ? 1 : Math.pow(dof, 0.5),
         remaining = o.syncAt
-          ? Math.max(0.2, (o.syncAt - performance.now()) / 1000)
+          ? Math.max(0.2, (o.syncAt - this.effectTime) / 1000)
           : 0,
         vy = o.syncAt
           ? -(startY - burstY) / remaining
@@ -2337,12 +2488,17 @@
         // away (positive z) sound quieter. Maps Z range [-depth, +depth]
         // to a 0.3-1.0 multiplier on the base gain.
         zFalloff = clamp(1 - (z / launchDepth) * 0.5, 0.3, 1),
-        depth =
+        depth = clamp(
           (o.audioGain === undefined
             ? o.finale
               ? 0.9
               : 0.5 + Math.random() * 0.45
-            : clamp(Number(o.audioGain), 0.2, 1)) * zFalloff,
+            : clamp(Number(o.audioGain), 0.2, 1)) *
+            zFalloff *
+            apparentScale,
+          0.2,
+          1.5,
+        ),
         soundType =
           !o.text &&
           !o.finale &&
@@ -2360,6 +2516,7 @@
         vz,
         burstY,
         dof,
+        apparentScale,
         styleScale,
         styleName: mixedStyleName,
         type,
@@ -2375,6 +2532,8 @@
     }
     // Picks a random shell type from the enabled list.
     _type(enabledTypes = this.options.show.enabledTypes) {
+      if (Math.random() < this.options.show.grandFinaleShellChance)
+        return "grand-finale-bomb";
       const e = enabledTypes;
       const list = e === "all" ? TYPES : e;
       return list[Math.floor(Math.random() * list.length)];
@@ -2421,11 +2580,17 @@
         this.raf = 0;
         if (["stopped", "paused", "destroyed"].includes(this.state)) return;
         if (this.resizePending) this._resize();
-        const dt = Math.min(0.05, (now - this.lastTime) / 1000 || 0.016);
+        const realDt = Math.min(
+            0.05,
+            (now - this.lastTime) / 1000 || 0.016,
+          ),
+          dt = realDt * this.options.speedMultiplier;
         this.lastTime = now;
-        this.fps += (1 / dt - this.fps) * 0.05;
+        this.effectTime += dt * 1000;
+        const effectNow = this.effectTime;
+        this.fps += (1 / realDt - this.fps) * 0.05;
         if (this.state === "running") {
-          this.elapsed += dt * 1000;
+          this.elapsed += realDt * 1000;
           if (
             this.runtimeDuration > 0 &&
             this.elapsed >= this.runtimeDuration
@@ -2454,7 +2619,7 @@
           else if (this.fps > target * 0.93)
             this.quality = Math.min(1, this.quality + 0.05);
         }
-        this._update(now, dt);
+        this._update(effectNow, dt);
       // Frame-rate-normalized trail fade. The pow() call ensures trails
       // look the same regardless of actual frame time — faster frames
       // fade less per frame, slower frames fade more.
@@ -2462,13 +2627,13 @@
           ? 1 - Math.pow(1 - this.options.visuals.trailFade, dt * 60)
           : 1;
         this.renderer.render(
-          this._drawItems(now),
+          this._drawItems(effectNow),
           this.width,
           this.height,
           trailFade,
           this.zoom,
         );
-        this._drawText(now);
+        this._drawText(effectNow);
         if (this.fpsEl)
           this.fpsEl.textContent = `${Math.round(this.fps)} fps · ${this.particles.length} particles · ${this.rendererType}`;
         this._finish(now);
@@ -2509,6 +2674,16 @@
     //   6. Age out dead/off-screen particles and expired flashes
     // All loops scan backward so splicing is safe.
     _update(now, dt) {
+      // Retarget a subtle show-wide breeze every few seconds, then ease into
+      // it. This avoids particles all drifting in a robotic fixed direction.
+      if (now >= this.wind.nextRetarget) {
+        this.wind.target =
+          (Math.random() * 2 - 1) * this.options.visuals.windStrength;
+        this.wind.nextRetarget = now + 4000 + Math.random() * 5000;
+      }
+      this.wind.current +=
+        (this.wind.target - this.wind.current) * Math.min(1, dt * 0.3);
+      const windDrift = this.wind.current * dt * 60;
       if (
         this.state === "running" &&
         this.textExclusiveUntil &&
@@ -2572,13 +2747,13 @@
       }
       for (let i = this.rockets.length - 1; i >= 0; i--) {
         const r = this.rockets[i];
-        r.x += r.vx * dt;
+        r.x += r.vx * dt + windDrift;
         r.y += r.vy * dt;
         r.vy += (r.satellite ? 28 : 45) * dt;
         // Z-drift: rocket moves toward or away from viewer. Update Z
         // position and recalculate dof — closer = bigger, further = smaller.
         if (r.vz) r.z += r.vz * dt;
-        r.dof = this._depthScale(r.z);
+        r.dof = this._depthScale(r.z) * (r.apparentScale || 1);
         r.sparkClock += dt;
         // Rocket exhaust: spawn small trailing sparks behind the rocket.
         // Satellites produce exhaust more frequently and with larger particles.
@@ -2601,6 +2776,7 @@
             z: r.z,
             vz: r.vz || 0,
             dof: r.dof,
+            depthScale: r.apparentScale || 1,
             sparkle: true,
             star: r.satellite && Math.random() < 0.12,
             exhaust: true,
@@ -2711,14 +2887,43 @@
           p.vy += gravity * dt * 60;
           p.vx *= Math.pow(friction, dt * 60);
           p.vy *= Math.pow(friction, dt * 60);
-          p.x += p.vx * dt * 60;
+          p.x += p.vx * dt * 60 + windDrift;
           p.y += p.vy * dt * 60;
           p.z += p.vz * dt * 60;
-          p.dof = this._depthScale(p.z);
-          p.size = p.baseSize * p.dof;
-          p.alpha =
-            clamp(1 - age / p.life, 0, 1) *
-            (p.twinkle ? 0.5 + 0.5 * Math.sin(p.phase + age * 0.02) : 1);
+          p.dof = this._depthScale(p.z) * (p.depthScale || 1);
+          const sparkPulse =
+            p.sparkle &&
+            Math.sin(now * 0.052 + p.phase * 2.3) > 0.82
+              ? 1.48
+              : 1;
+          p.size = p.baseSize * p.dof * sparkPulse;
+          const lifetime = clamp(age / p.life, 0, 1);
+          if (p.pyroBurn) {
+            // Firework chemistry has a distinct life cycle: an almost-white
+            // ignition, a steady emitter colour, then a warm fading ember.
+            const hot = clamp(1 - lifetime / 0.1, 0, 1);
+            const ember = clamp((lifetime - 0.72) / 0.28, 0, 1);
+            p.r = (p.baseR + (1 - p.baseR) * hot * 0.9) * (1 - ember * 0.35) + ember * 0.35;
+            p.g = (p.baseG + (1 - p.baseG) * hot * 0.9) * (1 - ember * 0.78) + ember * 0.075;
+            p.b = (p.baseB + (1 - p.baseB) * hot * 0.9) * (1 - ember * 0.96) + ember * 0.015;
+            const flicker =
+              Math.abs(Math.sin(now * 0.037 + p.phase) * Math.sin(now * 0.023 + p.phase * 1.7));
+            const shimmer = p.twinkle ? 0.74 + flicker * 0.26 : 1;
+            const spark = sparkPulse > 1 ? 1.18 : 1;
+            const fadeProgress = clamp(
+              (lifetime - p.fadeStart) / Math.max(0.01, 1 - p.fadeStart),
+              0,
+              1,
+            );
+            const individualFade =
+              1 - Math.pow(fadeProgress, p.fadePower);
+            p.alpha =
+              individualFade * p.burnStrength * shimmer * spark;
+          } else {
+            p.alpha =
+              (1 - lifetime) *
+              (p.twinkle ? 0.5 + 0.5 * Math.sin(p.phase + age * 0.02) : 1);
+          }
         }
         if (
           age >= p.life ||
@@ -2747,7 +2952,7 @@
       if (
         !textPriority &&
         this.textReservedUntil &&
-        performance.now() < this.textReservedUntil
+        this.effectTime < this.textReservedUntil
       )
         return false;
       if (this.particles.length >= limit) return false;
@@ -2757,7 +2962,10 @@
       p.r = c[0];
       p.g = c[1];
       p.b = c[2];
-      p.birth = o.birth || performance.now();
+      p.baseR = c[0];
+      p.baseG = c[1];
+      p.baseB = c[2];
+      p.birth = o.birth || this.effectTime;
       p.alpha = 1;
       p.phase = Math.random() * TAU;
       p.friction = o.friction || 0.985;
@@ -2769,12 +2977,24 @@
         this.options.visuals.bloom;
       p.z = Number(o.z) || 0;
       p.vz = Number(o.vz) || 0;
-      p.dof = o.dof === undefined ? this._depthScale(p.z) : o.dof;
+      p.depthScale = Number(o.depthScale) || 1;
+      p.dof =
+        o.dof === undefined
+          ? this._depthScale(p.z) * p.depthScale
+          : o.dof;
       p.size = p.baseSize * p.dof;
       p.text = Boolean(o.text);
       p.hybrid = Boolean(o.hybrid);
-      p.twinkle = Boolean(o.twinkle);
-      p.sparkle = Boolean(o.sparkle);
+      // Cinematic-style shimmer is applied per particle, so the bright points
+      // blink independently rather than pulsing together as one flat burst.
+      p.twinkle = Boolean(o.twinkle) || Math.random() < this.options.visuals.shimmerChance;
+      p.sparkle = Boolean(o.sparkle) || Math.random() < this.options.visuals.sparkleChance;
+      p.pyroBurn = Boolean(o.pyroBurn) || this.options.visuals.pyroBurn;
+      // Real stars do not burn uniformly. Some exhaust their composition
+      // quickly, while denser stars remain bright well into the falling arc.
+      p.burnStrength = p.pyroBurn ? 0.72 + Math.random() * 0.42 : 1;
+      p.fadeStart = p.pyroBurn ? 0.42 + Math.random() * 0.4 : 0;
+      p.fadePower = p.pyroBurn ? 0.75 + Math.random() * 1.5 : 1;
       p.star =
         o.star === undefined
           ? (o.size || 2) > 3 && Math.random() < this.options.visuals.starChance
@@ -2824,7 +3044,20 @@
             : (i / count) * TAU +
               (Math.random() - 0.5) *
                 (opts.jitter === undefined ? 0.16 : opts.jitter),
-          s = min + Math.random() * (max - min);
+          // Project a uniformly sampled 3D sphere onto the screen. Stars
+          // near the camera axis land close to the centre; the broad rim gets
+          // the dense silhouette that makes real shell breaks feel spherical.
+          sphereZ = this.options.visuals.sphereBurst
+            ? Math.random() * 2 - 1
+            : 0,
+          sphereScale = this.options.visuals.sphereBurst
+            ? Math.sqrt(Math.max(0, 1 - sphereZ * sphereZ))
+            : 1,
+          s =
+            (min + Math.random() * (max - min)) *
+            this.options.visuals.burstVelocity *
+            sphereScale *
+            clamp(dof, 0.35, 2);
         if (
           !this._spawn({
             x: r.x,
@@ -2839,8 +3072,12 @@
               Math.random() *
                 ((opts.maxSize || 4) - (opts.minSize || opts.size || 1.2)),
             dof,
-            z: r.z,
-            vz: (Math.random() - 0.5) * Math.max(0.08, max * 0.025),
+            depthScale:
+              (r.apparentScale || 1) * (r.styleScale || 1),
+            z: r.z + sphereZ * max * 7,
+            vz:
+              (Math.random() - 0.5) * Math.max(0.08, max * 0.025) +
+              sphereZ * 0.025,
             life: opts.life || 2200,
             gravity: opts.gravity,
             friction: opts.friction,
@@ -2856,25 +3093,75 @@
           break;
       }
     }
-    // Creates a brief radial flash at the explosion point. Uses the
-    // rocket's primary color as a large, short-lived, semi-transparent
-    // circle that simulates the camera bloom from a real firework burst.
+    // Creates a brief radial flash at the explosion point. Styles can tune
+    // its colour, size, opacity, and duration independently of the stars.
     _flash(r, now, size = 130) {
       if (!this.options.visuals.explosionFlashes) return;
-      const c = hex(r.colors[0]);
+      const v = this.options.visuals,
+        c = hex(v.flashColor || r.colors[0]);
       this.flashes.push({
         x: r.x,
         y: r.y,
         r: c[0],
         g: c[1],
         b: c[2],
-        size: size * this.options.visuals.bloom,
+        size: size * v.bloom * v.flashScale * (r.dof || 1),
         birth: now,
-        life: 420,
-        alpha: 0.34,
+        life: v.flashLife,
+        alpha: v.flashAlpha,
         flash: true,
         star: true,
       });
+    }
+    // A rare full-scene flash for shells bright enough to overwhelm the
+    // virtual camera. A cooldown prevents finales and chains becoming a strobe.
+    _flashBang(r, now) {
+      const v = this.options.visuals;
+      if (
+        !this.flashBangLayer ||
+        v.flashBangChance <= 0 ||
+        Math.random() >= v.flashBangChance ||
+        now - this.lastFlashBang < v.flashBangCooldown
+      )
+        return;
+
+      this.lastFlashBang = now;
+      const screenX = clamp((r.x * this.zoom) / this.width, 0, 1) * 100,
+        screenY = clamp((r.y * this.zoom) / this.height, 0, 1) * 100,
+        reduced = this.reducedMotion,
+        peak = reduced ? Math.min(v.flashBangAlpha, 0.4) : v.flashBangAlpha;
+      if (typeof this.flashBangLayer.style.setProperty === "function") {
+        this.flashBangLayer.style.setProperty("--flash-x", `${screenX}%`);
+        this.flashBangLayer.style.setProperty("--flash-y", `${screenY}%`);
+      }
+      if (this.flashBangAnimation) this.flashBangAnimation.cancel();
+      if (typeof this.flashBangLayer.animate !== "function") {
+        this.flashBangLayer.style.opacity = String(peak);
+        window.setTimeout(() => {
+          if (this.flashBangLayer) this.flashBangLayer.style.opacity = "0";
+        }, v.flashBangDuration / this.options.speedMultiplier);
+        return;
+      }
+      this.flashBangAnimation = this.flashBangLayer.animate(
+        reduced
+          ? [
+              { opacity: 0 },
+              { opacity: peak, offset: 0.12 },
+              { opacity: 0 },
+            ]
+          : [
+              { opacity: 0 },
+              { opacity: peak, offset: 0.07 },
+              { opacity: peak * 0.1, offset: 0.28 },
+              { opacity: peak * 0.48, offset: 0.43 },
+              { opacity: 0 },
+            ],
+        {
+          duration: v.flashBangDuration / this.options.speedMultiplier,
+          easing: "linear",
+          fill: "none",
+        },
+      );
     }
     // Crossette: a shell that splits into smaller "stars" mid-flight.
     // Creates 28+ arms, each splitting into 6 sub-particles in a tight
@@ -3045,7 +3332,7 @@
     }
     // Each satellite rocket produces a multi-layered burst: a dense inner
     // ring, a smaller white diamond ring, and a willow trail for hang-time.
-    _grandFinaleBurst(r, now) {
+    _grandFinaleBurst(r, now, dispatchStage = true) {
       const scale =
         this.options.finale.burstScale * this.options.finale.particleScale;
       this._flash(r, now, 175);
@@ -3073,11 +3360,12 @@
         type: "willow",
         randomAngles: true,
       });
-      this.dispatchEvent(
-        new CustomEvent("finalestage", {
-          detail: { stage: "secondary-burst", x: r.x, y: r.y, source: r },
-        }),
-      );
+      if (dispatchStage)
+        this.dispatchEvent(
+          new CustomEvent("finalestage", {
+            detail: { stage: "secondary-burst", x: r.x, y: r.y, source: r },
+          }),
+        );
     }
     // The main explosion dispatcher. Routes to the correct burst algorithm
     // based on the rocket's type. Handles special cases:
@@ -3182,6 +3470,12 @@
         this._grandFinaleBurst(r, now);
         return;
       }
+      if (r.type === "grand-finale-bomb") {
+        // Standalone spectacle only. It deliberately does not emit finale
+        // stage events, launch children, stop the show, or involve World Ender.
+        this._grandFinaleBurst(r, now, false);
+        return;
+      }
       if (r.type === "sovereign-crown") {
         this._flash(r, now, 220);
         this._burst(r, 360, 3, 10, {
@@ -3206,6 +3500,7 @@
         return;
       }
       this._flash(r, now, r.type === "thunder_clap" ? 210 : 130);
+      this._flashBang(r, now);
       switch (r.type) {
         case "crossette_supreme":
           this._crossette(r);
@@ -3398,18 +3693,20 @@
     // Collects all drawable items into a flat array for the renderer:
     // flashes (fading), rocket heads (bright stars at the tip), and
     // all active particles.
-    _drawItems(now = performance.now()) {
+    _drawItems(now = this.effectTime) {
       const a = [];
       for (const f of this.flashes) {
         const t = clamp(1 - (now - f.birth) / f.life, 0, 1);
-        a.push({ ...f, alpha: t * 0.34, size: f.size * (1.15 - t * 0.15) });
+        // A strong detonation flash falls away rapidly, leaving the moving
+        // stars to carry the eye through the rest of the explosion.
+        a.push({ ...f, alpha: t * t * f.alpha, size: f.size * (1.12 - t * 0.12) });
       }
       for (const r of this.rockets) {
         const c = hex(r.colors[0]);
         a.push({
           x: r.x,
           y: r.y,
-          size: 4.6 * this.options.visuals.bloom,
+          size: 4.6 * this.options.visuals.bloom * (r.dof || 1),
           alpha: 1,
           r: c[0],
           g: c[1],
@@ -3826,7 +4123,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.6.2";
+  GrandFireworks.VERSION = "1.6.3";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

@@ -20,10 +20,10 @@
         [
           "baseStyle",
           "select",
-          "medium",
-          "Overall particle size and motion feel. Classic = old-school, Thin = delicate, Medium = balanced, Bold = thick, Spectacle = over the top.",
+          "cinematic",
+          "Overall particle size and motion feel. Cinematic = restrained, realistic shells with warm colours and longer ember trails. Classic = old-school, Thin = delicate, Medium = balanced, Bold = thick, Spectacle = over the top.",
           "Choose a base look, then override individual settings below.",
-          ["classic", "oldSchool", "thin", "medium", "bold", "spectacle"],
+          ["classic", "oldSchool", "thin", "medium", "cinematic", "bold", "spectacle"],
         ],
         [
           "colorTheme",
@@ -47,6 +47,13 @@
           0,
           "Show duration in milliseconds; 0 runs forever.",
           "Default 0.",
+        ],
+        [
+          "speedMultiplier",
+          "number",
+          1,
+          "Scales the speed of the complete firework simulation.",
+          "Use 0.8 for 80% speed, 1 for normal, or 1.2 for 120%.",
         ],
         [
           "durationMode",
@@ -284,6 +291,27 @@
           1,
           "Total launch area in screen widths; zoom out to reveal more of it.",
           "Range 0.5–20; use 3 for a staged multi-screen horizon.",
+        ],
+        [
+          "show.minShellScale",
+          "number",
+          1,
+          "Smallest random apparent scale assigned to each shell.",
+          "Use 0.5 with maxShellScale 1.5 for dramatic depth variation.",
+        ],
+        [
+          "show.maxShellScale",
+          "number",
+          1,
+          "Largest random apparent scale assigned to each shell.",
+          "Use 1.5 with minShellScale 0.5 for dramatic depth variation.",
+        ],
+        [
+          "show.grandFinaleShellChance",
+          "number",
+          0,
+          "Chance that an ordinary automatic launch becomes one layered Grand Finale shell.",
+          "Use 0.05 for a 5% chance. This never launches the World Ender.",
         ],
         [
           "show.zAngleRange",
