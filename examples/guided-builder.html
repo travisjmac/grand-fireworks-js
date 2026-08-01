@@ -97,6 +97,13 @@
 .tab-action-btn.secondary:hover{background:rgba(100,200,255,.16)}
 .tab-text-input{flex:1;min-width:120px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;border-radius:6px;padding:6px 10px;font:13px/1 system-ui,sans-serif}
 .tab-text-input:focus{outline:none;border-color:rgba(255,215,0,.4)}
+.tab-text-lines{display:grid;gap:6px;flex:1 1 100%;min-width:0}
+.color-picker-list{display:grid;gap:6px}
+.color-picker-row{display:grid;grid-template-columns:42px minmax(90px,1fr) 30px;gap:6px;align-items:center}
+.color-picker-row input[type=color]{width:42px;height:32px;padding:2px;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(255,255,255,.06);cursor:pointer}
+.color-picker-row input[type=text]{font-family:ui-monospace,monospace;text-transform:uppercase}
+.color-picker-row button,.add-color-btn{border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;min-height:30px}
+.add-color-btn{padding:6px 10px;color:#ffe27a}
 
 /* Playback controls */
 .playback-group{display:flex;gap:2px;align-items:center;margin:0 4px}
@@ -497,7 +504,84 @@ const PRESET_DEFS = [
   { id: 'spectacle',   label: 'Spectacle',      icon: '🎆',  config: { baseStyle: 'spectacle', performance: { preset: 'ultra' } } },
   { id: 'mobile',      label: 'Mobile Friendly', icon: '📱', config: { baseStyle: 'medium',   performance: { preset: 'low' }, show: { maxParticles: 1000, maxRockets: 3 } } }
 ];
-const PRESET_MAP = Object.fromEntries(PRESET_DEFS.map(p => [p.id, p]));
+// These entries are valid states that can be loaded by saved configs or the
+// wizard, but are not duplicated as buttons in the preset bar.
+const HIDDEN_PRESETS = [
+  { id: 'oldSchool', label: 'Old School', icon: '📟', config: { baseStyle: 'oldSchool' } },
+  { id: 'custom', label: 'Custom configuration', icon: '⚙️', config: {} }
+];
+const PRESET_MAP = Object.fromEntries(
+  [...PRESET_DEFS, ...HIDDEN_PRESETS].map(p => [p.id, p])
+);
+
+const MIXED_STYLE_DEFAULTS = {
+  classic: 15,
+  oldSchool: 10,
+  thin: 15,
+  medium: 20,
+  cinematic: 20,
+  bold: 10,
+  spectacle: 10
+};
+
+const MIXED_STYLE_LABELS = {
+  classic: 'Classic',
+  oldSchool: 'Old School',
+  thin: 'Thin',
+  medium: 'Medium',
+  cinematic: 'Cinematic',
+  bold: 'Bold',
+  spectacle: 'Spectacle'
+};
+
+function balanceMixedStyles(current, changedStyle, requestedValue) {
+  const styles = Object.keys(MIXED_STYLE_DEFAULTS);
+  const changedValue = Math.max(0, Math.min(100, Math.round(requestedValue)));
+  const remaining = 100 - changedValue;
+  const others = styles.filter(style => style !== changedStyle);
+  const weights = others.map(style =>
+    Math.max(0, Number(current?.[style] ?? MIXED_STYLE_DEFAULTS[style]))
+  );
+  const weightTotal = weights.reduce((total, value) => total + value, 0);
+  const raw = weights.map(value =>
+    weightTotal > 0 ? (value / weightTotal) * remaining : remaining / others.length
+  );
+  const balanced = { [changedStyle]: changedValue };
+  let assigned = 0;
+
+  others.forEach((style, index) => {
+    balanced[style] = Math.floor(raw[index]);
+    assigned += balanced[style];
+  });
+
+  raw
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction)
+    .slice(0, remaining - assigned)
+    .forEach(({ index }) => {
+      balanced[others[index]] += 1;
+    });
+
+  return balanced;
+}
+
+function applyMixedStyleRatio(config, changedStyle, value, fireworks) {
+  const balanced = balanceMixedStyles(
+    config.mixedStyles || MIXED_STYLE_DEFAULTS,
+    changedStyle,
+    value
+  );
+  config.mixedStyles = balanced;
+  fireworks.setOptions({ mixedStyles: balanced });
+
+  for (const [style, ratio] of Object.entries(balanced)) {
+    const input = document.getElementById(`opt-mixedStyles.${style}`);
+    if (!input) continue;
+    input.value = ratio;
+    const output = input.nextElementSibling;
+    if (output) output.textContent = `${ratio}%`;
+  }
+}
 
 /* ---------- section definitions ---------- */
 const SECTIONS = {
@@ -507,7 +591,7 @@ const SECTIONS = {
     options: [
       { id: 'style',       label: 'Style',           type: 'select', updateMode: 'live',
         choices: ['Classic','Old School','Thin','Medium','Cinematic','Bold','Spectacle','Mixed'].map(v => ({ label: v === 'Mixed' ? '🎲 Mixed styles' : v === 'Cinematic' ? '🌙 Cinematic realism' : v, value: v.toLowerCase().replace(/\s+/g,'') })),
-        apply: (c, v, fw) => { if (v === 'mixed') fw.setOptions({baseStyle:v}); else fw.setStyle(v); c.baseStyle = v; },
+        apply: (c, v, fw) => { fw.setStyle(v); c.baseStyle = v; },
         summary: v => `${PRESET_MAP[v] ? PRESET_MAP[v].icon + ' ' : ''}${v.charAt(0).toUpperCase()+v.slice(1)} style`,
         tooltip: 'Overall look and feel — changes visuals and show behavior together' },
       { id: 'colorTheme',  label: 'Color theme',     type: 'select', updateMode: 'live',
@@ -603,7 +687,7 @@ const SECTIONS = {
       { id: 'visuals.trailFade',        label: 'Trail fade',        type: 'number', min: .03, max: 1, step: .01, def: .115, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {trailFade:v}); fw.setOptions({visuals:{trailFade:v}}); },
         tooltip: 'How quickly trails fade — lower = longer tails' },
-      { id: 'visuals.bloom',            label: 'Glow (bloom)',      type: 'number', min: .5, max: 2.5, step: .05, def: 1.25, slider: true, updateMode: 'live',
+      { id: 'visuals.bloom',            label: 'Glow (bloom)',      type: 'number', min: .5, max: 10, step: .05, def: 1.25, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {bloom:v}); fw.setOptions({visuals:{bloom:v}}); },
         tooltip: 'Glow intensity around explosions' },
       { id: 'visuals.rocketExhaust',    label: 'Rocket exhaust',    type: 'toggle', def: true, updateMode: 'live',
@@ -624,12 +708,21 @@ const SECTIONS = {
       { id: 'visuals.zoom',             label: 'View zoom',         type: 'number', min: .1, max: 4, step: .05, def: 1, slider: true, unit: '×', updateMode: 'live',
         apply: (c,v,fw) => { c.visuals = deepMerge(c.visuals||{}, {zoom:v}); fw.setZoom(v); },
         tooltip: 'Viewport scale: lower values pull back to reveal more of the launch horizon' },
-      { id: 'mixedStyles.classic', label: 'Mix: Classic', type: 'number', min: 0, max: 100, step: 1, def: 20, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{classic:v}); fw.setOptions({mixedStyles:{classic:v}}); }, tooltip: 'Relative share of Classic shells when Mixed styles is selected' },
-      { id: 'mixedStyles.oldSchool', label: 'Mix: Old School', type: 'number', min: 0, max: 100, step: 1, def: 10, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{oldSchool:v}); fw.setOptions({mixedStyles:{oldSchool:v}}); }, tooltip: 'Relative share of Old School shells when Mixed styles is selected' },
-      { id: 'mixedStyles.thin', label: 'Mix: Thin', type: 'number', min: 0, max: 100, step: 1, def: 20, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{thin:v}); fw.setOptions({mixedStyles:{thin:v}}); }, tooltip: 'Relative share of Thin shells when Mixed styles is selected' },
-      { id: 'mixedStyles.medium', label: 'Mix: Medium', type: 'number', min: 0, max: 100, step: 1, def: 25, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{medium:v}); fw.setOptions({mixedStyles:{medium:v}}); }, tooltip: 'Relative share of Medium shells when Mixed styles is selected' },
-      { id: 'mixedStyles.bold', label: 'Mix: Bold', type: 'number', min: 0, max: 100, step: 1, def: 15, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{bold:v}); fw.setOptions({mixedStyles:{bold:v}}); }, tooltip: 'Relative share of Bold shells when Mixed styles is selected' },
-      { id: 'mixedStyles.spectacle', label: 'Mix: Spectacle', type: 'number', min: 0, max: 100, step: 1, def: 10, slider: true, unit: '%', updateMode: 'live', apply: (c,v,fw) => { c.mixedStyles=deepMerge(c.mixedStyles||{},{spectacle:v}); fw.setOptions({mixedStyles:{spectacle:v}}); }, tooltip: 'Relative share of Spectacle shells when Mixed styles is selected' },
+      ...Object.entries(MIXED_STYLE_DEFAULTS).map(([style, value]) => ({
+        id: `mixedStyles.${style}`,
+        label: `Mix: ${MIXED_STYLE_LABELS[style]}`,
+        type: 'number',
+        min: 0,
+        max: 100,
+        step: 1,
+        def: value,
+        slider: true,
+        unit: '%',
+        updateMode: 'live',
+        apply: (config, ratio, fireworks) =>
+          applyMixedStyleRatio(config, style, ratio, fireworks),
+        tooltip: `Percentage of ${MIXED_STYLE_LABELS[style]} shells in Mixed style. All ratios always total 100%.`
+      })),
       { id: 'bg',                       label: 'Background',        type: 'toggle', def: false, updateMode: 'restart',
         apply: (c,v,fw) => { if(v) c.background = {value:'linear-gradient(#101a4b,#040714)',opacity:1}; else c.background = false; },
         tooltip: 'Show a dark gradient background behind fireworks' }
@@ -644,8 +737,15 @@ const SECTIONS = {
       { id: 'sound.ambience', label: 'Ambience', type: 'number', min: 0, max: .05, step: .001, def: .005, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{ambience:v}); fw.setOptions({sound:{ambience:v}}); }, tooltip: 'Quiet background atmosphere beneath the fireworks' },
       { id: 'sound.stereo', label: 'Stereo pan', type: 'toggle', def: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{stereo:v}); fw.setOptions({sound:{stereo:v}}); }, tooltip: 'Pan launches and bursts across the stereo field' },
       { id: 'sound.whistleChance', label: 'Whistle chance', type: 'number', min: 0, max: .3, step: .01, def: .03, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{whistleChance:v}); fw.setOptions({sound:{whistleChance:v}}); }, tooltip: 'Chance a shell uses a rising whistle launch sound' },
+      { id: 'sound.boomStyle', label: 'Boom character', type: 'select', def: 'mixed', updateMode: 'live',
+        choices: [{label:'🎲 Mixed',value:'mixed'},{label:'💥 Classic',value:'classic'},{label:'🌊 Deep',value:'deep'},{label:'🧨 Artillery',value:'artillery'},{label:'💥💥 Double thump',value:'double'},{label:'🌩️ Rolling',value:'rolling'}],
+        apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{boomStyle:v}); fw.setOptions({sound:{boomStyle:v}}); },
+        tooltip: 'The character of explosion booms. Mixed picks a different character per shell.' },
+      { id: 'sound.boomVariation', label: 'Boom variation', type: 'number', min: 0, max: .5, step: .01, def: .25, slider: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{boomVariation:v}); fw.setOptions({sound:{boomVariation:v}}); },
+        tooltip: 'How much each boom varies in length, tone, and punch. 0 is consistent; 0.5 is very varied.' },
       { id: 'sound.finaleRhythm', label: 'Finale rhythm', type: 'toggle', def: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{finaleRhythm:v}); fw.setOptions({sound:{finaleRhythm:v}}); }, tooltip: 'Add the rhythmic boom pattern beneath the finale' },
-      { id: 'sound.maxVoices', label: 'Voice limit', type: 'number', min: 4, max: 64, step: 1, def: 36, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{maxVoices:v}); fw.setOptions({sound:{maxVoices:v}}); }, tooltip: 'Maximum concurrent synthesized sounds' }
+      { id: 'sound.maxVoices', label: 'Voice limit', type: 'number', min: 4, max: 64, step: 1, def: 36, slider: true, updateMode: 'live', apply: (c,v,fw) => { c.sound=deepMerge(c.sound||{},{maxVoices:v}); fw.setOptions({sound:{maxVoices:v}}); }, tooltip: 'Maximum concurrent synthesized sounds' }
     ]
   },
   show: {
@@ -655,16 +755,16 @@ const SECTIONS = {
       { id: 'show.intensity',      label: 'Intensity',       type: 'number', min: .1, max: 3, step: .1, def: 1, slider: true, unit: '×', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {intensity:v}); fw.setOptions({show:{intensity:v}}); },
         tooltip: 'Multiplier for overall launch frequency' },
-      { id: 'show.openingSalvo',   label: 'Opening salvo',   type: 'number', min: 1, max: 20, step: 1, def: 6, updateMode: 'live',
+      { id: 'show.openingSalvo',   label: 'Opening salvo',   type: 'number', min: 1, max: 20, step: 1, def: 6, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {openingSalvo:v}); fw.setOptions({show:{openingSalvo:v}}); },
         tooltip: 'Rockets launched immediately when show starts' },
-      { id: 'show.maxRockets',     label: 'Max rockets',     type: 'number', min: 1, max: 25, step: 1, def: null, updateMode: 'live',
+      { id: 'show.maxRockets',     label: 'Max rockets',     type: 'number', min: 1, max: 25, step: 1, def: null, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {maxRockets:v}); fw.setOptions({show:{maxRockets:v}}); },
         tooltip: 'Maximum simultaneous rockets (blank = preset)' },
-      { id: 'show.maxParticles',   label: 'Max particles',   type: 'number', min: 100, max: 10000, step: 100, def: null, updateMode: 'live',
+      { id: 'show.maxParticles',   label: 'Max particles',   type: 'number', min: 100, max: 10000, step: 100, def: null, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {maxParticles:v}); fw.setOptions({show:{maxParticles:v}}); },
         tooltip: 'Maximum active particles (blank = preset)' },
-      { id: 'show.launchInterval', label: 'Launch interval', type: 'number', min: 100, max: 3000, step: 50, def: null, updateMode: 'live',
+      { id: 'show.launchInterval', label: 'Launch interval', type: 'number', min: 100, max: 3000, step: 50, def: null, slider: true, unit: ' ms', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {launchInterval:v}); fw.setOptions({show:{launchInterval:v}}); },
         tooltip: 'ms between automatic launches (blank = preset)' },
       { id: 'show.launchSpread',   label: 'Launch spread',   type: 'number', min: 0, max: 1, step: .05, def: .55, slider: true, updateMode: 'live',
@@ -688,10 +788,10 @@ const SECTIONS = {
       { id: 'show.zAngleStrength', label: 'Depth strength',  type: 'number', min: 0, max: 3, step: .1, def: .8, slider: true, unit: '×', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {zAngleStrength:v}); fw.setOptions({show:{zAngleStrength:v}}); },
         tooltip: 'How strongly shells stage into near and distant layers' },
-      { id: 'show.angleRange',     label: 'Angle range',     type: 'number', min: 0, max: 45, step: 1, def: 14, updateMode: 'live',
+      { id: 'show.angleRange',     label: 'Angle range',     type: 'number', min: 0, max: 45, step: 1, def: 14, slider: true, unit: '°', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleRange:v}); fw.setOptions({show:{angleRange:v}}); },
         tooltip: 'Max launch-angle variation in degrees' },
-      { id: 'show.angleStrength',  label: 'Angle strength',  type: 'number', min: 0, max: 3, step: .1, def: 1, updateMode: 'live',
+      { id: 'show.angleStrength',  label: 'Angle strength',  type: 'number', min: 0, max: 3, step: .1, def: 1, slider: true, unit: '×', updateMode: 'live',
         apply: (c,v,fw) => { c.show = deepMerge(c.show||{}, {angleStrength:v}); fw.setOptions({show:{angleStrength:v}}); },
         tooltip: 'How strongly angle affects horizontal motion' },
       { id: 'show.enabledTypes',   label: 'Shell types',     type: 'shell-picker', updateMode: 'live',
@@ -768,28 +868,32 @@ const SECTIONS = {
         choices: [{label:'Hybrid (best)',value:'hybrid'},{label:'Crisp text',value:'crisp'},{label:'Particles only',value:'particles'}],
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {renderMode:v}); fw.setOptions({textFirework:{renderMode:v}}); },
         tooltip: 'Text rendering: hybrid blends crisp + particle dissolve' },
-      { id: 'textFirework.maxCharacters',   label: 'Max chars',         type: 'number', min: 10, max: 200, step: 1, def: 72, updateMode: 'live',
+      { id: 'textFirework.maxCharacters',   label: 'Max chars',         type: 'number', min: 10, max: 200, step: 1, def: 72, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {maxCharacters:v}); fw.setOptions({textFirework:{maxCharacters:v}}); },
         tooltip: 'Maximum accepted message length' },
-      { id: 'textFirework.maxLines',        label: 'Lines',             type: 'number', min: 1, max: 5, step: 1, def: 3, updateMode: 'live',
-        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {maxLines:v}); fw.setOptions({textFirework:{maxLines:v}}); },
+      { id: 'textFirework.maxLines',        label: 'Lines',             type: 'number', min: 1, max: 5, step: 1, def: 3, slider: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {maxLines:v}); fw.setOptions({textFirework:{maxLines:v}}); syncTextLaunchInputs(v); },
         tooltip: 'Maximum number of text lines' },
-      { id: 'textFirework.fontSize',        label: 'Font size',         type: 'number', min: 24, max: 200, step: 4, def: 92, updateMode: 'live',
+      { id: 'textFirework.textAlign',       label: 'Justification',     type: 'select', def: 'center', updateMode: 'live',
+        choices: [{label:'⬅ Left',value:'left'},{label:'↔ Center',value:'center'},{label:'➡ Right',value:'right'}],
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {textAlign:v}); fw.setOptions({textFirework:{textAlign:v}}); },
+        tooltip: 'Align every configured text line to the left, center, or right edge of the text area' },
+      { id: 'textFirework.fontSize',        label: 'Font size',         type: 'number', min: 24, max: 200, step: 4, def: 92, slider: true, unit: ' px', updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {fontSize:v}); fw.setOptions({textFirework:{fontSize:v}}); },
         tooltip: 'Text size in CSS pixels' },
-      { id: 'textFirework.particleSpacing', label: 'Particle spacing',  type: 'number', min: 1, max: 8, step: 1, def: 4, updateMode: 'live',
+      { id: 'textFirework.particleSpacing', label: 'Particle spacing',  type: 'number', min: 1, max: 8, step: 1, def: 4, slider: true, updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {particleSpacing:v}); fw.setOptions({textFirework:{particleSpacing:v}}); },
         tooltip: 'Higher = fewer particles (better performance)' },
-      { id: 'textFirework.holdDuration',    label: 'Hold duration',     type: 'number', min: 200, max: 5000, step: 100, def: 1400, updateMode: 'live',
+      { id: 'textFirework.holdDuration',    label: 'Hold duration',     type: 'number', min: 200, max: 5000, step: 100, def: 1400, slider: true, unit: ' ms', updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {holdDuration:v}); fw.setOptions({textFirework:{holdDuration:v}}); },
         tooltip: 'How long text stays readable before dissolving (ms)' },
       { id: 'textFirework.dissolveStyle',   label: 'Dissolve style',    type: 'select', updateMode: 'live',
         choices: [{label:'✨ Sparkle',value:'sparkle'},{label:'🎲 Random',value:'random'},{label:'⬅ Left to right',value:'left-to-right'},{label:'⬇ Top down',value:'top-down'}],
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {dissolveStyle:v}); fw.setOptions({textFirework:{dissolveStyle:v}}); },
         tooltip: 'Order in which text particles release' },
-      { id: 'textFirework.colors',          label: 'Colors',            type: 'text', def: '#FFFFFF, #FFD700, #FF69B4', updateMode: 'live',
-        apply: (c,v,fw) => { const arr = v.split(',').map(s=>s.trim()).filter(Boolean); c.textFirework = deepMerge(c.textFirework||{}, {colors:arr}); fw.setOptions({textFirework:{colors:arr}}); },
-        tooltip: 'Comma-separated hex colors for text particles' },
+      { id: 'textFirework.colors',          label: 'Colours',           type: 'colors', def: ['#FFFFFF','#FFD700','#FF69B4'], updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {colors:v}); fw.setOptions({textFirework:{colors:v}}); },
+        tooltip: 'Visible colour swatches used by the text particles' },
       { id: 'textFirework.shimmer',         label: 'Shimmer',           type: 'toggle', def: true, updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {shimmer:v}); fw.setOptions({textFirework:{shimmer:v}}); },
         tooltip: 'Make text particles twinkle' },
@@ -865,6 +969,7 @@ const state = {
   history: [],
   historyIndex: -1,
   startingPreset: 'cinematic',
+  startingConfig: null,
   currentPreset: 'cinematic',
   activeTab: 'guided',
   guidedOption: null,
@@ -1205,6 +1310,104 @@ function buildShellPicker(value,onChange) {
   root.append(actions,grid);return root;
 }
 
+function normalizePickerColour(value) {
+  const hex = String(value || '').trim();
+  if (/^#[0-9a-f]{6}$/i.test(hex)) return hex.toUpperCase();
+  if (/^#[0-9a-f]{3}$/i.test(hex)) {
+    return `#${hex.slice(1).split('').map(character => character + character).join('')}`.toUpperCase();
+  }
+  return '#FFFFFF';
+}
+
+function buildColourPicker(option) {
+  const root = document.createElement('div');
+  root.className = 'color-picker-list';
+  const configured = getDeep(state.committedConfig, option.id);
+  let colours = (Array.isArray(configured) ? configured : option.def)
+    .map(normalizePickerColour);
+
+  const applyColours = () => {
+    colours = [...root.querySelectorAll('input[type=color]')].map(input =>
+      normalizePickerColour(input.value)
+    );
+    applyDirectOption(option.id, colours);
+  };
+
+  const render = () => {
+    root.innerHTML = '';
+    colours.forEach((colour, index) => {
+      const row = document.createElement('div');
+      row.className = 'color-picker-row';
+      const picker = document.createElement('input');
+      picker.type = 'color';
+      picker.value = colour;
+      picker.setAttribute('aria-label', `Text colour ${index + 1}`);
+      const hex = document.createElement('input');
+      hex.type = 'text';
+      hex.value = colour;
+      hex.maxLength = 7;
+      hex.setAttribute('aria-label', `Text colour ${index + 1} hex value`);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.title = 'Remove colour';
+      remove.disabled = colours.length === 1;
+
+      picker.addEventListener('input', () => {
+        hex.value = picker.value.toUpperCase();
+        applyColours();
+      });
+      hex.addEventListener('change', () => {
+        const normalized = normalizePickerColour(hex.value);
+        picker.value = normalized;
+        hex.value = normalized;
+        applyColours();
+      });
+      remove.addEventListener('click', () => {
+        colours.splice(index, 1);
+        render();
+        applyColours();
+      });
+      row.append(picker, hex, remove);
+      root.appendChild(row);
+    });
+
+    if (colours.length < 8) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'add-color-btn';
+      add.textContent = '+ Add colour';
+      add.addEventListener('click', () => {
+        colours.push('#FFFFFF');
+        render();
+        applyColours();
+      });
+      root.appendChild(add);
+    }
+  };
+
+  render();
+  return root;
+}
+
+function syncTextLaunchInputs(requestedCount) {
+  const host = document.getElementById('text-launch-lines');
+  if (!host) return;
+  const count = Math.max(1, Math.min(5, Math.round(Number(requestedCount) || 1)));
+  const previous = [...host.querySelectorAll('input')].map(input => input.value);
+  host.innerHTML = '';
+
+  for (let index = 0; index < count; index++) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tab-text-input';
+    input.placeholder = `Text line ${index + 1}`;
+    input.value = previous[index] ?? (index === 0 ? '✨ Grand Fireworks!' : '');
+    input.setAttribute('aria-label', `Text firework line ${index + 1}`);
+    host.appendChild(input);
+  }
+}
+
 /* ---------- category tab ---------- */
 function buildCategoryTab(sec) {
   const frag = document.createDocumentFragment();
@@ -1279,6 +1482,8 @@ function buildCategoryTab(sec) {
         getDeep(state.committedConfig, o.id) ?? 'all',
         value => applyDirectOption(o.id, value)
       ));
+    } else if (o.type === 'colors') {
+      ctrl.appendChild(buildColourPicker(o));
     }
 
     row.appendChild(ctrl);
@@ -1297,25 +1502,28 @@ function buildCategoryTab(sec) {
     frag.appendChild(act);
   }
   if (sec.icon === '📝') {
-    // Text tab: input + launch button
+    // Match the launch inputs to the configured line count so each line can
+    // be composed deliberately instead of depending on automatic word-wrap.
     const act = document.createElement('div');
     act.className = 'tab-action-row';
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.className = 'tab-text-input';
-    inp.id = 'text-launch-input';
-    inp.placeholder = 'Type your message here…';
-    inp.value = '✨ Grand Fireworks!';
+    const lines = document.createElement('div');
+    lines.className = 'tab-text-lines';
+    lines.id = 'text-launch-lines';
     const btn = document.createElement('button');
     btn.className = 'tab-action-btn secondary';
     btn.textContent = '🚀 Launch Text';
     btn.addEventListener('click', () => {
-      const txt = document.getElementById('text-launch-input')?.value;
+      const txt = [...document.querySelectorAll('#text-launch-lines input')]
+        .map(input => input.value.trim())
+        .join('\n');
       if (txt && fw) try { fw.launchText(txt); } catch(e) {}
     });
-    act.appendChild(inp);
+    act.appendChild(lines);
     act.appendChild(btn);
     frag.appendChild(act);
+    requestAnimationFrame(() =>
+      syncTextLaunchInputs(getDeep(state.committedConfig, 'textFirework.maxLines') ?? 3)
+    );
   }
   return frag;
 }
@@ -1326,7 +1534,9 @@ function renderSummary() {
   el.innerHTML = '';
 
   // Preset chip
-  const preset = PRESET_MAP[state.currentPreset];
+  // Saved configurations can be custom or originate from an older version.
+  // Always show a safe custom chip instead of failing on an unknown preset ID.
+  const preset = PRESET_MAP[state.currentPreset] || PRESET_MAP.custom;
   const chip = document.createElement('span');
   chip.className = 'summary-chip preset-chip';
   chip.textContent = `${preset.icon} ${preset.label}`;
@@ -1557,6 +1767,20 @@ function undo() {
 }
 
 function resetToStart() {
+  if (state.startingPreset === 'custom') {
+    state.committedConfig = deepMerge({}, state.startingConfig || state.committedConfig);
+    state.currentPreset = 'custom';
+    state.history = [];
+    state.historyIndex = -1;
+    state.changes.clear();
+    restartFireworks(state.committedConfig);
+    renderPresets();
+    renderSummary();
+    rebuildCategoryTabs();
+    switchTab('guided');
+    showToast('⟲ Reset to loaded custom configuration');
+    return;
+  }
   selectPreset(state.startingPreset);
   showToast(`⟲ Reset to ${PRESET_MAP[state.startingPreset].label}`);
 }
@@ -1597,7 +1821,7 @@ function copyConfig() {
 const STORAGE_KEY='gf_saved_configs';
 function getSavedConfigs(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}}catch(e){return{}}}
 function saveConfig(nm){const t=nm.trim();if(!t)return false;const s=getSavedConfigs();s[t]=deepMerge({},state.committedConfig);localStorage.setItem(STORAGE_KEY,JSON.stringify(s));refreshSavedConfigs();return true;}
-function loadSavedConfig(nm){const s=getSavedConfigs();if(!s[nm])return false;const c=deepMerge(deepMerge({},CORE_CONFIG),s[nm]);state.currentPreset='custom';state.startingPreset='custom';state.committedConfig=c;state.history=[];state.historyIndex=-1;state.changes.clear();state.isPreviewing=false;state.guidedOption=null;state.guidedValue=null;restartFireworks(state.committedConfig);renderPresets();renderSummary();rebuildCategoryTabs();switchTab('guided');document.getElementById('load-overlay').classList.add('hidden');announce('Loaded: '+nm);showToast('📂 Loaded "'+nm+'"');return true;}
+function loadSavedConfig(nm){const s=getSavedConfigs();if(!s[nm])return false;const c=deepMerge(deepMerge({},CORE_CONFIG),s[nm]);state.currentPreset='custom';state.startingPreset='custom';state.startingConfig=deepMerge({},c);state.committedConfig=c;state.history=[];state.historyIndex=-1;state.changes.clear();state.isPreviewing=false;state.guidedOption=null;state.guidedValue=null;restartFireworks(state.committedConfig);renderPresets();renderSummary();rebuildCategoryTabs();switchTab('guided');document.getElementById('load-overlay').classList.add('hidden');announce('Loaded: '+nm);showToast('📂 Loaded "'+nm+'"');return true;}
 function deleteSavedConfig(nm){const s=getSavedConfigs();delete s[nm];localStorage.setItem(STORAGE_KEY,JSON.stringify(s));refreshSavedConfigs();}
 function refreshSavedConfigs(){const sel=document.getElementById('load-saved-select');if(!sel)return;const s=getSavedConfigs();const names=Object.keys(s).sort();sel.innerHTML='';if(names.length===0){sel.add(new Option('— No saved configs —',''));document.getElementById('load-saved-apply').disabled=true;document.getElementById('load-saved-del').disabled=true;}else{sel.add(new Option('— Select a config —',''));names.forEach(n=>sel.add(new Option(n,n)));document.getElementById('load-saved-apply').disabled=false;document.getElementById('load-saved-del').disabled=false;}sel.value='';}
 
@@ -2107,7 +2331,7 @@ function applyLoadedConfig() {
     return;
   }
   // Basic validation: check for known keys
-  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime'];
+  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime','speedMultiplier','mixedStyles','showFps'];
   const keys = Object.keys(parsed);
   const unknown = keys.filter(k => !known.includes(k) && k !== 'container');
   if (unknown.length > 0 && keys.length > 5) {
@@ -2119,6 +2343,7 @@ function applyLoadedConfig() {
   const merged = deepMerge(deepMerge({}, CORE_CONFIG), parsed);
   state.currentPreset = 'custom';
   state.startingPreset = 'custom';
+  state.startingConfig = deepMerge({}, merged);
   state.committedConfig = merged;
   state.history = []; state.historyIndex = -1; state.changes.clear();
   state.isPreviewing = false; state.guidedOption = null; state.guidedValue = null;

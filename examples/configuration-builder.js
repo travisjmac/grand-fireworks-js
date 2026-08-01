@@ -505,6 +505,14 @@
           "Default 0.42.",
         ],
         [
+          "textFirework.textAlign",
+          "select",
+          "center",
+          "Horizontal justification for every rendered text line.",
+          "Choose left, center, or right.",
+          ["left", "center", "right"],
+        ],
+        [
           "textFirework.lineHeight",
           "number",
           1.15,

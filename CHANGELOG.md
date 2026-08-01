@@ -2,6 +2,26 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.6.5] — July 31, 2026
+
+### Added
+
+- Added ballistic rocket arcs that slow into the burst and tip into a natural fall.
+- Added cinematic shimmer, sparkle, varied particle persistence, wind, flash bursts, and a dedicated Cinematic style.
+- Added global speed control, varied apparent shell depth, mixed-style weighting, expanded text alignment and colour controls, and procedural boom character choices.
+- Added smooth automatic intensity movement, automatic style-and-colour changes, periodic Grand Finale launches, and a 20-shell homepage ceiling.
+
+### Changed
+
+- Reworked live style switching so new launches use the selected preset without interrupting shells already in flight.
+- Replaced versioned distribution filenames with stable `GrandFireworks.js` and `GrandFireworks.min.js` files for reliable CDN `@main` and `@latest` use.
+- Expanded the guided builder with normalized mixed-style ratios, visible colour pickers, and more sound and text controls.
+
+### Fixed
+
+- Live trail settings now recreate the WebGL surface when needed, allowing trail-capable styles to activate correctly.
+- Fixed custom saved configurations in the guided builder when no named preset applies.
+
 ## [1.6.4] — July 29, 2026
 
 ### Fixed

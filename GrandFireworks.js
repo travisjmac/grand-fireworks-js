@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.6.4
+ * Version: 1.6.5
  *
  * @author Travis MacDonald
- * @version 1.6.4
+ * @version 1.6.5
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -398,7 +398,15 @@
     baseStyle: "cinematic",
     // Global simulation rate. 0.8 runs every firework motion and effect at 80%.
     speedMultiplier: 1,
-    mixedStyles: { classic: 20, oldSchool: 10, thin: 20, medium: 25, bold: 15, spectacle: 10 },
+    mixedStyles: {
+      classic: 15,
+      oldSchool: 10,
+      thin: 15,
+      medium: 20,
+      cinematic: 20,
+      bold: 10,
+      spectacle: 10,
+    },
     colorTheme: "default",
     showFps: false,
     duration: 0,
@@ -451,6 +459,10 @@
       ambience: 0.005,
       stereo: true,
       whistleChance: 0.03,
+      // Boom character: mixed chooses a suitable variation per shell.
+      boomStyle: "mixed",
+      // Randomizes the selected boom's duration, gain, and tone by ± this amount.
+      boomVariation: 0.25,
       // Multiplier applied only to shells staged in front of the viewer.
       // The master compressor keeps dramatic close booms from clipping.
       nearBoomMultiplier: 1,
@@ -553,6 +565,7 @@
       overflow: "ellipsis",
       maxWidth: 0.82,
       verticalPosition: 0.42,
+      textAlign: "center",
       lineHeight: 1.15,
       fontFamily: "system-ui, sans-serif",
       fontWeight: 800,
@@ -1032,7 +1045,7 @@
         0.03,
         1,
       );
-      o.visuals.bloom = clamp(Number(o.visuals.bloom) || 1, 0.5, 2);
+      o.visuals.bloom = clamp(Number(o.visuals.bloom) || 1, 0.5, 10);
       o.visuals.flashScale = clamp(Number(o.visuals.flashScale) || 1, 0.5, 3);
       o.visuals.flashAlpha = clamp(Number(o.visuals.flashAlpha) || 0.34, 0.05, 1);
       o.visuals.flashLife = clamp(Number(o.visuals.flashLife) || 420, 80, 900);
@@ -1063,6 +1076,11 @@
       o.visuals.starChance = clamp(Number(o.visuals.starChance) || 0, 0, 0.3);
       o.visuals.zoom = clamp(Number(o.visuals.zoom ?? 1), 0.1, 4);
       o.speedMultiplier = clamp(Number(o.speedMultiplier) || 1, 0.1, 3);
+      o.textFirework.textAlign = ["left", "center", "right"].includes(
+        o.textFirework.textAlign,
+      )
+        ? o.textFirework.textAlign
+        : "center";
 
       o.show.zAngleRange = clamp(Number(o.show.zAngleRange ?? 25), 0, 45);
       o.show.zAngleStrength = clamp(Number(o.show.zAngleStrength ?? 0.8), 0, 3);
@@ -1095,6 +1113,12 @@
           o.show.minShellScale,
         ];
       o.sound.nearBoomMultiplier = clamp(Number(o.sound.nearBoomMultiplier ?? 1), 0.2, 10);
+      o.sound.boomStyle = ["classic", "deep", "artillery", "double", "rolling", "mixed"].includes(
+        o.sound.boomStyle,
+      )
+        ? o.sound.boomStyle
+        : "mixed";
+      o.sound.boomVariation = clamp(Number(o.sound.boomVariation ?? 0.25), 0, 0.5);
       o.show.angleRange = clamp(Number(o.show.angleRange), 0, 45);
       o.show.angleStrength = clamp(Number(o.show.angleStrength), 0, 3);
       o.show.textRocketAngle = clamp(Number(o.show.textRocketAngle), -45, 45);
@@ -1257,6 +1281,29 @@
       } catch (e) {}
       this.renderer = new CanvasRenderer(this.canvas);
       this.rendererType = "canvas2d";
+    }
+    // WebGL context attributes cannot be changed after creation. Replacing
+    // the canvas lets live trail toggles update preserveDrawingBuffer without
+    // restarting the show or discarding the active rockets and particles.
+    _recreateRenderer(reason) {
+      const previousType = this.rendererType;
+      if (this.renderer) this.renderer.destroy();
+
+      const oldCanvas = this.canvas;
+      this.canvas = this._canvas();
+      oldCanvas.replaceWith(this.canvas);
+      this._initRenderer();
+      this._resize();
+
+      this.dispatchEvent(
+        new CustomEvent("rendererchange", {
+          detail: {
+            from: previousType,
+            to: this.rendererType,
+            reason,
+          },
+        }),
+      );
     }
     // Swaps the WebGL canvas for a new Canvas2D canvas and fires a
     // rendererchange event. Called on context loss or explicit fallback.
@@ -1957,21 +2004,31 @@
     // Word-wrap algorithm: greedily packs words onto lines, respecting
     // maxCharactersPerLine. Adds ellipsis on overflow if configured.
     _wrapText(text, cfg) {
-      const words = text.split(/\s+/),
-        lines = [];
-      let line = "";
-      for (const word of words) {
-        const next = line ? line + " " + word : word;
-        if (next.length <= cfg.maxCharactersPerLine) line = next;
-        else {
-          if (line) lines.push(line);
-          line = word;
+      const lines = [];
+      const requestedLines = String(text).split(/\r?\n/);
+
+      for (const requestedLine of requestedLines) {
+        const words = requestedLine.trim().split(/\s+/).filter(Boolean);
+        let line = "";
+
+        for (const word of words) {
+          const next = line ? line + " " + word : word;
+          if (next.length <= cfg.maxCharactersPerLine) {
+            line = next;
+          } else {
+            if (line) lines.push(line);
+            line = word;
+          }
+          if (lines.length === cfg.maxLines) break;
         }
+
+        if (lines.length < cfg.maxLines)
+          lines.push(line);
         if (lines.length === cfg.maxLines) break;
       }
-      if (lines.length < cfg.maxLines && line) lines.push(line);
-      const used = lines.join(" ").length;
-      if (used < text.length && lines.length) {
+
+      const used = lines.join("\n").length;
+      if (used < String(text).length && lines.length) {
         if (cfg.overflow === "ellipsis")
           lines[lines.length - 1] =
             lines[lines.length - 1].replace(/[.…]*$/, "") + "…";
@@ -1992,10 +2049,19 @@
         off.width = Math.max(280, Math.floor(this.width * cfg.maxWidth));
         off.height = Math.ceil(cfg.fontSize * 1.45);
         x.fillStyle = "#fff";
-        x.textAlign = "center";
+        x.textAlign = ["left", "right"].includes(cfg.textAlign)
+          ? cfg.textAlign
+          : "center";
         x.textBaseline = "middle";
         x.font = `${cfg.fontWeight} ${cfg.fontSize}px ${cfg.fontFamily}`;
-        x.fillText(line, off.width / 2, off.height / 2, off.width - 8);
+        const inset = 4;
+        const textX =
+          x.textAlign === "left"
+            ? inset
+            : x.textAlign === "right"
+              ? off.width - inset
+              : off.width / 2;
+        x.fillText(line, textX, off.height / 2, off.width - inset * 2);
         // Sample the image data: any pixel with alpha > 100 becomes a
         // particle target point. Step size is scaled by particleScale
         // so higher quality = more particles.
@@ -2017,6 +2083,12 @@
         plans.push({
           line,
           points,
+          x:
+            x.textAlign === "left"
+              ? this.width / 2 - off.width / 2
+              : x.textAlign === "right"
+                ? this.width / 2 + off.width / 2
+                : this.width / 2,
           y: top + i * cfg.fontSize * cfg.lineHeight + off.height / 2,
         });
       });
@@ -2179,7 +2251,7 @@
     //   crackle → bandpass at high frequency (snap/crackle)
     // Whistle sounds also layer a sine/triangle oscillator on top
     // of the noise for a tonal component.
-    _playNoise(type, position, startDelay = 0, accent = 1) {
+    _playNoise(type, position, startDelay = 0, accent = 1, boomStyle = "classic") {
       const a = this._audio(false),
         vol = clamp(Number(this.options.sound.volume), 0, 1),
         t = this.options.sound.tuning || {};
@@ -2205,19 +2277,30 @@
         )
           ? t.whistleWave
           : "sine",
-        boomVariation = type === "explode" ? 0.75 + Math.random() : 1,
+        boomProfiles = {
+          classic: { duration: 1, gain: 1, cutoff: 1, q: 0.7 },
+          deep: { duration: 1.45, gain: 1.14, cutoff: 0.52, q: 0.48 },
+          artillery: { duration: 0.58, gain: 1.28, cutoff: 1.9, q: 1.08 },
+          double: { duration: 0.88, gain: 1.08, cutoff: 0.9, q: 0.78 },
+          rolling: { duration: 1.85, gain: 0.88, cutoff: 0.68, q: 0.42 },
+        },
+        boomProfile = boomProfiles[boomStyle] || boomProfiles.classic,
+        boomVariation =
+          type === "explode"
+            ? 1 + (Math.random() * 2 - 1) * this.options.sound.boomVariation
+            : 1,
         boomDuration = clamp(
-          (Number(t.boomDuration) || 1.08) * boomVariation,
+          (Number(t.boomDuration) || 1.08) * boomProfile.duration * boomVariation,
           0.25,
           3,
         ),
         boomGain = clamp(
-          (Number(t.boomGain) || 0.42) * boomVariation,
+          (Number(t.boomGain) || 0.42) * boomProfile.gain * boomVariation,
           0.05,
           1.25,
         ),
         boomCutoff = clamp(
-          (Number(t.boomCutoff) || 230) * boomVariation,
+          (Number(t.boomCutoff) || 230) * boomProfile.cutoff * boomVariation,
           60,
           700,
         ),
@@ -2281,7 +2364,7 @@
               ? 1.15
               : type === "crackle"
                 ? 0.55
-                : 0.7;
+                : boomProfile.q;
       const level =
         vol *
         (type === "whistle"
@@ -2350,20 +2433,39 @@
         return;
       }
       if (type === "finale") {
-        this._playNoise("explode", position, delay, 1.2 * accent);
+        const style = this._pickBoomStyle();
+        this._playBoom(style, position, delay, 1.2 * accent);
         return;
       }
       if (type === "explode") {
-        this._playNoise("explode", position, delay, accent);
+        const style = this._pickBoomStyle();
+        this._playBoom(style, position, delay, accent);
         this._playNoise("crackle", position, delay + 0.012, 0.6 * accent);
+      }
+    }
+    // Select a single boom character for this shell. Mixed shows off the
+    // engine by rotating between natural, deep, artillery, double, and roll.
+    _pickBoomStyle() {
+      const style = this.options.sound.boomStyle;
+      if (style !== "mixed") return style;
+      const choices = ["classic", "deep", "artillery", "double", "rolling"];
+      return choices[Math.floor(Math.random() * choices.length)];
+    }
+    _playBoom(style, position, delay, accent) {
+      this._playNoise("explode", position, delay, accent, style);
+      if (style === "double") {
+        this._playNoise("explode", position, delay + 0.12, accent * 0.56, "deep");
+      } else if (style === "rolling") {
+        this._playNoise("explode", position, delay + 0.2, accent * 0.38, "deep");
+        this._playNoise("explode", position, delay + 0.43, accent * 0.22, "deep");
       }
     }
     _scheduleFinaleRhythm(position) {
       if (this.options.sound.finaleRhythm === false) return;
       const beats = [0, 0.25, 0.43, 0.61, 0.96];
       for (let i = 0; i < beats.length; i++)
-        this._playNoise(
-          "explode",
+        this._playBoom(
+          this._pickBoomStyle(),
           position,
           beats[i],
           i === beats.length - 1 ? 1.35 : 0.56 + i * 0.1,
@@ -2460,9 +2562,19 @@
         remaining = o.syncAt
           ? Math.max(0.2, (o.syncAt - this.effectTime) / 1000)
           : 0,
-        vy = o.syncAt
-          ? -(startY - burstY) / remaining
-          : -(560 + Math.random() * 180) / this.zoom * vyScale,
+        flightDistance = Math.max(1, startY - burstY),
+        // Use a ballistic launch instead of a constant-speed climb. Rockets
+        // now shed upward speed as they approach the burst height, tip into
+        // a shallow arc, and detonate just after gravity wins.
+        apexLead = o.syncAt ? Math.min(0.08, remaining * 0.2) : 0,
+        apexTime = o.syncAt ? Math.max(0.12, remaining - apexLead) : 0,
+        launchSpeed = o.syncAt
+          ? (2 * flightDistance) / apexTime
+          : ((560 + Math.random() * 180) / this.zoom) * vyScale,
+        rocketGravity = o.syncAt
+          ? launchSpeed / apexTime
+          : (launchSpeed * launchSpeed) / (2 * flightDistance),
+        vy = -launchSpeed,
         // Z-drift: each rocket has a configurable random Z-angle so it drifts
         // slightly toward/away from the viewer during flight. Creates
         // subtle 3D parallax — rockets aren't perfectly straight up.
@@ -2515,6 +2627,9 @@
         vy,
         vz,
         burstY,
+        gravity: rocketGravity,
+        burstFallSpeed: o.syncAt ? 0 : 10 + Math.random() * 12,
+        detonateAt: o.syncAt || null,
         dof,
         apparentScale,
         styleScale,
@@ -2749,7 +2864,7 @@
         const r = this.rockets[i];
         r.x += r.vx * dt + windDrift;
         r.y += r.vy * dt;
-        r.vy += (r.satellite ? 28 : 45) * dt;
+        r.vy += (r.satellite ? 28 : r.gravity || 45) * dt;
         // Z-drift: rocket moves toward or away from viewer. Update Z
         // position and recalculate dof — closer = bigger, further = smaller.
         if (r.vz) r.z += r.vz * dt;
@@ -2783,8 +2898,8 @@
           });
         }
         if (
-          (r.satellite && now >= r.detonateAt) ||
-          (!r.satellite && r.y <= r.burstY)
+          (r.detonateAt && now >= r.detonateAt) ||
+          (!r.satellite && !r.detonateAt && r.vy >= r.burstFallSpeed)
         ) {
           this._explode(r, now);
           this.rockets.splice(i, 1);
@@ -3389,7 +3504,7 @@
         if (cfg.renderMode !== "particles")
           this.textBlocks.push({
             text: r.textPlan.line,
-            x: this.width / 2,
+            x: r.textPlan.x,
             y: r.textPlan.y,
             birth: now,
             cfg,
@@ -3676,7 +3791,9 @@
         x.save();
         x.globalAlpha = clamp(alpha, 0, 1);
         x.font = `${c.fontWeight} ${c.fontSize}px ${c.fontFamily}`;
-        x.textAlign = "center";
+        x.textAlign = ["left", "right"].includes(c.textAlign)
+          ? c.textAlign
+          : "center";
         x.textBaseline = "middle";
         x.fillStyle = c.colors[0] || "#FFFFFF";
         x.shadowColor = c.colors[1] || c.colors[0] || "#FFFFFF";
@@ -3834,6 +3951,13 @@
         this.state !== "destroyed"
       )
         this._resize();
+      if (
+        previous &&
+        this.rendererType === "webgl2" &&
+        previous.renderer.preserveDrawingBuffer !==
+          this.options.renderer.preserveDrawingBuffer
+      )
+        this._recreateRenderer("trail-buffer-setting-changed");
       if (!this.options.performance.pauseWhenHidden) this._resumeFor("hidden");
       if (!this.options.performance.pauseWhenOffscreen)
         this._resumeFor("offscreen");
@@ -4135,7 +4259,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.6.4";
+  GrandFireworks.VERSION = "1.6.5";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

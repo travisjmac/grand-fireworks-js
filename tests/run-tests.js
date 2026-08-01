@@ -170,9 +170,22 @@ test('honors explicit performance and live visual options', () => {
   fireworks.setOptions({ performance: { dprCap: 1 } });
   assert.equal(fireworks.dpr, 1);
   fireworks.setOpacity(.25);
-  fireworks.setOptions({ show: { launchSpread: .4 }, speedMultiplier: .8 });
+  fireworks.setOptions({
+    show: { launchSpread: .4 },
+    speedMultiplier: .8,
+    visuals: { bloom: 8, trails: false }
+  });
   assert.equal(fireworks.options.visuals.opacity, .25);
   assert.equal(fireworks.options.speedMultiplier, .8);
+  assert.equal(fireworks.options.visuals.bloom, 8);
+  assert.equal(fireworks.options.renderer.preserveDrawingBuffer, false);
+  fireworks.setOptions({ visuals: { trails: true } });
+  assert.equal(fireworks.options.renderer.preserveDrawingBuffer, true);
+  fireworks.setOptions({ sound: { boomStyle: 'artillery', boomVariation: .4 } });
+  assert.equal(fireworks.options.sound.boomStyle, 'artillery');
+  assert.equal(fireworks.options.sound.boomVariation, .4);
+  fireworks.setOptions({ sound: { boomStyle: 'not-a-boom' } });
+  assert.equal(fireworks.options.sound.boomStyle, 'mixed');
   assert.equal(Number(fireworks.root.style.opacity), .25);
   fireworks.destroy();
 });
@@ -207,6 +220,12 @@ test('resets style-owned settings when switching styles', () => {
 
   fireworks.setStyle('mixed');
   assert.equal(fireworks.options.baseStyle, 'mixed');
+  assert.equal(fireworks.options.mixedStyles.cinematic, 20);
+  assert.equal(
+    Object.values(fireworks.options.mixedStyles)
+      .reduce((total, ratio) => total + ratio, 0),
+    100
+  );
 });
 
 test('keeps one apparent scale across a rocket and its burst', () => {
@@ -223,9 +242,27 @@ test('keeps one apparent scale across a rocket and its burst', () => {
   fireworks.destroy();
 });
 
+test('uses a ballistic rocket arc before bursting', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' }
+  });
+
+  fireworks._createRocket({ x: .5, burstHeight: .25, apparentScale: 1 });
+  const rocket = fireworks.rockets[0];
+  const flightDistance = rocket.y - rocket.burstY;
+  const predictedApexDistance =
+    (rocket.vy * rocket.vy) / (2 * rocket.gravity);
+
+  assert.ok(rocket.gravity > 0);
+  assert.ok(rocket.burstFallSpeed > 0);
+  assert.ok(Math.abs(predictedApexDistance - flightDistance) < .001);
+  fireworks.destroy();
+});
+
 test('reuses audio context and preserves zero volume', () => {
   const { GrandFireworks, audioStats } = createRuntime({ audio: true });
-  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { enabled: true, volume: .4, ambience: 0 } });
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { enabled: true, volume: .4, ambience: 0, boomStyle: 'classic' } });
   fireworks._playSound('launch');
   fireworks._playSound('explode');
   assert.equal(audioStats.contexts, 1);
@@ -255,6 +292,13 @@ test('keeps sound opt-in and unlocks it through the public control', () => {
 test('runs and cancels text sequences and supports staggered lines', async () => {
   const { GrandFireworks } = createRuntime();
   const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, textFirework: { maxCharactersPerLine: 3, maxLines: 2, synchronizeExplosions: false } });
+  assert.equal(
+    JSON.stringify(fireworks._wrapText('ONE\nTWO', fireworks.options.textFirework)),
+    JSON.stringify(['ONE', 'TWO'])
+  );
+  fireworks.setOptions({ textFirework: { textAlign: 'left' } });
+  const leftPlan = fireworks._textPlans(['ONE'], fireworks.options.textFirework)[0];
+  assert.ok(leftPlan.x < fireworks.width / 2);
   await fireworks.launchText('ONE TWO');
   const rockets = fireworks.pendingRockets.filter(rocket => rocket.textPlan).sort((a, b) => a.syncAt - b.syncAt);
   assert.equal(rockets[1].syncAt - rockets[0].syncAt, 250);

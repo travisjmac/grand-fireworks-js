@@ -9,7 +9,6 @@ const pkg = require('../package.json');
 const root = path.join(__dirname, '..');
 const dist = path.join(root, 'dist');
 const sourcePath = path.join(root, 'GrandFireworks.js');
-const baseName = `GrandFireworks-v${pkg.version}`;
 const banner = `/*! Grand Fireworks JS v${pkg.version} | Travis MacDonald | MIT License */`;
 
 async function build() {
@@ -19,12 +18,15 @@ async function build() {
   }
 
   fs.mkdirSync(dist, { recursive: true });
+  // CDN consumers of @latest need stable filenames. Versioned filenames made
+  // older documentation point to a file that disappears on the next build.
   for (const entry of fs.readdirSync(dist)) {
-    if (/^GrandFireworks-v.*\.js(?:\.gz)?$/.test(entry)) fs.rmSync(path.join(dist, entry));
+    if (/^GrandFireworks(?:-v.*)?(?:\.min)?\.js(?:\.gz)?$/.test(entry))
+      fs.rmSync(path.join(dist, entry));
   }
 
-  const fullPath = path.join(dist, `${baseName}.js`);
-  const minPath = path.join(dist, `${baseName}.min.js`);
+  const fullPath = path.join(dist, 'GrandFireworks.js');
+  const minPath = path.join(dist, 'GrandFireworks.min.js');
   const gzipPath = `${minPath}.gz`;
   fs.writeFileSync(fullPath, source);
 

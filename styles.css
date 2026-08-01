@@ -411,6 +411,7 @@ body.showing-fireworks .grand-fireworks-creator-credit {
 .auto-rotate-control {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   min-height: 42px;
   color: #d8daec;
@@ -418,11 +419,21 @@ body.showing-fireworks .grand-fireworks-creator-credit {
   font-size: 0.82rem;
   grid-column: span 2;
 }
+.auto-rotate-control[aria-pressed="true"] {
+  color: #fff4ba;
+  border-color: rgba(255, 204, 68, 0.85);
+  box-shadow: 0 0 18px rgba(255, 196, 40, 0.2);
+}
 .auto-rotate-control input {
   width: 18px;
   height: 18px;
   margin: 0;
   accent-color: var(--gold);
+}
+.auto-change-countdown {
+  margin-left: auto;
+  color: #ffdc68;
+  font-variant-numeric: tabular-nums;
 }
 .hero-playground.fullscreen-controls {
   position: fixed;
