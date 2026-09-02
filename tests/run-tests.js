@@ -363,6 +363,54 @@ test('Lucky example performs one randomization per click path', () => {
   assert.equal((clickHandler[0].match(/feelingLucky\(\)/g) || []).length, 1);
 });
 
+test('TypeScript declarations describe the full public API and are published', () => {
+  const root = path.join(__dirname, '..');
+  const declarationPath = path.join(root, 'index.d.ts');
+  const declaration = fs.readFileSync(declarationPath, 'utf8');
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+
+  // The declaration file must exist and be wired into package exports.
+  assert.ok(declaration.includes('export class GrandFireworks'));
+  assert.ok(declaration.includes('export default GrandFireworks'));
+  assert.equal(pkg.types, './index.d.ts');
+  assert.equal(pkg.exports['.'].types, './index.d.ts');
+  assert.ok(pkg.files.includes('index.d.ts'));
+
+  // Every documented primary public method must be declared.
+  const methods = [
+    'start', 'stop', 'pause', 'resume', 'clear', 'destroy', 'launch',
+    'launchText', 'launchTextSequence', 'cancelTextSequence', 'launchFinale',
+    'launchWorldEnder', 'finalize', 'setOptions', 'setOpacity', 'setZoom',
+    'setStyle', 'setColorTheme', 'enableSound', 'disableSound', 'setMuted',
+    'feelingLucky', 'getOptions', 'getStats',
+  ];
+  for (const method of methods) {
+    assert.ok(
+      new RegExp(`\\b${method}\\(`).test(declaration),
+      `index.d.ts is missing the public method ${method}()`,
+    );
+  }
+
+  // Every top-level DEFAULTS section must be typed as an options interface.
+  const sections = {
+    transition: 'TransitionOptions',
+    renderer: 'RendererOptions',
+    visuals: 'VisualOptions',
+    sound: 'SoundOptions',
+    performance: 'PerformanceOptions',
+    show: 'ShowOptions',
+    finale: 'FinaleOptions',
+    worldEnder: 'WorldEnderOptions',
+    textFirework: 'TextFireworkOptions',
+  };
+  for (const [section, interfaceName] of Object.entries(sections)) {
+    assert.ok(
+      declaration.includes(`interface ${interfaceName}`),
+      `index.d.ts is missing the options interface "${interfaceName}" for "${section}"`,
+    );
+  }
+});
+
 (async () => {
   let failed = 0;
   for (const { name, run } of tests) {

@@ -2,6 +2,23 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [Unreleased] — Developer platform: TypeScript declarations
+
+### Added
+
+- Added first-party TypeScript declarations (`index.d.ts`) for the public API: constructor and per-launch options, configuration sections (visuals, sound, performance, show, finale, world-ender, text firework, renderer, transition, background), method signatures, return types for `getOptions()`, `getStats()`, and cleanup handles, and the static `VERSION`, `DEFAULTS`, `PRESETS`, `TYPES`, `STYLES`, and `COLOR_THEMES` members.
+- Wired `types`/exports so TypeScript, bundlers, and editors resolve `index.d.ts` automatically. Both `import GrandFireworks from` and `import { GrandFireworks } from` are supported.
+- Added `npm run typecheck`, which compiles focused fixtures exercising the default and named import paths against the declarations with `strict` mode.
+- Added a declaration contract test to `npm test` that verifies the published methods and configuration interfaces are represented in `index.d.ts` and that the file is wired into `package.json` publishing.
+
+### Changed
+
+- Added `typescript` as a dev-only dependency for the type-check fixture; the runtime stays framework-free and dependency-free.
+
+### Fixed
+
+- None.
+
 ## [1.6.5] — July 31, 2026
 
 ### Added

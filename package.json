@@ -3,11 +3,13 @@
   "version": "1.6.5",
   "description": "Photorealistic WebGL 2 fireworks engine with 15 shell types, multi-line text effects, adaptive performance, Canvas fallback, and a choreographed Super Grand Finale. Zero dependencies.",
   "main": "./GrandFireworks.js",
+  "types": "./index.d.ts",
   "browser": "./dist/GrandFireworks.min.js",
   "unpkg": "./dist/GrandFireworks.min.js",
   "jsdelivr": "./dist/GrandFireworks.min.js",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "require": "./GrandFireworks.js",
       "default": "./GrandFireworks.js"
     },
@@ -15,6 +17,7 @@
   },
   "files": [
     "GrandFireworks.js",
+    "index.d.ts",
     "dist",
     "README.md",
     "CHANGELOG.md",
@@ -53,9 +56,11 @@
   "scripts": {
     "build": "node scripts/build-dist.js",
     "test": "node tests/run-tests.js",
+    "typecheck": "tsc -p types/fixtures/tsconfig.json",
     "prepublishOnly": "npm test && npm run build"
   },
   "devDependencies": {
-    "terser": "^5.49.0"
+    "terser": "^5.49.0",
+    "typescript": "^5.9.3"
   }
 }

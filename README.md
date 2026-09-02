@@ -1,5 +1,7 @@
 # GrandFireworks
 
+> **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
+
 Created by **Travis MacDonald** on July 15, 2026.  
 Version **1.6.5** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
@@ -11,6 +13,8 @@ Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-s
 
 Open `index.html` for complete documentation and links to working examples.
 
+Maintainers and AI collaborators should begin with the detailed [project handoff](docs/AI_HANDOFF.md).
+
 ## Install
 
 ```bash
@@ -21,6 +25,37 @@ For a no-build webpage, use the stable CDN filename:
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@main/dist/GrandFireworks.min.js"></script>
+```
+
+### TypeScript
+
+First-party type declarations ship with the package as `index.d.ts` and are
+resolved automatically by TypeScript, bundlers, and editors. Both default and
+named imports work:
+
+```ts
+import GrandFireworks from 'grand-fireworks-js';
+// or: import { GrandFireworks } from 'grand-fireworks-js';
+
+const fireworks = new GrandFireworks({
+  baseStyle: 'cinematic',
+  show: { intensity: 0.9 },
+});
+
+fireworks.start();
+fireworks.setStyle('bold');
+const stats = fireworks.getStats();
+```
+
+Configuration options, launch/text/finale/world-ender/stop vectors, stats,
+and the `GrandFireworks` class are fully typed. The declarations reflect only
+behaviour the engine actually implements — they include browser-only guards
+and describe safe import expectations for CommonJS, ESM, and `<script>` use.
+
+Run the declaration contract check with:
+
+```bash
+npm run typecheck
 ```
 
 ## Live documentation and examples
@@ -132,4 +167,6 @@ const fireworks = new GrandFireworks({
 
 Shells are staged as near, middle, or far. Distance affects apparent size, flight speed, burst height, stereo position, loudness, and a slight delay on distant launch and boom sounds. Tune depth drift with `zAngleRange` and `zAngleStrength`, or call `fireworks.setZoom(0.5)` to update the view live. See the [Feature Demo panel](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=features) for a live reference.
 
-Run the dependency-free regression suite with `npm test`.
+Run the dependency-free regression suite with `npm test`, the declaration
+contract check with `npm run typecheck`, and regenerate distribution builds
+with `npm run build`.
