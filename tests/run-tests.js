@@ -460,6 +460,37 @@ test('skips redundant fullscreen resizes', () => {
   fireworks.destroy();
 });
 
+test('the builder import accepts the snippet the builder export produces', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
+  const match = source.match(/function parseConfigText[\s\S]*?\n\}/);
+  assert.ok(match, 'parseConfigText should exist in the guided builder');
+  // Exercise the real function, extracted from the page.
+  const parseConfigText = new Function('return (' + match[0] + ')')();
+
+  // Bare JSON, as hand-written by a user.
+  assert.deepEqual(parseConfigText('{"show":{"intensity":0.5}}'), { show: { intensity: 0.5 } });
+  // The statement Copy Config puts on the clipboard.
+  const snippet = 'const fireworks = new GrandFireworks({\n  "show": {\n    "intensity": 0.5\n  }\n});';
+  assert.deepEqual(parseConfigText(snippet), { show: { intensity: 0.5 } });
+  // Trailing semicolons and surrounding whitespace must not matter.
+  assert.deepEqual(parseConfigText('\n  {"a":1}\n  ;\n'), { a: 1 });
+  // Nonsense is still rejected rather than silently accepted.
+  assert.throws(() => parseConfigText('not a config'));
+  assert.throws(() => parseConfigText(''));
+});
+
+test('the builder import accepts every documented top-level option', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
+  const known = source.match(/const known = \[([^\]]*)\]/);
+  assert.ok(known, 'the import validator should list its known keys');
+  const keys = known[1].split(',').map(entry => entry.trim().replace(/^'|'$/g, ''));
+  // Every key the engine actually ships must survive validation, otherwise a
+  // perfectly valid exported config is rejected as containing unknown keys.
+  const engineDefaults = Object.keys(new (createRuntime().GrandFireworks)({ renderer: { preferred: 'canvas2d' } }).constructor.DEFAULTS);
+  const missing = engineDefaults.filter(key => key !== 'container' && !keys.includes(key));
+  assert.deepEqual(missing, [], `import validator rejects documented option(s): ${missing.join(', ')}`);
+});
+
 test('Lucky example performs one randomization per click path', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'lucky.html'), 'utf8');
   const clickHandler = source.match(/#lucky-btn'[\s\S]*?addEventListener\('click',[\s\S]*?\n  \}\);/);

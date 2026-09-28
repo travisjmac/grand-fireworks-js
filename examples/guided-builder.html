@@ -1794,7 +1794,9 @@ function copyConfig() {
 
   // Build final config: committed + preset + core
   const finalConfig = deepMerge(deepMerge({}, CORE_CONFIG), state.committedConfig);
-  // Remove container/mode/autoStart since user will set those
+  // Drop only the container; a pasted snippet must not point at the builder's
+  // own preview element. mode and autoStart are left in place because a loaded
+  // config may legitimately have set them.
   delete finalConfig.container;
 
   const json = JSON.stringify(finalConfig, null, 2);
@@ -2314,13 +2316,22 @@ function initWizard() {
 /* ===========================================================
    Load Config
    =========================================================== */
+// Copy Config emits a paste-ready statement rather than bare JSON, so accept
+// both shapes: trim to the outermost object literal before parsing.
+function parseConfigText(text) {
+  let raw = String(text || '').trim();
+  const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+  if (start === -1 || end <= start) throw new SyntaxError('No configuration object found');
+  raw = raw.slice(start, end + 1);
+  return JSON.parse(raw);
+}
 function applyLoadedConfig() {
   const ta = document.getElementById('load-textarea');
   const err = document.getElementById('load-error');
   err.style.display = 'none';
   let parsed;
   try {
-    parsed = JSON.parse(ta.value);
+    parsed = parseConfigText(ta.value);
   } catch(e) {
     err.textContent = '⚠️ Invalid JSON — ' + e.message;
     err.style.display = 'block';
@@ -2332,7 +2343,7 @@ function applyLoadedConfig() {
     return;
   }
   // Basic validation: check for known keys
-  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime','speedMultiplier','mixedStyles','showFps'];
+  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','worldEnder','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime','speedMultiplier','mixedStyles','showFps'];
   const keys = Object.keys(parsed);
   const unknown = keys.filter(k => !known.includes(k) && k !== 'container');
   if (unknown.length > 0 && keys.length > 5) {
