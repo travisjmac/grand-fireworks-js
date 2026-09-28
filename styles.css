@@ -394,6 +394,12 @@ body.showing-fireworks .grand-fireworks-creator-credit {
   cursor: pointer;
   font: 600 14px/1 system-ui, sans-serif;
 }
+/* The native dropdown popup is white by default, so a select that only sets a
+   light text colour renders unreadable options. Style the options explicitly. */
+select option {
+  background: #0b0e22;
+  color: white;
+}
 .hero-range span {
   display: flex;
   justify-content: space-between;

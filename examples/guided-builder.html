@@ -213,6 +213,7 @@
 .feature-mode-intro{display:grid;gap:6px;margin-bottom:12px}
 .feature-mode-intro label,.studio-feature-card h2{color:#ffd65a;font-weight:700}
 .feature-mode-intro select,.studio-feature-card select,.studio-feature-card input[type=text],.studio-feature-card input[type=number]{width:100%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:8px;padding:8px}
+.feature-mode-intro select option,.studio-feature-card select option,.studio-feature-row select option{background:#0b0e22;color:#fff}
 .studio-feature-card{display:grid;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(0,0,0,.16)}
 .studio-feature-card h2,.studio-feature-card p{margin:0}
 .studio-feature-card p{color:rgba(255,255,255,.6);font-size:12px;line-height:1.45}
@@ -425,7 +426,7 @@
     <div id="load-saved-section">
       <p style="font-size:12px;color:rgba(255,255,255,.5);margin:0 0 6px">Saved configurations</p>
       <div style="display:flex;gap:6px">
-        <select id="load-saved-select" style="flex:1;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:6px;padding:8px;font:13px/1 system-ui,sans-serif">
+        <select id="load-saved-select" class="load-select" style="flex:1;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#e8ecff;border-radius:6px;padding:8px;font:13px/1 system-ui,sans-serif">
           <option value="">— No saved configs —</option>
         </select>
         <button class="bottom-btn" id="load-saved-apply" disabled style="flex:0 0 auto;padding:8px 14px">Load</button>

@@ -221,6 +221,11 @@ body {
   color: #e8f3ff;
   font: 600 13px system-ui;
 }
+/* Keep the native popup readable — it is white unless the options are styled. */
+.settings select option {
+  background: #0b1a30;
+  color: #e8f3ff;
+}
 .settings button {
   cursor: pointer;
 }
