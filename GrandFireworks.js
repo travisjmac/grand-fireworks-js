@@ -874,15 +874,34 @@
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     // Builds (or retrieves from cache) a 64×64 radial-gradient sprite.
-    // Sprites are keyed by [r,g,b]+star so identical colors share a canvas.
+    // Sprites are keyed by a quantised [r,g,b]+star so identical colours share
+    // a canvas. Quantisation is what keeps the cache bounded: pyroBurn drifts
+    // each particle's colour continuously, so keying on the exact colour minted
+    // a new canvas for nearly every frame of the ignition and ember phases —
+    // around 12k live canvases (~184 MB) over a single show with the default
+    // palettes. Sixteen levels per channel is indistinguishable inside a soft
+    // additive glow and collapses that to a few hundred entries. Sizes are
+    // entered in access order so the least recently used sprite is evicted first.
     // The star variant draws a 5-point star in the center for twinkle effects.
     _sprite(r, g, b, star = false) {
-      const rgb = [r, g, b].map((x) => Math.round(x * 255)),
-        key = rgb.join(",") + (star ? "s" : "g");
-      if (this.sprites.has(key)) return this.sprites.get(key);
+      const level = (v) =>
+          Math.round(clamp(v, 0, 1) * (SPRITE_COLOR_LEVELS - 1)),
+        ri = level(r),
+        gi = level(g),
+        bi = level(b),
+        key = ri + "," + gi + "," + bi + (star ? "s" : "g"),
+        cached = this.sprites.get(key);
+      if (cached) {
+        // Re-insert so a hit is the most recently used entry, not the next eviction.
+        this.sprites.delete(key);
+        this.sprites.set(key, cached);
+        return cached;
+      }
       const c = document.createElement("canvas");
       c.width = c.height = 64;
-      const x = c.getContext("2d"),
+      const step = 255 / (SPRITE_COLOR_LEVELS - 1),
+        rgb = [ri, gi, bi].map((v) => Math.round(v * step)),
+        x = c.getContext("2d"),
         gr = x.createRadialGradient(32, 32, 0, 32, 32, 32),
         color = `rgb(${rgb.join(",")})`;
       gr.addColorStop(0, "white");
@@ -906,6 +925,11 @@
         x.closePath();
         x.fill();
       }
+      // Hard ceiling so a palette set with many distinct hues still cannot grow
+      // the cache without bound. A 64×64 RGBA sprite is 16 KB, so the limit
+      // corresponds to roughly 16 MB of canvas memory.
+      if (this.sprites.size >= CanvasRenderer.SPRITE_CACHE_LIMIT)
+        this.sprites.delete(this.sprites.keys().next().value);
       this.sprites.set(key, c);
       return c;
     }
@@ -954,6 +978,12 @@
       this.sprites.clear();
     }
   }
+
+  // Sprite cache tuning for the Canvas fallback. Colours are quantised to this
+  // many levels per channel before becoming cache keys, and the cache holds at
+  // most SPRITE_CACHE_LIMIT sprites. See CanvasRenderer._sprite for the reasoning.
+  const SPRITE_COLOR_LEVELS = 16;
+  CanvasRenderer.SPRITE_CACHE_LIMIT = 1024;
 
   /* ========================================================================
    *  GRAND FIREWORKS ENGINE
@@ -2709,19 +2739,8 @@
           if (
             this.runtimeDuration > 0 &&
             this.elapsed >= this.runtimeDuration
-          ) {
-            this.accepting = false;
-            if (this.options.durationMode === "strict") {
-              this._fade(false);
-            } else {
-              this.state = "finishing";
-              this.finishStarted = now;
-              this.wantFinale = this._finaleTriggered("duration");
-              this.stopPromise = new Promise(
-                (resolve) => (this.stopResolve = resolve),
-              );
-            }
-          }
+          )
+            this._durationReached(now);
         }
         // Adaptive quality: every 2 seconds, compare actual FPS to target.
         // If we're below 78% of target, dial quality down (fewer particles).
@@ -2755,6 +2774,18 @@
         this.raf = requestAnimationFrame(frame);
       };
       this.raf = requestAnimationFrame(frame);
+    }
+    // Called once the show's runtime duration has elapsed. "immediate" ends
+    // the show at once; "graceful" (the default) winds down first so in-flight
+    // shells can finish and the duration-triggered finale can still run.
+    // This is the documented durationMode contract from index.d.ts.
+    _durationReached(now) {
+      this.accepting = false;
+      if (this.options.durationMode === "immediate") return this._fade(false);
+      this.state = "finishing";
+      this.finishStarted = now;
+      this.wantFinale = this._finaleTriggered("duration");
+      this.stopPromise = new Promise((resolve) => (this.stopResolve = resolve));
     }
     // Recalculates canvas dimensions and DPR. Fires on window resize,
     // container resize (ResizeObserver), or DPR change.

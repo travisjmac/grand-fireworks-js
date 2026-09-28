@@ -17,7 +17,8 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ### Fixed
 
-- None.
+- Bounded the Canvas 2D sprite cache. Sprites were keyed on the exact runtime colour, but `pyroBurn` drifts each particle's colour every frame, so a single show with the default palettes could mint roughly 12,000 live 64×64 canvases — around 184 MB of canvas memory that was only released by `destroy()`. Colours are now quantised to 16 levels per channel (indistinguishable inside a soft additive glow) and the cache is capped with least-recently-used eviction, which bounds it to about 16 MB. This was reachable in the default embedded configuration: `mode: 'contained'` selects Canvas 2D and `baseStyle: 'cinematic'` enables `pyroBurn`.
+- `durationMode: 'immediate'` now works. The engine previously compared the option against an undocumented `'strict'` value, so neither the declared type nor the guided builder's "End mode → Immediate" control could ever trigger an immediate finish — every show wound down gracefully regardless. The comparison now matches the documented `'graceful' | 'immediate'` contract in `index.d.ts`.
 
 ## [1.6.5] — July 31, 2026
 

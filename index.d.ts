@@ -69,7 +69,7 @@ export type ColorString = string;
 /** Options accepted by the GrandFireworks constructor. Every field is optional. */
 export interface GrandFireworksOptions {
   /** A CSS selector or a DOM element used as the container. Defaults to document.body. */
-  container?: string | Element;
+  container?: string | Element | null;
   mode?: Mode;
   placement?: Placement;
   clip?: boolean;
@@ -86,7 +86,8 @@ export interface GrandFireworksOptions {
   duration?: number;
   durationMode?: DurationMode;
   maxFinishTime?: number;
-  background?: BackgroundOptions;
+  /** The engine defaults this to false; pass an object to enable a backdrop. */
+  background?: BackgroundOptions | false;
   transition?: TransitionOptions;
   renderer?: RendererOptions;
   visuals?: VisualOptions;
@@ -191,6 +192,17 @@ export interface PerformanceOptions {
   dprCap?: number;
   particleScale?: number;
   secondary?: number;
+}
+
+/**
+ * The shape of a built-in `GrandFireworks.PRESETS` entry. Preset entries also
+ * carry the show-level caps they imply, which are read as the fallback for
+ * `show.maxParticles`, `show.maxRockets`, and `show.launchInterval`.
+ */
+export interface PerformancePresetOptions extends PerformanceOptions {
+  maxParticles?: number;
+  maxRockets?: number;
+  launchInterval?: number;
 }
 
 export interface ShowOptions {
@@ -487,7 +499,7 @@ export class GrandFireworks extends EventTarget {
 export namespace GrandFireworks {
   const VERSION: string;
   const DEFAULTS: GrandFireworksOptions;
-  const PRESETS: Record<PerformancePreset, PerformanceOptions>;
+  const PRESETS: Record<PerformancePreset, PerformancePresetOptions>;
   const TYPES: ShellType[];
   const STYLES: Record<Exclude<StyleName, 'mixed'>, { visuals?: VisualOptions; show?: ShowOptions; performance?: PerformanceOptions }>;
   const COLOR_THEMES: Record<string, { palettes?: ColorString[][] | 'default' }>;

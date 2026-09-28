@@ -18,7 +18,10 @@ function createRuntime({ reducedMotion = false, audio = false } = {}) {
   const parameter = () => ({ value: 0, setValueAtTime: noop, exponentialRampToValueAtTime: noop });
   const context2d = new Proxy({
     getImageData: () => ({ data: new Uint8ClampedArray(320 * 140 * 4) }),
-    measureText: text => ({ width: String(text).length * 10 })
+    measureText: text => ({ width: String(text).length * 10 }),
+    // The Canvas fallback builds radial-gradient sprites, so the mock context
+    // has to hand back a gradient object with addColorStop.
+    createRadialGradient: () => ({ addColorStop: noop })
   }, {
     get(target, property) {
       if (property in target) return target[property];
@@ -353,6 +356,62 @@ test('applies finale wait, density, and finish delay', () => {
   assert.equal(fireworks.state, 'finale');
   fireworks._finish(1300);
   assert.equal(fireworks.state, 'fading');
+  fireworks.destroy();
+});
+
+test('honors the documented durationMode values when the duration elapses', () => {
+  const { GrandFireworks } = createRuntime();
+
+  // 'immediate' must bypass the graceful wind-down and fade at once.
+  const immediate = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, durationMode: 'immediate' });
+  assert.equal(immediate.options.durationMode, 'immediate');
+  immediate.state = 'running';
+  immediate._durationReached(1000);
+  assert.equal(immediate.state, 'fading');
+  assert.equal(immediate.accepting, false);
+  immediate.destroy();
+
+  // 'graceful' must enter the finishing state so in-flight shells can land.
+  const graceful = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, durationMode: 'graceful' });
+  graceful.state = 'running';
+  graceful._durationReached(1000);
+  assert.equal(graceful.state, 'finishing');
+  assert.equal(graceful.finishStarted, 1000);
+  graceful.destroy();
+});
+
+test('bounds the Canvas2D sprite cache while still reusing sprites', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const renderer = fireworks.renderer;
+  const limit = renderer.constructor.SPRITE_CACHE_LIMIT;
+  assert.ok(limit > 0);
+
+  // Identical colours must share one cached sprite instead of accumulating.
+  renderer._sprite(1, 0.5, 0.25);
+  const afterFirst = renderer.sprites.size;
+  for (let i = 0; i < 200; i++) renderer._sprite(1, 0.5, 0.25);
+  assert.equal(renderer.sprites.size, afterFirst);
+
+  // A drifting colour, the pyroBurn pattern, must not grow the cache per frame.
+  const driftingBefore = renderer.sprites.size;
+  for (let i = 0; i < 20000; i++) {
+    const t = i / 20000;
+    renderer._sprite(t, 1 - t * 0.6, 0.2 + t * 0.3, i % 2 === 0);
+  }
+  assert.ok(
+    renderer.sprites.size < limit,
+    `drifting colours should stay well under the ceiling, got ${renderer.sprites.size}`,
+  );
+  assert.ok(renderer.sprites.size >= driftingBefore);
+
+  // Far more distinct colours than the ceiling must evict rather than grow.
+  for (let ri = 0; ri < 16; ri++)
+    for (let gi = 0; gi < 16; gi++)
+      for (let bi = 0; bi < 16; bi++)
+        renderer._sprite(ri / 15, gi / 15, bi / 15, bi % 2 === 0);
+  assert.equal(renderer.sprites.size, limit);
+
   fireworks.destroy();
 });
 
