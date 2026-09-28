@@ -101,6 +101,18 @@ function createRuntime({ reducedMotion = false, audio = false } = {}) {
   const stage = new MockElement('div');
   body.appendChild(stage);
 
+  // window-level listeners are captured so tests can drive the gesture handlers
+  // the engine registers, such as the one-shot audio unlock.
+  const windowListeners = new Map();
+  const addWindowListener = (type, fn) => {
+    if (!windowListeners.has(type)) windowListeners.set(type, []);
+    windowListeners.get(type).push(fn);
+  };
+  const removeWindowListener = (type, fn) => {
+    const list = windowListeners.get(type);
+    if (list) windowListeners.set(type, list.filter(entry => entry !== fn));
+  };
+
   const sandbox = {
     console,
     Event,
@@ -131,8 +143,8 @@ function createRuntime({ reducedMotion = false, audio = false } = {}) {
     ResizeObserver: class { observe() {} disconnect() {} },
     IntersectionObserver: MockIntersectionObserver,
     matchMedia: () => ({ matches: reducedMotion, addEventListener: noop, removeEventListener: noop }),
-    addEventListener: noop,
-    removeEventListener: noop
+    addEventListener: addWindowListener,
+    removeEventListener: removeWindowListener
   };
   if (audio) sandbox.AudioContext = MockAudioContext;
   sandbox.window = sandbox;
@@ -145,7 +157,10 @@ function createRuntime({ reducedMotion = false, audio = false } = {}) {
     GrandFireworks: sandbox.GrandFireworks,
     observers,
     audioStats,
-    setNow(value) { now = value; }
+    setNow(value) { now = value; },
+    gesture(type) {
+      (windowListeners.get(type) || []).slice().forEach(fn => fn({ type }));
+    }
   };
 }
 
@@ -412,6 +427,36 @@ test('bounds the Canvas2D sprite cache while still reusing sprites', () => {
         renderer._sprite(ri / 15, gi / 15, bi / 15, bi % 2 === 0);
   assert.equal(renderer.sprites.size, limit);
 
+  fireworks.destroy();
+});
+
+test('attempts to unlock audio when sound is enabled through options', () => {
+  const { GrandFireworks, audioStats, gesture } = createRuntime({ audio: true });
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, sound: { enabled: true, ambience: 0 } });
+  fireworks.start();
+  // Previously a context was created and never resumed, leaving the show silent.
+  assert.equal(audioStats.contexts, 1);
+  assert.equal(audioStats.resumes, 1);
+  // The gesture fallback stays registered until a real interaction unlocks audio.
+  assert.equal(typeof fireworks.onAudioUnlock, 'function');
+  gesture('pointerdown');
+  assert.equal(fireworks.onAudioUnlock, null);
+  fireworks.destroy();
+});
+
+test('skips redundant fullscreen resizes', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  let reallocations = 0;
+  const realResize = fireworks.renderer.resize.bind(fireworks.renderer);
+  fireworks.renderer.resize = (...args) => {
+    reallocations++;
+    return realResize(...args);
+  };
+  // The constructor already sized the canvas, so an unchanged viewport must not
+  // reallocate the drawing buffer or the text canvases.
+  fireworks._resize();
+  assert.equal(reallocations, 0);
   fireworks.destroy();
 });
 

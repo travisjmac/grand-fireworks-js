@@ -750,6 +750,16 @@
       this.aStar = gl.getAttribLocation(this.program, "a_star");
       this.uRes = gl.getUniformLocation(this.program, "u_resolution");
       this.uZoom = gl.getUniformLocation(this.program, "u_zoom");
+      // Drivers cap the size of a GL_POINTS primitive, and the spec allows as
+      // little as 1. Many mobile GPUs top out at 64 and switch to software
+      // rasterization beyond it, so ask the driver rather than assuming 256.
+      // Still capped at 256 so desktop output is unchanged.
+      const sizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
+      this.maxPointSize = clamp(
+        Number(sizeRange && sizeRange[1]) || 256,
+        2,
+        256,
+      );
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.disable(gl.DEPTH_TEST);
@@ -804,6 +814,10 @@
       const need = items.length * this.stride;
       if (this.data.length < need)
         this.data = new Float32Array(Math.max(need, this.data.length * 2, 256));
+      // The vertex shader multiplies the size by zoom, so the ceiling is divided
+      // by zoom too. Otherwise zooming in would push the final gl_PointSize back
+      // past the driver's limit even though the buffered value looked clamped.
+      const ceiling = Math.max(2, this.maxPointSize / (zoom || 1));
       let o = 0;
       for (const p of items) {
         this.data[o++] = p.x * this.dpr;
@@ -811,7 +825,7 @@
         this.data[o++] = clamp(
           (p.flash ? p.size : p.size * 6.2) * this.dpr,
           2,
-          256,
+          ceiling,
         );
         this.data[o++] = p.r;
         this.data[o++] = p.g;
@@ -1353,6 +1367,22 @@
         }),
       );
     }
+    // Stops listening for the gesture that unlocks audio. Called once the
+    // AudioContext is actually running, or when sound is turned off.
+    _detachAudioUnlock() {
+      if (!this.onAudioUnlock) return;
+      window.removeEventListener(
+        "pointerdown",
+        this.onAudioUnlock,
+        this.audioUnlockOptions,
+      );
+      window.removeEventListener(
+        "keydown",
+        this.onAudioUnlock,
+        this.audioUnlockOptions,
+      );
+      this.onAudioUnlock = null;
+    }
     // Registers resize, visibility, intersection, and reduced-motion
     // listeners. Uses passive resize and IntersectionObserver for offscreen
     // pause detection.
@@ -1365,6 +1395,26 @@
       };
       window.addEventListener("resize", this.onResize, { passive: true });
       document.addEventListener("visibilitychange", this.onVisibility);
+      // Browsers only allow an AudioContext to start from inside a user gesture,
+      // so a show that enables sound through options (or through autoStart) stays
+      // silent until the first interaction. Catch that interaction, unlock, and
+      // stop listening, rather than leaving the context suspended forever.
+      this.audioUnlockOptions = { passive: true, capture: true };
+      this.onAudioUnlock = () => {
+        if (!this.options.sound.enabled) return this._detachAudioUnlock();
+        const ctx = this._audio(true);
+        if (ctx && ctx.state === "running") this._detachAudioUnlock();
+      };
+      window.addEventListener(
+        "pointerdown",
+        this.onAudioUnlock,
+        this.audioUnlockOptions,
+      );
+      window.addEventListener(
+        "keydown",
+        this.onAudioUnlock,
+        this.audioUnlockOptions,
+      );
       if (this.options.mode === "contained" && global.ResizeObserver) {
         this.resizeObserver = new ResizeObserver(this.onResize);
         this.resizeObserver.observe(this.container);
@@ -1424,7 +1474,10 @@
       this.root.style.opacity = String(
         clamp(Number(this.options.visuals.opacity ?? 1), 0, 1),
       );
-      this._audio();
+      // Sound enabled through options has no gesture to unlock the AudioContext
+      // with, so at least attempt the resume here; _bind()'s one-shot gesture
+      // handler covers the case where this call is outside a user gesture.
+      this._audio(Boolean(this.options.sound.enabled));
       requestAnimationFrame(() => {
         if (this.options.background)
           this.backdrop.style.opacity = String(
@@ -1578,6 +1631,7 @@
       clearTimeout(this.fadeTimer);
       this.cancelTextSequence({ clear: false });
       this._clearWorldEnder();
+      this._detachAudioUnlock();
       window.removeEventListener("resize", this.onResize);
       document.removeEventListener("visibilitychange", this.onVisibility);
       if (this.resizeObserver) this.resizeObserver.disconnect();
@@ -1817,9 +1871,15 @@
      * @param {Object} [overrides={}] - Text firework config overrides
      * @returns {Promise<string[]>} Resolves with the lines rendered
      */
-    launchText(text, overrides = {}) {
+    async launchText(text, overrides = {}) {
       const cfg = merge(this.options.textFirework, overrides);
-      if (!cfg.enabled || !text) return Promise.resolve([]);
+      if (!cfg.enabled || !text) return [];
+      // Rasterisation samples pixels immediately, so a webfont that has not
+      // finished loading would be measured with fallback metrics and the text
+      // particles would assemble into the wrong shape. ready resolves as soon as
+      // the font set has settled, and is normally already resolved.
+      const fonts = global.document && global.document.fonts;
+      if (fonts && fonts.ready) await fonts.ready;
       this._activateManual("manual");
       let value = String(text).trim();
       if (value.length > cfg.maxCharacters)
@@ -2193,6 +2253,10 @@
       try {
         if (!this.audioContext || this.audioContext.state === "closed") {
           this.audioContext = new Audio();
+          // iOS mutes Web Audio entirely while the hardware silent switch is on
+          // unless the session is declared as playback (Safari 16.4+).
+          if (global.navigator && global.navigator.audioSession)
+            global.navigator.audioSession.type = "playback";
           this.audioMaster = this.audioContext.createGain();
           this.audioMaster.gain.setValueAtTime(
             clamp(Number(this.options.sound.volume), 0, 1),
@@ -2791,17 +2855,33 @@
     // container resize (ResizeObserver), or DPR change.
     _resize() {
       this.resizePending = false;
-      const r =
-        this.options.mode === "fullscreen"
-          ? { width: innerWidth, height: innerHeight }
-          : this.container.getBoundingClientRect();
-      this.width = Math.max(1, r.width);
-      this.height = Math.max(1, r.height);
+      // Prefer visualViewport in fullscreen: it reports the area that is actually
+      // visible, so a collapsing URL bar is less likely to read as a resize.
+      const viewport = global.visualViewport,
+        r =
+          this.options.mode === "fullscreen"
+            ? {
+                width: viewport ? viewport.width : innerWidth,
+                height: viewport ? viewport.height : innerHeight,
+              }
+            : this.container.getBoundingClientRect(),
+        width = Math.max(1, r.width),
+        height = Math.max(1, r.height),
+        dpr = Math.min(devicePixelRatio || 1, this.options.performance.dprCap);
+      // Safari fires resize for every step of the URL bar sliding away while the
+      // viewport settles. Reallocating the drawing buffer and both text canvases
+      // for a size that has not actually changed is pure waste, so bail out.
+      if (
+        this.renderer.dpr &&
+        width === this.width &&
+        height === this.height &&
+        dpr === this.dpr
+      )
+        return;
+      this.width = width;
+      this.height = height;
       this.worldWidth = this.width / this.zoom;
-      this.dpr = Math.min(
-        devicePixelRatio || 1,
-        this.options.performance.dprCap,
-      );
+      this.dpr = dpr;
       this.renderer.resize(this.width, this.height, this.dpr);
       this.textCanvas.width = Math.round(this.width * this.dpr);
       this.textCanvas.height = Math.round(this.height * this.dpr);
