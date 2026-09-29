@@ -2,6 +2,20 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.7.1] — September 28, 2026
+
+Text fireworks keep their shape on phones, the Workbench's Old School style works, and the homepage gets quicker routes to fullscreen and to the full tools. No option or method changed shape.
+
+### Added
+
+- Homepage scroll shortcut. Once the controls panel scrolls out of view, a compact **🎬 Show Fullscreen** button appears centred just below the sticky section menu. It hides again when the controls are back in view or while fullscreen is showing.
+- Homepage controls link to the full tools. A **More controls** row at the bottom of the controls panel links to the **🎛 Config Workbench** and **🔭 Feature Demo**, both on the page and in fullscreen.
+
+### Fixed
+
+- Text fireworks no longer look stretched tall on phones. A line wider than the allowed width (`maxWidth`) was squeezed horizontally by the canvas to fit, so on narrow screens the letters looked tall and thin. The engine now shrinks the font for the whole text block instead, so every line keeps its normal shape and they share one size.
+- The Workbench's Guided **Style → Old School** now shows Old School. It was sending `oldschool` instead of the engine's `oldSchool`, which silently fell back to Medium.
+
 ## [1.7.0] — September 28, 2026
 
 First-party TypeScript declarations, a round of engine reliability fixes, a more forgiving guided-builder import, and a phone-friendly fullscreen control bar on the homepage. No existing option or method changed shape.
@@ -13,8 +27,6 @@ First-party TypeScript declarations, a round of engine reliability fixes, a more
 - Added `npm run typecheck`, which compiles focused fixtures exercising the default and named import paths against the declarations with `strict` mode.
 - Added a declaration contract test to `npm test` that verifies the published methods and configuration interfaces are represented in `index.d.ts` and that the file is wired into `package.json` publishing.
 - Homepage fullscreen control bar. In fullscreen the controls panel now has **Slim/Full**, **Random**, a 🔇/🔊 sound toggle, and **Exit** in its title bar. On phones it opens as a slim `Controls: Full | Random | 🔇 | Exit` bar locked to the top left so it cannot be dragged or pushed off screen; **Full** opens the complete controls below it, capped at 60% of the screen and scrolling inside. Desktop keeps the draggable panel.
-- Homepage scroll shortcut. Once the controls panel scrolls out of view, a compact **🎬 Show Fullscreen** button appears centred just below the sticky section menu. It hides again when the controls are back in view or while fullscreen is showing.
-- Homepage controls link to the full tools. A **More controls** row at the bottom of the controls panel links to the **🎛 Config Workbench** and **🔭 Feature Demo**, both on the page and in fullscreen.
 
 ### Changed
 
@@ -22,8 +34,6 @@ First-party TypeScript declarations, a round of engine reliability fixes, a more
 
 ### Fixed
 
-- Text fireworks no longer look stretched tall on phones. A line wider than the allowed width (`maxWidth`) was squeezed horizontally by the canvas to fit, so on narrow screens the letters looked tall and thin. The engine now shrinks the font for the whole text block instead, so every line keeps its normal shape and they share one size.
-- The Workbench's Guided **Style → Old School** now shows Old School. It was sending `oldschool` instead of the engine's `oldSchool`, which silently fell back to Medium.
 - Dropdown menus are readable again. Several dark-themed pages set light text on `<select>` elements without styling their `<option>`s, so the native popup showed white text on a white background. Options are now styled on the homepage, guided builder, configuration builder, I'm Feeling Lucky, and Fireworks Command.
 - The guided builder's **Load Config** accepts every option the engine supports, including `worldEnder`. The accepted list is now read from `GrandFireworks.DEFAULTS` instead of a hand-maintained copy, and an unrecognised option reports "nothing was imported" rather than a bare error.
 - WebGL point sprites now respect the driver's real size limit. Every point was clamped to a hardcoded 256 without ever querying `ALIASED_POINT_SIZE_RANGE`, which many mobile GPUs cap at 64. The limit is now read once at renderer init and the clamp accounts for zoom, because the vertex shader scales point size by the zoom factor. The existing 256 buffer cap still applies, so output on GPUs with a large point-size range is unchanged.

@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.7.0**
+- Current release: **v1.7.1**
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -26,7 +26,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 - Build: `npm run build`
 - Test: `npm test`
 
-The v1.7.0 release added first-party TypeScript declarations (`index.d.ts`), fixed the Canvas 2D sprite-cache memory growth, `durationMode: 'immediate'`, WebGL point-size limits, iOS audio unlock, redundant resizes, and webfont timing in text fireworks, made the guided builder's config import accept JavaScript object literals, fixed unreadable dropdowns, and added the phone-friendly fullscreen control bar on the homepage. The v1.6.5 release before it introduced the cinematic style and related effects, ballistic rockets, stable distribution filenames, homepage automation, richer sound options, text controls, mixed-style weights, and guided-builder fixes.
+The v1.7.1 release makes text fireworks shrink their font to fit instead of being squeezed tall and thin on narrow screens, fixes the Workbench's Old School style choice (it silently fell back to Medium), and adds a homepage Show Fullscreen shortcut after scrolling plus links from the homepage controls to the Config Workbench and Feature Demo. The v1.7.0 release before it added first-party TypeScript declarations (`index.d.ts`), fixed the Canvas 2D sprite-cache memory growth, `durationMode: 'immediate'`, WebGL point-size limits, iOS audio unlock, redundant resizes, and webfont timing in text fireworks, made the guided builder's config import accept JavaScript object literals, fixed unreadable dropdowns, and added the phone-friendly fullscreen control bar on the homepage. The v1.6.5 release before it introduced the cinematic style and related effects, ballistic rockets, stable distribution filenames, homepage automation, richer sound options, text controls, mixed-style weights, and guided-builder fixes.
 
 Development happens on `dev` and is merged into `main` for releases. The developer-platform plan (see `docs/developer-platform-plan.md`) is implemented one sprint at a time. Sprint 1 (TypeScript and public API contract) is complete: the package now ships first-party types in `index.d.ts`, resolved automatically through `package.json`. TypeScript is a dev-only dependency; the published runtime stays zero-dependency.
 
@@ -217,7 +217,7 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.7.0/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.7.1/dist/GrandFireworks.min.js"></script>
 ```
 
 For the moving development branch, use:
