@@ -591,7 +591,9 @@ const SECTIONS = {
     desc: 'Pick one thing to change, preview it, then keep or revert.',
     options: [
       { id: 'style',       label: 'Style',           type: 'select', updateMode: 'live',
-        choices: ['Classic','Old School','Thin','Medium','Cinematic','Bold','Spectacle','Mixed'].map(v => ({ label: v === 'Mixed' ? '🎲 Mixed styles' : v === 'Cinematic' ? '🌙 Cinematic realism' : v, value: v.toLowerCase().replace(/\s+/g,'') })),
+        // Values must match the engine's STYLES keys exactly (oldSchool is camelCase);
+        // an unknown name silently falls back to Medium.
+        choices: [['Classic','classic'],['Old School','oldSchool'],['Thin','thin'],['Medium','medium'],['🌙 Cinematic realism','cinematic'],['Bold','bold'],['Spectacle','spectacle'],['🎲 Mixed styles','mixed']].map(([label, value]) => ({ label, value })),
         apply: (c, v, fw) => { fw.setStyle(v); c.baseStyle = v; },
         summary: v => `${PRESET_MAP[v] ? PRESET_MAP[v].icon + ' ' : ''}${v.charAt(0).toUpperCase()+v.slice(1)} style`,
         tooltip: 'Overall look and feel — changes visuals and show behavior together' },

@@ -581,6 +581,20 @@ test('the builder import accepts every option the engine ships', () => {
   instance.destroy();
 });
 
+test('the builder style picker offers every engine style under its real name', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
+  const line = source.match(/\{ id: 'style',[\s\S]*?choices: (\[[^\n]*?\])\.map/);
+  assert.ok(line, 'the Guided style option should exist');
+  const values = [...line[1].matchAll(/,'([A-Za-z]+)'\]/g)].map(m => m[1]);
+  const { GrandFireworks } = createRuntime();
+  // Every value must be a real style (or mixed); an unknown name falls back to Medium.
+  for (const value of values)
+    assert.ok(value === 'mixed' || value in GrandFireworks.STYLES, `unknown style value: ${value}`);
+  // And every engine style must be offered.
+  for (const style of Object.keys(GrandFireworks.STYLES))
+    assert.ok(values.includes(style), `style picker is missing ${style}`);
+});
+
 test('Lucky example performs one randomization per click path', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'lucky.html'), 'utf8');
   const clickHandler = source.match(/#lucky-btn'[\s\S]*?addEventListener\('click',[\s\S]*?\n  \}\);/);
