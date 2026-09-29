@@ -38,6 +38,41 @@ body {
 .section-nav::-webkit-scrollbar {
   display: none;
 }
+/* Compact Show Fullscreen button that appears below the sticky menu once the
+   hero controls have scrolled out of view. visibility keeps it out of the tab
+   order and accessibility tree while hidden. */
+.scroll-fullscreen-btn {
+  position: fixed;
+  z-index: 20;
+  top: 56px;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 999px;
+  background: rgba(5, 7, 21, 0.85);
+  color: #ffdc68;
+  font: 650 0.8rem/1 system-ui, sans-serif;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+.scroll-fullscreen-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.scroll-fullscreen-btn:hover {
+  background: rgba(255, 215, 0, 0.16);
+}
+body.showing-fireworks .scroll-fullscreen-btn {
+  opacity: 0;
+  visibility: hidden;
+}
 .section-nav a {
   flex: 0 0 auto;
   padding: 5px 10px;

@@ -13,6 +13,7 @@ First-party TypeScript declarations, a round of engine reliability fixes, a more
 - Added `npm run typecheck`, which compiles focused fixtures exercising the default and named import paths against the declarations with `strict` mode.
 - Added a declaration contract test to `npm test` that verifies the published methods and configuration interfaces are represented in `index.d.ts` and that the file is wired into `package.json` publishing.
 - Homepage fullscreen control bar. In fullscreen the controls panel now has **Slim/Full**, **Random**, a 🔇/🔊 sound toggle, and **Exit** in its title bar. On phones it opens as a slim `Controls: Full | Random | 🔇 | Exit` bar locked to the top left so it cannot be dragged or pushed off screen; **Full** opens the complete controls below it, capped at 60% of the screen and scrolling inside. Desktop keeps the draggable panel.
+- Homepage scroll shortcut. Once the controls panel scrolls out of view, a compact **🎬 Show Fullscreen** button appears centred just below the sticky section menu. It hides again when the controls are back in view or while fullscreen is showing.
 
 ### Changed
 
