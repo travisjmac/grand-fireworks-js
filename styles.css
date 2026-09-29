@@ -567,6 +567,24 @@ select option {
   background: rgba(100, 200, 255, 0.06);
   color: #8fd4ff;
 }
+/* Links to the full Workbench and Feature Demo, on the page and in fullscreen. */
+.hero-links {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: #8fd4ff;
+  font-weight: 600;
+}
 .toggle-btn {
   position: relative;
   z-index: 1;
