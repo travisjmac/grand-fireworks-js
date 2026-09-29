@@ -2402,12 +2402,18 @@ function applyLoadedConfig() {
     err.style.display = 'block';
     return;
   }
-  // Basic validation: check for known keys
-  const known = ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','worldEnder','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime','speedMultiplier','mixedStyles','showFps'];
+  // Accept every top-level option the engine itself ships, read straight from
+  // GrandFireworks.DEFAULTS rather than a hardcoded copy. A duplicated list would
+  // silently start rejecting valid configs the moment a new option is added.
+  // `container` is allowed on top of that because the loader lets the caller
+  // supply one. The fallback only applies if the engine failed to load.
+  const known = (typeof GrandFireworks !== 'undefined' && GrandFireworks.DEFAULTS)
+    ? Object.keys(GrandFireworks.DEFAULTS)
+    : ['baseStyle','colorTheme','mode','placement','duration','visuals','show','performance','finale','worldEnder','textFirework','transition','background','sound','renderer','clip','zIndex','autoStart','durationMode','maxFinishTime','speedMultiplier','mixedStyles','showFps'];
   const keys = Object.keys(parsed);
   const unknown = keys.filter(k => !known.includes(k) && k !== 'container');
   if (unknown.length > 0 && keys.length > 5) {
-    err.textContent = `⚠️ Unknown keys: ${unknown.join(', ')}`;
+    err.textContent = `⚠️ Unrecognised option${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')} — nothing was imported.`;
     err.style.display = 'block';
     return;
   }

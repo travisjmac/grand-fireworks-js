@@ -511,16 +511,34 @@ test('the builder import accepts every shape a config gets pasted in', () => {
   assert.throws(() => parseConfigText(''));
 });
 
-test('the builder import accepts every documented top-level option', () => {
+test('the builder import accepts every option the engine ships', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
-  const known = source.match(/const known = \[([^\]]*)\]/);
-  assert.ok(known, 'the import validator should list its known keys');
-  const keys = known[1].split(',').map(entry => entry.trim().replace(/^'|'$/g, ''));
-  // Every key the engine actually ships must survive validation, otherwise a
-  // perfectly valid exported config is rejected as containing unknown keys.
-  const engineDefaults = Object.keys(new (createRuntime().GrandFireworks)({ renderer: { preferred: 'canvas2d' } }).constructor.DEFAULTS);
-  const missing = engineDefaults.filter(key => key !== 'container' && !keys.includes(key));
-  assert.deepEqual(missing, [], `import validator rejects documented option(s): ${missing.join(', ')}`);
+
+  // The accepted-key list must be derived from the engine rather than duplicated
+  // as a literal, otherwise adding an engine option silently starts rejecting
+  // valid configs as containing unrecognised keys.
+  assert.ok(
+    /Object\.keys\(GrandFireworks\.DEFAULTS\)/.test(source),
+    'the import validator should derive its accepted keys from GrandFireworks.DEFAULTS',
+  );
+  assert.ok(
+    !/const known = \['baseStyle'/.test(source),
+    'the accepted keys should not be a hardcoded duplicate of the engine option list',
+  );
+
+  // Prove the derivation really does cover everything the engine resolves, so a
+  // config exporting every section round-trips without being rejected.
+  const { GrandFireworks } = createRuntime();
+  const accepted = Object.keys(GrandFireworks.DEFAULTS);
+  const instance = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const resolved = Object.keys(instance.options);
+  const rejected = resolved.filter(key => key !== 'container' && !accepted.includes(key));
+  assert.deepEqual(rejected, [], `import would reject: ${rejected.join(', ')}`);
+  // Every section the engine exposes must be present in one place or the other.
+  const expected = ['visuals', 'sound', 'performance', 'show', 'finale', 'worldEnder', 'textFirework', 'transition', 'renderer', 'background'];
+  const unreachable = expected.filter(key => !accepted.includes(key) && !resolved.includes(key));
+  assert.deepEqual(unreachable, [], `engine exposes section(s) the import cannot accept: ${unreachable.join(', ')}`);
+  instance.destroy();
 });
 
 test('Lucky example performs one randomization per click path', () => {
