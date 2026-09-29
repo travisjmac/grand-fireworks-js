@@ -155,6 +155,7 @@ function createRuntime({ reducedMotion = false, audio = false } = {}) {
 
   return {
     GrandFireworks: sandbox.GrandFireworks,
+    document,
     observers,
     audioStats,
     setNow(value) { now = value; },
@@ -460,6 +461,36 @@ test('skips redundant fullscreen resizes', () => {
   fireworks.destroy();
 });
 
+test('launchText waits only while fonts load and not past destroy', async () => {
+  const { GrandFireworks, document } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+
+  // Fonts settled: the launch happens synchronously, as it did before.
+  document.fonts = { status: 'loaded', ready: Promise.resolve() };
+  const settled = fireworks.launchText('HI');
+  assert.ok(fireworks.pendingRockets.length > 0);
+  await settled;
+
+  // Fonts loading: nothing is launched until ready resolves.
+  fireworks.pendingRockets.length = 0;
+  let release;
+  document.fonts = { status: 'loading', ready: new Promise(resolve => (release = resolve)) };
+  const waiting = fireworks.launchText('HI');
+  assert.equal(fireworks.pendingRockets.length, 0);
+  release();
+  await waiting;
+  assert.ok(fireworks.pendingRockets.length > 0);
+
+  // Destroyed while waiting: the late launch must not touch the dead instance.
+  fireworks.pendingRockets.length = 0;
+  document.fonts = { status: 'loading', ready: new Promise(resolve => (release = resolve)) };
+  const orphan = fireworks.launchText('HI');
+  fireworks.destroy();
+  release();
+  assert.equal((await orphan).length, 0);
+  assert.equal(fireworks.pendingRockets.length, 0);
+});
+
 test('the builder import accepts every shape a config gets pasted in', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
   const match = source.match(/function parseConfigText[\s\S]*?\n\}/);
@@ -505,6 +536,15 @@ test('the builder import accepts every shape a config gets pasted in', () => {
 
   // Surrounding whitespace and a trailing semicolon must not matter.
   assert.deepEqual(parseConfigText('\n  {"a":1}\n  ;\n'), { a: 1 });
+
+  // An escaped apostrophe inside a double-quoted string is valid JS.
+  assert.deepEqual(parseConfigText(`{ note: "it\\'s" }`), { note: "it's" });
+
+  // Prototype-bearing keys are dropped rather than carried into a deep merge.
+  const hostile = parseConfigText('{"__proto__":{"polluted":true},"visuals":{"constructor":{"prototype":{"x":1}},"bloom":2}}');
+  assert.equal(Object.prototype.hasOwnProperty.call(hostile, '__proto__'), false);
+  assert.deepEqual(Object.keys(hostile.visuals), ['bloom']);
+  assert.equal({}.polluted, undefined);
 
   // Nonsense is still rejected rather than silently accepted.
   assert.throws(() => parseConfigText('not a config'));

@@ -61,7 +61,7 @@
           "graceful",
           "How duration completion is handled.",
           "Graceful lets active fireworks finish.",
-          ["graceful", "strict"],
+          ["graceful", "immediate"],
         ],
         [
           "maxFinishTime",

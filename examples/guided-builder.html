@@ -2345,6 +2345,8 @@ function parseConfigText(text) {
         if (c === '\\') {
           const esc = raw[i + 1];
           if (esc === close) { out += close === '"' ? '\\"' : esc; i += 2; continue; }
+          // \' and \` are valid JS escapes but not JSON ones.
+          if (esc === "'" || esc === '`') { out += esc; i += 2; continue; }
           out += c + (esc === undefined ? '' : esc); i += 2; continue;
         }
         if (c === close) { i++; break; }
@@ -2383,7 +2385,10 @@ function parseConfigText(text) {
     out += ch;
     i++;
   }
-  return JSON.parse(out);
+  // Drop prototype-bearing keys so a pasted config cannot pollute Object.prototype
+  // when it is deep-merged into the builder state.
+  return JSON.parse(out, (key, value) =>
+    key === '__proto__' || key === 'constructor' || key === 'prototype' ? undefined : value);
 }
 function applyLoadedConfig() {
   const ta = document.getElementById('load-textarea');

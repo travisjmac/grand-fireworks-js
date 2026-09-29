@@ -751,15 +751,11 @@
       this.uRes = gl.getUniformLocation(this.program, "u_resolution");
       this.uZoom = gl.getUniformLocation(this.program, "u_zoom");
       // Drivers cap the size of a GL_POINTS primitive, and the spec allows as
-      // little as 1. Many mobile GPUs top out at 64 and switch to software
-      // rasterization beyond it, so ask the driver rather than assuming 256.
-      // Still capped at 256 so desktop output is unchanged.
+      // little as 1. Many mobile GPUs top out at 64, so ask the driver rather
+      // than assuming 256. The raw limit is kept here; render() still applies
+      // the historical 256 cap so desktop output is unchanged.
       const sizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
-      this.maxPointSize = clamp(
-        Number(sizeRange && sizeRange[1]) || 256,
-        2,
-        256,
-      );
+      this.maxPointSize = Math.max(2, Number(sizeRange && sizeRange[1]) || 256);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.disable(gl.DEPTH_TEST);
@@ -817,7 +813,7 @@
       // The vertex shader multiplies the size by zoom, so the ceiling is divided
       // by zoom too. Otherwise zooming in would push the final gl_PointSize back
       // past the driver's limit even though the buffered value looked clamped.
-      const ceiling = Math.max(2, this.maxPointSize / (zoom || 1));
+      const ceiling = clamp(this.maxPointSize / (zoom || 1), 2, 256);
       let o = 0;
       for (const p of items) {
         this.data[o++] = p.x * this.dpr;
@@ -1876,10 +1872,13 @@
       if (!cfg.enabled || !text) return [];
       // Rasterisation samples pixels immediately, so a webfont that has not
       // finished loading would be measured with fallback metrics and the text
-      // particles would assemble into the wrong shape. ready resolves as soon as
-      // the font set has settled, and is normally already resolved.
+      // particles would assemble into the wrong shape. Only wait while fonts are
+      // actually loading, so the common case still launches synchronously.
       const fonts = global.document && global.document.fonts;
-      if (fonts && fonts.ready) await fonts.ready;
+      if (fonts && fonts.status === "loading" && fonts.ready) {
+        await fonts.ready;
+        if (this.state === "destroyed") return [];
+      }
       this._activateManual("manual");
       let value = String(text).trim();
       if (value.length > cfg.maxCharacters)
@@ -2855,15 +2854,9 @@
     // container resize (ResizeObserver), or DPR change.
     _resize() {
       this.resizePending = false;
-      // Prefer visualViewport in fullscreen: it reports the area that is actually
-      // visible, so a collapsing URL bar is less likely to read as a resize.
-      const viewport = global.visualViewport,
-        r =
+      const r =
           this.options.mode === "fullscreen"
-            ? {
-                width: viewport ? viewport.width : innerWidth,
-                height: viewport ? viewport.height : innerHeight,
-              }
+            ? { width: innerWidth, height: innerHeight }
             : this.container.getBoundingClientRect(),
         width = Math.max(1, r.width),
         height = Math.max(1, r.height),
