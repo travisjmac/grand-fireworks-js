@@ -2128,22 +2128,38 @@
     // pixel alpha at a configurable step interval. Each opaque pixel
     // becomes a target (x, y) coordinate for a text particle to animate to.
     _textPlans(lines, cfg) {
+      const inset = 4,
+        lineWidth = Math.max(280, Math.floor(this.width * cfg.maxWidth)),
+        measure = document.createElement("canvas").getContext("2d");
+      // fillText squeezes text that is wider than its maxWidth horizontally,
+      // which makes long lines look tall and narrow on small screens. Shrink
+      // the font for the whole block instead so every line keeps its shape.
+      measure.font = `${cfg.fontWeight} ${cfg.fontSize}px ${cfg.fontFamily}`;
+      const widest = Math.max(
+          1,
+          ...lines.map((line) => measure.measureText(line).width || 0),
+        ),
+        fontSize = Math.max(
+          1,
+          Math.floor(
+            cfg.fontSize * Math.min(1, (lineWidth - inset * 2) / widest),
+          ),
+        );
       const plans = [],
-        block = cfg.fontSize * cfg.lineHeight * lines.length,
+        block = fontSize * cfg.lineHeight * lines.length,
         top = this.height * cfg.verticalPosition - block / 2;
       lines.forEach((line, i) => {
-        // Render the line to an off-screen canvas at the configured font size
+        // Render the line to an off-screen canvas at the fitted font size
         const off = document.createElement("canvas"),
           x = off.getContext("2d");
-        off.width = Math.max(280, Math.floor(this.width * cfg.maxWidth));
-        off.height = Math.ceil(cfg.fontSize * 1.45);
+        off.width = lineWidth;
+        off.height = Math.ceil(fontSize * 1.45);
         x.fillStyle = "#fff";
         x.textAlign = ["left", "right"].includes(cfg.textAlign)
           ? cfg.textAlign
           : "center";
         x.textBaseline = "middle";
-        x.font = `${cfg.fontWeight} ${cfg.fontSize}px ${cfg.fontFamily}`;
-        const inset = 4;
+        x.font = `${cfg.fontWeight} ${fontSize}px ${cfg.fontFamily}`;
         const textX =
           x.textAlign === "left"
             ? inset
@@ -2167,10 +2183,11 @@
             if (data[(py * off.width + px) * 4 + 3] > 100)
               points.push({
                 x: this.width / 2 - off.width / 2 + px,
-                y: top + i * cfg.fontSize * cfg.lineHeight + py,
+                y: top + i * fontSize * cfg.lineHeight + py,
               });
         plans.push({
           line,
+          fontSize,
           points,
           x:
             x.textAlign === "left"
@@ -2178,7 +2195,7 @@
               : x.textAlign === "right"
                 ? this.width / 2 + off.width / 2
                 : this.width / 2,
-          y: top + i * cfg.fontSize * cfg.lineHeight + off.height / 2,
+          y: top + i * fontSize * cfg.lineHeight + off.height / 2,
         });
       });
       return plans;
@@ -3608,6 +3625,7 @@
         if (cfg.renderMode !== "particles")
           this.textBlocks.push({
             text: r.textPlan.line,
+            fontSize: r.textPlan.fontSize,
             x: r.textPlan.x,
             y: r.textPlan.y,
             birth: now,
@@ -3894,7 +3912,7 @@
             1 - (age - c.revealDuration - c.holdDuration) / c.dissolveDuration;
         x.save();
         x.globalAlpha = clamp(alpha, 0, 1);
-        x.font = `${c.fontWeight} ${c.fontSize}px ${c.fontFamily}`;
+        x.font = `${c.fontWeight} ${b.fontSize || c.fontSize}px ${c.fontFamily}`;
         x.textAlign = ["left", "right"].includes(c.textAlign)
           ? c.textAlign
           : "center";
@@ -3902,11 +3920,13 @@
         x.fillStyle = c.colors[0] || "#FFFFFF";
         x.shadowColor = c.colors[1] || c.colors[0] || "#FFFFFF";
         x.shadowBlur = 18 * (c.textGlow || 1);
-        x.fillText(b.text, b.x, b.y, this.width * c.maxWidth);
+        // Same width as the particle plan, so the fitted font is never squeezed.
+        const fit = Math.max(280, Math.floor(this.width * c.maxWidth)) - 8;
+        x.fillText(b.text, b.x, b.y, fit);
         x.globalAlpha *= 0.55;
         x.lineWidth = 1.2;
         x.strokeStyle = "#FFFFFF";
-        x.strokeText(b.text, b.x, b.y, this.width * c.maxWidth);
+        x.strokeText(b.text, b.x, b.y, fit);
         x.restore();
       }
       if (!this.textBlocks.length) this.textCanvas.style.display = "none";

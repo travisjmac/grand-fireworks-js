@@ -22,6 +22,8 @@ First-party TypeScript declarations, a round of engine reliability fixes, a more
 
 ### Fixed
 
+- Text fireworks no longer look stretched tall on phones. A line wider than the allowed width (`maxWidth`) was squeezed horizontally by the canvas to fit, so on narrow screens the letters looked tall and thin. The engine now shrinks the font for the whole text block instead, so every line keeps its normal shape and they share one size.
+- The Workbench's Guided **Style → Old School** now shows Old School. It was sending `oldschool` instead of the engine's `oldSchool`, which silently fell back to Medium.
 - Dropdown menus are readable again. Several dark-themed pages set light text on `<select>` elements without styling their `<option>`s, so the native popup showed white text on a white background. Options are now styled on the homepage, guided builder, configuration builder, I'm Feeling Lucky, and Fireworks Command.
 - The guided builder's **Load Config** accepts every option the engine supports, including `worldEnder`. The accepted list is now read from `GrandFireworks.DEFAULTS` instead of a hand-maintained copy, and an unrecognised option reports "nothing was imported" rather than a bare error.
 - WebGL point sprites now respect the driver's real size limit. Every point was clamped to a hardcoded 256 without ever querying `ALIASED_POINT_SIZE_RANGE`, which many mobile GPUs cap at 64. The limit is now read once at renderer init and the clamp accounts for zoom, because the vertex shader scales point size by the zoom factor. The existing 256 buffer cap still applies, so output on GPUs with a large point-size range is unchanged.

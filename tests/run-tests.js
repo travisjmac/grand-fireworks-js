@@ -329,6 +329,21 @@ test('runs and cancels text sequences and supports staggered lines', async () =>
   fireworks.destroy();
 });
 
+test('text that is too wide shrinks its font instead of being squeezed', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const cfg = fireworks.options.textFirework;
+  const available = Math.max(280, Math.floor(fireworks.width * cfg.maxWidth)) - 8;
+  // The mock measures 10px per character at any font size.
+  assert.equal(fireworks._textPlans(['HI'], cfg)[0].fontSize, cfg.fontSize, 'short text keeps its size');
+  const long = 'W'.repeat(Math.ceil(available / 10) * 2);
+  const plans = fireworks._textPlans([long, 'HI'], cfg);
+  assert.ok(plans[0].fontSize < cfg.fontSize, 'a too-wide line should use a smaller font');
+  assert.ok(plans[0].fontSize * long.length * 10 / cfg.fontSize <= available, 'the fitted line should fit the width');
+  assert.equal(plans[1].fontSize, plans[0].fontSize, 'every line in the block shares one size');
+  fireworks.destroy();
+});
+
 test('keeps user pause separate from automatic pause reasons', () => {
   const { GrandFireworks, observers } = createRuntime({ reducedMotion: true });
   const fireworks = new GrandFireworks({ container: '#stage', mode: 'contained', renderer: { preferred: 'canvas2d' }, show: { openingSalvo: 6 } });
