@@ -460,20 +460,52 @@ test('skips redundant fullscreen resizes', () => {
   fireworks.destroy();
 });
 
-test('the builder import accepts the snippet the builder export produces', () => {
+test('the builder import accepts every shape a config gets pasted in', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
   const match = source.match(/function parseConfigText[\s\S]*?\n\}/);
   assert.ok(match, 'parseConfigText should exist in the guided builder');
   // Exercise the real function, extracted from the page.
   const parseConfigText = new Function('return (' + match[0] + ')')();
 
-  // Bare JSON, as hand-written by a user.
+  // Strict JSON.
   assert.deepEqual(parseConfigText('{"show":{"intensity":0.5}}'), { show: { intensity: 0.5 } });
-  // The statement Copy Config puts on the clipboard.
+
+  // The paste-ready statement Copy Config puts on the clipboard.
   const snippet = 'const fireworks = new GrandFireworks({\n  "show": {\n    "intensity": 0.5\n  }\n});';
   assert.deepEqual(parseConfigText(snippet), { show: { intensity: 0.5 } });
-  // Trailing semicolons and surrounding whitespace must not matter.
+
+  // A JavaScript object literal as the docs show it: unquoted keys, single
+  // quotes, trailing commas and a comment. This is the shape that produced
+  // "Expected double-quoted property name".
+  assert.deepEqual(
+    parseConfigText(`{
+      // a show
+      show: { intensity: 0.5, maxRockets: 8, },
+      visuals: { flashColor: null, pyroBurn: true },
+      sound: { boomStyle: 'mixed', volume: 1 },
+    }`),
+    {
+      show: { intensity: 0.5, maxRockets: 8 },
+      visuals: { flashColor: null, pyroBurn: true },
+      sound: { boomStyle: 'mixed', volume: 1 },
+    },
+  );
+
+  // JS-only literal values that strict JSON cannot express.
+  assert.deepEqual(
+    parseConfigText('{worldEnder:{maxParticles:Infinity,stopAfter:false}}'),
+    { worldEnder: { maxParticles: Infinity, stopAfter: false } },
+  );
+
+  // Quotes, apostrophes and a // inside a value must all survive untouched.
+  assert.deepEqual(
+    parseConfigText(`{ note: "I'm fine", q: 'say "hi"', url: 'https://example.com' }`),
+    { note: "I'm fine", q: 'say "hi"', url: 'https://example.com' },
+  );
+
+  // Surrounding whitespace and a trailing semicolon must not matter.
   assert.deepEqual(parseConfigText('\n  {"a":1}\n  ;\n'), { a: 1 });
+
   // Nonsense is still rejected rather than silently accepted.
   assert.throws(() => parseConfigText('not a config'));
   assert.throws(() => parseConfigText(''));

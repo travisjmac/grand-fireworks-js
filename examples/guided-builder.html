@@ -2316,14 +2316,74 @@ function initWizard() {
 /* ===========================================================
    Load Config
    =========================================================== */
-// Copy Config emits a paste-ready statement rather than bare JSON, so accept
-// both shapes: trim to the outermost object literal before parsing.
+// Accepts a config pasted in any of the shapes people actually produce: strict
+// JSON, the paste-ready statement the Copy button emits, or a JavaScript object
+// literal with unquoted keys, single quotes, trailing commas and comments. It is
+// parsed as text rather than evaluated, so a pasted config can never run code in
+// the page.
 function parseConfigText(text) {
-  let raw = String(text || '').trim();
+  let raw = String(text || '');
   const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
   if (start === -1 || end <= start) throw new SyntaxError('No configuration object found');
   raw = raw.slice(start, end + 1);
-  return JSON.parse(raw);
+
+  // JS-only literals that strict JSON has no equivalent for.
+  const literals = { Infinity: '1e999', NaN: 'null', undefined: 'null' };
+  let out = '', i = 0;
+  while (i < raw.length) {
+    const ch = raw[i], next = raw[i + 1];
+    // Comments are dropped.
+    if (ch === '/' && next === '/') { while (i < raw.length && raw[i] !== '\n') i++; continue; }
+    if (ch === '/' && next === '*') { i += 2; while (i < raw.length && !(raw[i] === '*' && raw[i + 1] === '/')) i++; i += 2; continue; }
+    // Strings: any quote style becomes a JSON string.
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const close = ch;
+      out += '"';
+      i++;
+      while (i < raw.length) {
+        const c = raw[i];
+        if (c === '\\') {
+          const esc = raw[i + 1];
+          if (esc === close) { out += close === '"' ? '\\"' : esc; i += 2; continue; }
+          out += c + (esc === undefined ? '' : esc); i += 2; continue;
+        }
+        if (c === close) { i++; break; }
+        out += c === '"' ? '\\"' : c;
+        i++;
+      }
+      out += '"';
+      continue;
+    }
+    // Bare words: an unquoted key becomes a quoted one, and JS-only literals are
+    // mapped. Nothing here touches string contents.
+    if (/[A-Za-z_$]/.test(ch)) {
+      let j = i;
+      while (j < raw.length && /[\w$]/.test(raw[j])) j++;
+      const word = raw.slice(i, j);
+      let k = j;
+      while (k < raw.length && /\s/.test(raw[k])) k++;
+      if (raw[k] === ':') out += '"' + word + '"';
+      else out += Object.prototype.hasOwnProperty.call(literals, word) ? literals[word] : word;
+      i = j;
+      continue;
+    }
+    // Trailing commas are legal in a JS literal but not in JSON.
+    if (ch === ',') {
+      let k = i + 1;
+      for (;;) {
+        while (k < raw.length && /\s/.test(raw[k])) k++;
+        if (raw[k] === '/' && raw[k + 1] === '/') { while (k < raw.length && raw[k] !== '\n') k++; continue; }
+        if (raw[k] === '/' && raw[k + 1] === '*') { k += 2; while (k < raw.length && !(raw[k] === '*' && raw[k + 1] === '/')) k++; k += 2; continue; }
+        break;
+      }
+      if (raw[k] !== '}' && raw[k] !== ']') out += ',';
+      i++;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return JSON.parse(out);
 }
 function applyLoadedConfig() {
   const ta = document.getElementById('load-textarea');
@@ -2333,7 +2393,7 @@ function applyLoadedConfig() {
   try {
     parsed = parseConfigText(ta.value);
   } catch(e) {
-    err.textContent = '⚠️ Invalid JSON — ' + e.message;
+    err.textContent = '⚠️ Could not read that configuration — ' + e.message;
     err.style.display = 'block';
     return;
   }
