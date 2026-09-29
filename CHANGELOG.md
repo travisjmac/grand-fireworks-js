@@ -2,7 +2,9 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
-## [Unreleased] — Developer platform: TypeScript declarations
+## [1.7.0] — September 28, 2026
+
+First-party TypeScript declarations, a round of engine reliability fixes, a more forgiving guided-builder import, and a phone-friendly fullscreen control bar on the homepage. No existing option or method changed shape.
 
 ### Added
 
@@ -10,6 +12,7 @@ All notable changes to Grand Fireworks JS are documented here.
 - Wired `types`/exports so TypeScript, bundlers, and editors resolve `index.d.ts` automatically. Both `import GrandFireworks from` and `import { GrandFireworks } from` are supported.
 - Added `npm run typecheck`, which compiles focused fixtures exercising the default and named import paths against the declarations with `strict` mode.
 - Added a declaration contract test to `npm test` that verifies the published methods and configuration interfaces are represented in `index.d.ts` and that the file is wired into `package.json` publishing.
+- Homepage fullscreen control bar. In fullscreen the controls panel now has **Slim/Full**, **Random**, a 🔇/🔊 sound toggle, and **Exit** in its title bar. On phones it opens as a slim `Controls: Full | Random | 🔇 | Exit` bar locked to the top left so it cannot be dragged or pushed off screen; **Full** opens the complete controls below it, capped at 60% of the screen and scrolling inside. Desktop keeps the draggable panel.
 
 ### Changed
 
@@ -17,13 +20,15 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ### Fixed
 
+- Dropdown menus are readable again. Several dark-themed pages set light text on `<select>` elements without styling their `<option>`s, so the native popup showed white text on a white background. Options are now styled on the homepage, guided builder, configuration builder, I'm Feeling Lucky, and Fireworks Command.
+- The guided builder's **Load Config** accepts every option the engine supports, including `worldEnder`. The accepted list is now read from `GrandFireworks.DEFAULTS` instead of a hand-maintained copy, and an unrecognised option reports "nothing was imported" rather than a bare error.
 - WebGL point sprites now respect the driver's real size limit. Every point was clamped to a hardcoded 256 without ever querying `ALIASED_POINT_SIZE_RANGE`, which many mobile GPUs cap at 64. The limit is now read once at renderer init and the clamp accounts for zoom, because the vertex shader scales point size by the zoom factor. The existing 256 buffer cap still applies, so output on GPUs with a large point-size range is unchanged.
 - Sound enabled through options now unlocks on iOS. `sound: { enabled: true }` (including with `autoStart`) previously created a suspended `AudioContext` that nothing ever resumed, so the show stayed silent with no error. `start()` now attempts the resume, and because browsers only permit that inside a gesture the engine also listens once for the first pointer or key interaction and unlocks there. While audio is active the session is declared as playback, so the iOS hardware silent switch no longer mutes it.
 - Resize no longer reallocates for unchanged sizes. The engine skips the drawing-buffer and text-canvas reallocation entirely when width, height and pixel ratio have not actually moved, removing repeated work from bursts of resize events such as a collapsing iOS URL bar.
 - Text fireworks wait for fonts to load. Rasterisation samples pixels immediately, so a host-supplied webfont that was still loading would be measured with fallback metrics and the particles would assemble into the wrong shape. `launchText()` now awaits `document.fonts.ready` while fonts are loading, and launches synchronously as before otherwise.
 - Bounded the Canvas 2D sprite cache. Sprites were keyed on the exact runtime colour, but `pyroBurn` drifts each particle's colour every frame, so a single show with the default palettes could mint roughly 12,000 live 64×64 canvases — around 184 MB of canvas memory that was only released by `destroy()`. Colours are now quantised to 16 levels per channel (indistinguishable inside a soft additive glow) and the cache is capped with least-recently-used eviction, which bounds it to about 16 MB. This was reachable in the default embedded configuration: `mode: 'contained'` selects Canvas 2D and `baseStyle: 'cinematic'` enables `pyroBurn`.
 - `durationMode: 'immediate'` now works. The engine previously compared the option against an undocumented `'strict'` value, so neither the declared type nor the guided builder's "End mode → Immediate" control could ever trigger an immediate finish — every show wound down gracefully regardless. The comparison now matches the documented `'graceful' | 'immediate'` contract in `index.d.ts`, and the configuration builder's End mode dropdown offers `immediate` instead of the dead `strict` value.
-- The Workbench config import now accepts JavaScript object literals and the Copy Config snippet, not just strict JSON, without evaluating pasted text, and strips `__proto__`/`constructor`/`prototype` keys.
+- The guided builder's **Load Config** now accepts JavaScript object literals and the Copy Config snippet, not just strict JSON. Pasted text is parsed, never evaluated, and `__proto__`/`constructor`/`prototype` keys are dropped.
 
 ## [1.6.5] — July 31, 2026
 

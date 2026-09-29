@@ -361,6 +361,46 @@ body.showing-fireworks .grand-fireworks-creator-credit {
   color: var(--muted);
   font-size: 0.72rem;
 }
+.handle-actions {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.fullscreen-controls .handle-actions {
+  display: flex;
+}
+.handle-label {
+  display: none;
+}
+.handle-btn {
+  min-height: 32px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: rgba(3, 4, 14, 0.6);
+  color: #fff1ac;
+  cursor: pointer;
+  font: 600 12px/1 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.handle-btn:hover {
+  background: rgba(255, 215, 0, 0.16);
+}
+/* Icon-only sound toggle: larger glyph, still a comfortable tap target. */
+#panel-sound {
+  min-width: 36px;
+  font-size: 15px;
+}
+#panel-sound[aria-pressed="true"] {
+  color: #8fd4ff;
+}
+.hero-playground.collapsed .hero-controls {
+  display: none;
+}
+.hero-playground.collapsed .hero-drag-handle {
+  border-bottom: 0;
+}
 .fullscreen-controls .hero-drag-handle {
   cursor: grab;
 }
@@ -448,6 +488,15 @@ select option {
   right: 14px;
   width: min(760px, calc(100vw - 28px));
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 28px);
+  max-height: calc(100dvh - 28px);
+}
+/* Keep the title bar fixed and let the controls scroll if they do not fit. */
+.fullscreen-controls .hero-controls {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .hero-actions {
   grid-column: 1 / -1;
@@ -713,10 +762,53 @@ select option {
   .auto-rotate-control {
     grid-column: 1 / -1;
   }
+  /* Fullscreen on a phone: a slim bar pinned to the top left that cannot be
+     dragged. !important overrides the inline position used by the desktop drag. */
   .hero-playground.fullscreen-controls {
-    top: 8px;
-    right: 8px;
+    top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+    left: calc(8px + env(safe-area-inset-left, 0px)) !important;
+    right: auto !important;
+    bottom: auto !important;
     width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: 60vh;
+    max-height: 60dvh;
+  }
+  .hero-playground.fullscreen-controls.collapsed {
+    width: max-content;
+    border-radius: 999px;
+  }
+  .fullscreen-controls .hero-drag-handle,
+  .fullscreen-controls .hero-drag-handle:active {
+    justify-content: flex-start;
+    padding: 4px 8px;
+    cursor: default;
+  }
+  .fullscreen-controls .hero-drag-handle > strong,
+  .fullscreen-controls .handle-hint {
+    display: none;
+  }
+  .fullscreen-controls .handle-actions {
+    margin-left: 0;
+    gap: 0;
+  }
+  .fullscreen-controls .handle-label {
+    display: inline;
+    margin-right: 6px;
+    color: #fff1ac;
+    font: 600 12px/1 system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+  .fullscreen-controls .handle-btn {
+    min-height: 32px;
+    border: 0;
+    border-radius: 0;
+    padding: 6px 10px;
+    background: transparent;
+  }
+  /* The "|" separators between Full, Random and Exit. */
+  .fullscreen-controls .handle-btn + .handle-btn {
+    border-left: 1px solid rgba(255, 215, 0, 0.3);
   }
   .toggle-btn {
     padding: 6px 10px;
