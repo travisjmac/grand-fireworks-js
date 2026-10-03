@@ -169,7 +169,6 @@ This is the cinematic parallax showcase. It uses layered sky, moon, stars, and g
 ### Game examples
 
 - `examples/fireworks-command/`: deliberately cheesy Mars-defence arcade game.
-- `examples/starlight-intercept/`: space action game with embers, asteroids, saucers, power-ups, and a warp ending.
 
 The games are examples of the engine, not replacements for the core product. Keep each game self-contained in its own folder with readable HTML, CSS, and JavaScript.
 

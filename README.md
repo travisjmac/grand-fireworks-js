@@ -72,7 +72,6 @@ After GitHub Pages is enabled for the repository, the complete interactive docum
 - [Feature Demo](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=features) — the shared draggable studio opened directly in feature-testing mode.
 - [Config Workbench](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=workbench) — the same studio opened with build, preview, save, load, and copy controls.
 - [Fireworks Command](https://travisjmac.github.io/grand-fireworks-js/examples/fireworks-command/) — a tactical Mars defence game showing the engine in an arcade setting.
-- [Starlight Intercept](https://travisjmac.github.io/grand-fireworks-js/examples/starlight-intercept/) — a space-action showcase with ember fields, ship combat, and a warp ending.
 
 The same files can be browsed directly inside the repository through the relative links in [`index.html`](index.html), but GitHub Pages is required to run the interactive JavaScript examples as a website.
 

@@ -2,6 +2,12 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [Unreleased]
+
+### Removed
+
+- Removed the Starlight Intercept example game and its logo. It never used the fireworks engine. Its Mars backdrop is kept for Fireworks Command and renamed `assets/fireworks-command-mars.png`.
+
 ## [1.7.1] — September 28, 2026
 
 Text fireworks keep their shape on phones, the Workbench's Old School style works, and the homepage gets quicker routes to fullscreen and to the full tools. No option or method changed shape.
