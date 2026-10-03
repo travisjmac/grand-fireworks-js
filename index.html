@@ -216,7 +216,11 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
         ['#FF0055'],
         ['#FFD700', '#FFA500', '#FFFFFF']
       ]
-    }
+    },
+    // Text fireworks layer into the ongoing show rather than pausing it. The engine's
+    // `exclusive` reservation stops new launches for the whole text lifecycle, which is
+    // right for a deliberate message but wrong for a background that should never stop.
+    textFirework: { exclusive: false }
   });
 
   const pageContent = document.querySelector('#page-content');
@@ -639,22 +643,37 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     ['#FFD700', '#FF8A80', '#FFFFFF'],
     ['#D17FE0', '#7FDBFF', '#FFFFFF']
   ];
+  // The spot comes from a fixed series of areas, walked one after another, rather than
+  // from anywhere on screen: every message lands somewhere deliberate and all four areas
+  // get used. Each area is a range per axis, in fractions of the viewport. Keep the
+  // horizontal centres within roughly 0.28-0.72 - at maxWidth 0.45 a block is up to 0.45
+  // of the width, so the engine clamps anything further out back toward the middle (and
+  // more so on narrow screens, where the block takes a bigger share of the width).
+  const TEXT_AREAS = [
+    { x: [0.29, 0.38], y: [0.30, 0.42] }, // left
+    { x: [0.44, 0.56], y: [0.20, 0.30] }, // centre, high
+    { x: [0.62, 0.71], y: [0.30, 0.42] }, // right
+    { x: [0.44, 0.56], y: [0.40, 0.50] } // centre, low
+  ];
+  let textAreaIndex = 0;
   const randomFrom = list => list[Math.floor(Math.random() * list.length)];
+  const within = ([min, max]) => min + Math.random() * (max - min);
   function shootTextFirework() {
+    const area = TEXT_AREAS[textAreaIndex++ % TEXT_AREAS.length];
+    // Deliberately no `exclusive` here, and the config above turns it off: that
+    // reservation halts new launches for the whole text lifecycle, and the background
+    // show has to keep going while the words assemble.
     fireworks.launchText(randomFrom(TEXT_PHRASES), {
       // Narrow enough that an off-centre block still fits, which is what lets the text
       // appear somewhere new each time rather than always dead centre.
       maxWidth: 0.45,
-      horizontalPosition: 0.3 + Math.random() * 0.4,
-      verticalPosition: 0.26 + Math.random() * 0.22,
+      horizontalPosition: within(area.x),
+      verticalPosition: within(area.y),
       colors: randomFrom(TEXT_COLOURS),
       fontSize: 84,
       holdDuration: 1100,
       dissolveDuration: 800,
-      fallDuration: 2600,
-      // Reserving particles is what keeps the words legible, at the cost of pausing other
-      // launches for the second or two the text is assembling. Worth it to read clearly.
-      exclusive: true
+      fallDuration: 2600
     }).catch(() => {});
   }
   setTimeout(shootTextFirework, 4000);

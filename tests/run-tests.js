@@ -2032,23 +2032,66 @@ test('text fireworks can be placed off-centre, and default to centred', () => {
   fireworks.destroy();
 });
 
-test('the homepage launches text fireworks at random spots', () => {
+test('text can be shown without halting the rest of the show', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ show: { maxParticles: 4000 } });
+  fireworks.start();
+  assert.equal(fireworks.accepting, true, 'a running show accepts launches to begin with');
+
+  // `exclusive: false` is the homepage's setting: the ambient show has to keep launching
+  // while the words assemble, so the engine must not take the lock or reserve the budget.
+  return fireworks
+    .launchText('BOOM', { exclusive: false })
+    .then(() => {
+      assert.equal(fireworks.accepting, true, 'a non-exclusive text launch must not stop the show');
+      assert.ok(
+        !(fireworks.textReservedUntil > 0),
+        'and must not reserve the particle budget away from other shells',
+      );
+      // The default is unchanged: a deliberate message still takes the show over.
+      return fireworks.launchText('BOOM');
+    })
+    .then(() => {
+      assert.equal(fireworks.accepting, false, 'the exclusive default still halts new launches');
+      assert.ok(fireworks.textReservedUntil > 0, 'and still reserves the budget');
+      fireworks.destroy();
+    });
+});
+
+test('the homepage walks a set series of areas for text, without stopping the show', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
   assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'the page must launch text');
   assert.ok(/setInterval\(shootTextFirework/.test(html), 'and keep doing it');
   assert.ok(/BOOM/.test(html) && /Grand Fireworks/.test(html), 'the phrases must include the ones asked for');
-  // Different places each time is the point, so both axes must be randomised.
-  assert.ok(
-    /horizontalPosition: 0\.3 \+ Math\.random\(\)/.test(html),
-    'each launch must take a fresh horizontal position',
-  );
-  assert.ok(
-    /verticalPosition: 0\.26 \+ Math\.random\(\)/.test(html),
-    'and a fresh vertical one',
-  );
+
+  // The spot is drawn from a declared series of areas, stepped in order, so every area is
+  // used and each message lands somewhere deliberate. Each area is a range on both axes.
+  assert.ok(/const TEXT_AREAS = \[/.test(html), 'the areas must be a declared series');
+  assert.ok(/textAreaIndex\+\+ % TEXT_AREAS\.length/.test(html), 'and be walked in order');
+  const areas = html.match(/\{ x: \[[\d.]+, [\d.]+\], y: \[[\d.]+, [\d.]+\] \}/g) || [];
+  assert.ok(areas.length >= 3, 'the series must define several areas, one per axis range');
+  assert.ok(/horizontalPosition: within\(area\.x\)/.test(html), 'the horizontal spot must come from the area');
+  assert.ok(/verticalPosition: within\(area\.y\)/.test(html), 'as must the vertical one');
+
   // A wide block could not be placed off-centre, so the page narrows it first.
   assert.ok(/maxWidth: 0\.45/.test(html), 'the block must be narrow enough to move around');
+
+  // The whole point of this test: text must not halt the ambient show. `exclusive` is the
+  // engine option that stops new launches for the text's whole lifecycle, so the page must
+  // switch it off in config and must not force it back on in the launcher.
+  assert.ok(
+    /textFirework: \{ exclusive: false \}/.test(html),
+    'the page must keep the show running while text is up',
+  );
+  const launcher = html.slice(
+    html.indexOf('function shootTextFirework'),
+    html.indexOf('setTimeout(shootTextFirework'),
+  );
+  assert.ok(launcher.length > 0, 'the launcher must exist');
+  // Match the option assignment, not the word: the launcher's comment explains why
+  // `exclusive` is absent, and a bare /exclusive/ would flag its own explanation.
+  assert.ok(!/exclusive\s*:/.test(launcher), 'the launcher must not re-impose the exclusive lock');
 });
 
 test('the builder import accepts every shape a config gets pasted in', () => {
