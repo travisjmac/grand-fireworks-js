@@ -3,7 +3,11 @@
 > **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.9.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.9.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+
+## Version 1.9.1
+
+The homepage gains a **timed-show demo** beside Fireworks Command: its own contained instance, a clock counting the time since the show started, the cue that just fired, a Replay button, and a collapsible panel showing the source that ran. Nine cues fire shells and text at set times, then a finale, and the show loops. It only runs while it is on screen.
 
 ## Version 1.9.0
 
@@ -36,7 +40,7 @@ For a no-build webpage, use the stable CDN filename:
 To stay on one release, pin its tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.0/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.1/dist/GrandFireworks.min.js"></script>
 ```
 
 ### TypeScript

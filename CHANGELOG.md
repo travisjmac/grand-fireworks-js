@@ -2,6 +2,19 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.9.1] — October 3, 2026
+
+The homepage gains a timed show, next to Fireworks Command.
+
+### Added
+
+- **A timed-show demo on the homepage.** Half of the "Build it into anything" row is now a second box beside Fireworks Command, with its own contained fireworks instance. It shows a **clock counting the time since the show started**, the cue that last fired, a **Replay** button, and a collapsible panel with the source. Nine cues fire shells and text at set times, then a finale, and the show loops every 18 seconds. Text lands about 1.8s after its cue, because the rockets have to fly first — which is exactly what the clock is there to show. The demo runs only while it is on screen, and the page's click-to-burst does not fire when the box is clicked.
+- The source panel reads the live script element, so the code on display is the code that ran rather than a copy that could drift.
+
+### Changed
+
+- The "Build it into anything" section is a **two-column grid** above 760px, so Fireworks Command and the timed show sit side by side at half width each. Below that they stack.
+
 ## [1.9.0] — October 3, 2026
 
 Text fireworks can be placed anywhere across the screen and tilted, they scale with the camera, and the Config Workbench exposes both.

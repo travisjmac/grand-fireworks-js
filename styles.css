@@ -198,6 +198,97 @@ h3 {
   font-size: .72em;
   font-weight: 700;
 }
+/* Fireworks Command and the Timed Show sit side by side, half each. */
+.use-case-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.timed-demo-card {
+  display: grid;
+  gap: 12px;
+  background: radial-gradient(circle at 76% 30%, rgba(255, 214, 90, .1), transparent 50%), #0a1022;
+}
+/* An interactive box, not a link, so it does not lift on hover. */
+.timed-demo-card:hover {
+  transform: none;
+  border-color: var(--line);
+}
+.timed-demo-card strong small {
+  color: var(--muted);
+  font-size: .72em;
+  font-weight: 700;
+}
+.timed-demo-stage {
+  position: relative;
+  height: 260px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #02030c 0%, #0a1030 100%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .38);
+}
+.timed-demo-clock {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 214, 90, .3);
+  border-radius: 8px;
+  background: rgba(5, 7, 21, .72);
+  line-height: 1.2;
+}
+.timed-demo-clock output {
+  color: var(--gold);
+  font: 700 1.15rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.timed-demo-clock small {
+  color: var(--muted);
+  font-size: .72rem;
+}
+.timed-demo-replay {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  border: 1px solid rgba(143, 212, 255, .35);
+  border-radius: 999px;
+  background: rgba(5, 7, 21, .72);
+  color: #dfe9ff;
+  font: 650 .8rem/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.timed-demo-replay:hover {
+  background: rgba(143, 212, 255, .16);
+}
+.timed-demo-source summary {
+  width: fit-content;
+  color: #8fd4ff;
+  font-weight: 650;
+  cursor: pointer;
+}
+.timed-demo-source[open] summary {
+  margin-bottom: 10px;
+}
+.timed-demo-source .code {
+  padding: 14px;
+}
+.timed-demo-source pre {
+  max-height: 340px;
+  margin: 0;
+  overflow: auto;
+  font-size: .78rem;
+}
+@media (max-width: 760px) {
+  .use-case-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .timed-demo-stage {
+    height: 220px;
+  }
+}
 .card.secondary-card {
   min-height: 112px;
   padding: 16px 18px;

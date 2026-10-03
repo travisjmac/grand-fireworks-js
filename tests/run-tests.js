@@ -2414,6 +2414,47 @@ test('the homepage walks a set series of areas for text, without stopping the sh
   assert.ok(!/exclusive\s*:/.test(launcher), 'the launcher must not re-impose the exclusive lock');
 });
 
+test('the homepage timed-show demo fires its cues in order, and can be cancelled', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  const script = html.match(/<script type="module" id="timed-demo-script">([\s\S]*?)<\/script>/);
+  assert.ok(script, 'the demo script must be declared with an id so its source can be shown');
+  const body = script[1];
+
+  // The displayed source has to be the live script, or the code shown drifts from
+  // the code that runs and the demo stops teaching the right thing.
+  assert.ok(
+    /getElementById\('timed-demo-script'\)\.textContent/.test(html),
+    'the source panel must read the script element itself',
+  );
+
+  // Cues carry a time and something to fire, and ascend, since they are scheduled
+  // as delays rather than absolute times.
+  const cues = body.match(/\{ at: (\d+),\s+fire:/g) || [];
+  assert.ok(cues.length >= 6, `expected several cues, found ${cues.length}`);
+  const times = cues.map(cue => Number(cue.match(/\d+/)[0]));
+  assert.deepEqual(times, [...times].sort((a, b) => a - b), 'cues must be in time order');
+
+  // Its own instance, drawn inside the box, with nothing launching on its own.
+  assert.ok(/mode: 'contained'/.test(body), 'the demo must render contained');
+  assert.ok(/container: stage/.test(body), 'and draw inside the stage');
+  assert.ok(/autoStart: false/.test(body), 'so that only the cues fire');
+
+  // Text is fired by a cue, and the words need the rockets to arrive first.
+  assert.ok(/show\.launchText\(/.test(body), 'cues must be able to fire text');
+  assert.ok(/show\.launchFinale\(/.test(body), 'and the finale');
+
+  // Replaying without cancelling first would stack a second set of timers on the
+  // first, so every cue would fire twice.
+  assert.ok(/timers\.forEach\(clearTimeout\)/.test(body), 'pending cues must be cancellable');
+
+  // The demo owns its own clicks: the page's click-to-burst must not fire inside it.
+  assert.ok(
+    /PAGE_CONTROLS = '[^']*#timed-demo/.test(html),
+    'the demo box must be excluded from click-to-burst',
+  );
+});
+
 test('the builder import accepts every shape a config gets pasted in', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
   const match = source.match(/function parseConfigText[\s\S]*?\n\}/);
