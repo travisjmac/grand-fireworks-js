@@ -1,10 +1,10 @@
 <!doctype html><!--
-  Grand Fireworks JS v1.9.1
+  Grand Fireworks JS v1.9.2
   Created by Travis MacDonald
   Created: July 15, 2026
   Website: http://travisandjoelyweareaperfect.fit/
   Repository: https://github.com/travisjmac/grand-fireworks-js
---><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="A configurable JavaScript fireworks engine with realistic WebGL effects, Canvas fallback, text fireworks, contained displays, and staged grand finales."><meta name="version" content="1.9.1"><meta name="date" content="2026-10-03"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS"><meta property="og:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><meta property="og:url" content="https://github.com/travisjmac/grand-fireworks-js"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Grand Fireworks JS"><meta name="twitter:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>GrandFireworks Documentation</title><link rel="stylesheet" href="styles.css"></head><body><nav class="section-nav" data-section-nav aria-label="Documentation sections"><a href="#quick-start">Start</a><a href="#examples">Demos</a><a href="#options">Options</a><a href="#performance" class="nav-detail">Performance</a><a href="#depth" class="nav-detail">Depth</a><a href="#text" class="nav-detail">Text</a><a href="#methods" class="nav-detail">Methods</a><a href="#events" class="nav-detail">Events</a><a href="#performance" class="nav-mobile">Features</a><a href="#methods" class="nav-mobile">API</a></nav><button type="button" id="scroll-fullscreen-btn" class="scroll-fullscreen-btn">🎬 Show Fullscreen</button><div id="page-content" class="page-content"><header><img id="site-logo" class="logo" src="assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS — Spark Your Creativity"><div id="hero-playground" class="hero-playground"><div id="hero-drag-handle" class="hero-drag-handle"><strong>Fireworks controls</strong><span class="handle-hint">Drag this bar in fullscreen</span><span class="handle-actions"><span class="handle-label">Controls:</span><button type="button" id="panel-collapse" class="handle-btn" aria-expanded="true" aria-controls="hero-controls">Slim</button><button type="button" id="panel-random" class="handle-btn">Random</button><button type="button" id="panel-sound" class="handle-btn" aria-pressed="false" aria-label="Sound off. Turn sound on">🔇</button><button type="button" id="panel-exit" class="handle-btn" aria-label="Exit fullscreen fireworks">Exit</button></span></div><div id="hero-controls" class="hero-controls"><label class="hero-field"><span>Style</span><select id="style-select" aria-label="Select firework style"><option value="classic">🕰️ Classic</option><option value="oldSchool">📟 Old School</option><option value="thin">🪶 Thin</option><option value="medium">⚖️ Medium</option><option value="cinematic" selected="selected">🎥 Cinematic</option><option value="bold">💪 Bold</option><option value="spectacle">🎆 Spectacle</option><option value="random" disabled>✨ Random</option></select></label><label class="hero-field"><span>Colours</span><select id="theme-select" aria-label="Color theme"><option value="default">🎨 Default</option><option value="iceBlue">❄️ Ice Blue</option><option value="emberRed">🔥 Ember Red</option><option value="neonGreen">💚 Neon Green</option><option value="goldenSun">☀️ Golden Sun</option><option value="royalPurple">👑 Royal Purple</option><option value="festival">🎉 Festival</option><option value="random" disabled>✨ Random</option></select></label><label class="hero-range"><span>Speed <output id="speed-value">80%</output></span><input id="speed-control" type="range" min="0.4" max="1.5" step="0.05" value="0.8"></label><label class="hero-range"><span>Zoom <output id="zoom-value">80%</output></span><input id="zoom-control" type="range" min="0.25" max="1.5" step="0.05" value="0.8"></label><label class="hero-range"><span>Intensity <output id="intensity-value">200%</output></span><input id="intensity-control" type="range" min="0.2" max="7" step="0.05" value="7"></label><label class="auto-rotate-control"><input id="auto-rotate-styles" type="checkbox"><span>Auto-rotate every 5 seconds</span></label><div class="hero-actions"><button class="panel-btn gold" id="random-btn"><span class="spinner"></span><span class="label-text">✨ Random Config</span></button><button class="panel-btn copy-btn" id="copy-config-btn">📋 Copy Config</button><button class="panel-btn" id="sound-btn">🔇 Sound</button><button id="toggle-btn" class="toggle-btn" aria-label="Toggle fullscreen fireworks"><span class="label-text">🎬 Show Fullscreen Fireworks</span></button></div><nav class="hero-links" aria-label="More controls"><span>More controls:</span><a href="examples/guided-builder.html?mode=workbench">🎛 Config Workbench</a><a href="examples/guided-builder.html?mode=features">🔭 Feature Demo</a></nav></div></div><div class="pill-row"><span class="pill">Version 1.9.1</span><span class="pill">WebGL 2 first</span><span class="pill">Canvas fallback</span><span class="pill">No dependencies</span><span class="pill">Click for fireworks</span></div><p class="lead">WebGL 2 fireworks with 15 distinct shell types, adaptive performance, multi-line text that shimmers and dissolves, and a choreographed Super Grand Finale. Zero dependencies. Tiny footprint.</p><p class="lead" style="margin-top:12px"><strong>Some libraries just draw circles and call them fireworks.</strong> Grand Fireworks renders genuine pyrotechnic geometry — crossettes that split mid-air, weeping willows that trail gravity-realistic embers, galactic spirals, and chrysanthemum shells that <em>bloom</em>. Built for landing pages, hero sections, celebrations, and anyone who refuses to ship a half-baked effect.</p><p><a href="https://github.com/travisjmac/grand-fireworks-js">View source on GitHub</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip">Download source ZIP</a> · <a href="https://travisjmac.github.io/grand-fireworks-js/">Open the GitHub Pages site</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/blob/main/CHANGELOG.md">What changed in 1.9.1</a></p></header><main>
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Travis MacDonald"><meta name="creator" content="Travis MacDonald"><meta name="application-name" content="Grand Fireworks JS"><meta name="description" content="A configurable JavaScript fireworks engine with realistic WebGL effects, Canvas fallback, text fireworks, contained displays, and staged grand finales."><meta name="version" content="1.9.2"><meta name="date" content="2026-10-03"><meta name="website" content="http://travisandjoelyweareaperfect.fit/"><meta name="repository" content="https://github.com/travisjmac/grand-fireworks-js"><meta property="og:type" content="website"><meta property="og:site_name" content="Grand Fireworks JS"><meta property="og:title" content="Grand Fireworks JS"><meta property="og:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><meta property="og:url" content="https://github.com/travisjmac/grand-fireworks-js"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Grand Fireworks JS"><meta name="twitter:description" content="Realistic, configurable WebGL and Canvas fireworks with text effects and a Super Grand Finale."><link rel="author" href="http://travisandjoelyweareaperfect.fit/"><link rel="help" href="https://github.com/travisjmac/grand-fireworks-js"><title>GrandFireworks Documentation</title><link rel="stylesheet" href="styles.css"></head><body><nav class="section-nav" data-section-nav aria-label="Documentation sections"><a href="#quick-start">Start</a><a href="#examples">Demos</a><a href="#options">Options</a><a href="#performance" class="nav-detail">Performance</a><a href="#depth" class="nav-detail">Depth</a><a href="#text" class="nav-detail">Text</a><a href="#methods" class="nav-detail">Methods</a><a href="#events" class="nav-detail">Events</a><a href="#performance" class="nav-mobile">Features</a><a href="#methods" class="nav-mobile">API</a></nav><button type="button" id="scroll-fullscreen-btn" class="scroll-fullscreen-btn">🎬 Show Fullscreen</button><div id="page-content" class="page-content"><header><img id="site-logo" class="logo" src="assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS — Spark Your Creativity"><div id="hero-playground" class="hero-playground"><div id="hero-drag-handle" class="hero-drag-handle"><strong>Fireworks controls</strong><span class="handle-hint">Drag this bar in fullscreen</span><span class="handle-actions"><span class="handle-label">Controls:</span><button type="button" id="panel-collapse" class="handle-btn" aria-expanded="true" aria-controls="hero-controls">Slim</button><button type="button" id="panel-types" class="handle-btn" aria-haspopup="dialog" aria-label="Choose which firework types appear">Types</button><button type="button" id="panel-random" class="handle-btn">Random</button><button type="button" id="panel-ender" class="handle-btn" aria-label="Fire the World Ender"><span class="ender-long">🌍 World Ender</span><span class="ender-short">🌍 Ender</span></button><button type="button" id="panel-sound" class="handle-btn" aria-pressed="false" aria-label="Sound off. Turn sound on">🔇</button><button type="button" id="panel-exit" class="handle-btn" aria-label="Exit fullscreen fireworks">Exit</button></span></div><div id="hero-controls" class="hero-controls"><label class="hero-field"><span>Style</span><select id="style-select" title="Style" aria-label="Select firework style"><option value="classic">🕰️ Classic</option><option value="oldSchool">📟 Old School</option><option value="thin">🪶 Thin</option><option value="medium">⚖️ Medium</option><option value="cinematic" selected="selected">🎥 Cinematic</option><option value="bold">💪 Bold</option><option value="spectacle">🎆 Spectacle</option><option value="random" disabled>✨ Random</option></select></label><label class="hero-field"><span>Colours</span><select id="theme-select" title="Colours" aria-label="Color theme"><option value="default">🎨 Default</option><option value="iceBlue">❄️ Ice Blue</option><option value="emberRed">🔥 Ember Red</option><option value="neonGreen">💚 Neon Green</option><option value="goldenSun">☀️ Golden Sun</option><option value="royalPurple">👑 Royal Purple</option><option value="festival">🎉 Festival</option><option value="random" disabled>✨ Random</option></select></label><label class="hero-range"><span><i class="hero-ico" aria-hidden="true" title="Speed">⚡</i><b class="hero-word">Speed</b><output id="speed-value">80%</output></span><input id="speed-control" type="range" min="0.4" max="1.5" step="0.05" value="0.8" aria-label="Speed"></label><label class="hero-range"><span><i class="hero-ico" aria-hidden="true" title="Zoom">🔍</i><b class="hero-word">Zoom</b><output id="zoom-value">80%</output></span><input id="zoom-control" type="range" min="0.25" max="1.5" step="0.05" value="0.8" aria-label="Zoom"></label><label class="hero-range"><span><i class="hero-ico" aria-hidden="true" title="Intensity">💥</i><b class="hero-word">Intensity</b><output id="intensity-value">200%</output></span><input id="intensity-control" type="range" min="0.2" max="7" step="0.05" value="7" aria-label="Intensity"></label><div class="auto-controls"><label class="auto-rotate-control"><input id="auto-rotate-styles" type="checkbox"><span>Auto style</span></label><label class="auto-rotate-control"><input id="auto-text" type="checkbox" checked><span>Auto text</span></label><button type="button" class="panel-btn types-panel-btn" id="types-btn" aria-haspopup="dialog">🎆 Types</button></div><div class="hero-actions"><button class="panel-btn gold" id="random-btn"><span class="spinner"></span><span class="label-text">✨ Random Config</span></button><button class="panel-btn copy-btn" id="copy-config-btn">📋 Copy Config</button><button class="panel-btn" id="sound-btn">🔇 Sound</button><button id="toggle-btn" class="toggle-btn" aria-label="Toggle fullscreen fireworks"><span class="label-text">🎬 Show Fullscreen Fireworks</span></button></div></div></div><dialog id="types-dialog" class="types-dialog" aria-labelledby="types-dialog-title"><h2 id="types-dialog-title">Firework types</h2><p>Choose which shells the homepage fires. At least one stays on.</p><div id="types-grid" class="types-grid"></div><div class="types-actions"><button type="button" id="types-all">Select all</button><button type="button" id="types-classic">Classic shells</button><button type="button" id="types-close">Done</button></div></dialog><div class="pill-row"><span class="pill">Version 1.9.2</span><span class="pill">WebGL 2 first</span><span class="pill">Canvas fallback</span><span class="pill">No dependencies</span><span class="pill">Click for fireworks</span></div><p class="lead">WebGL 2 fireworks with 15 distinct shell types, adaptive performance, multi-line text that shimmers and dissolves, and a choreographed Super Grand Finale. Zero dependencies. Tiny footprint.</p><p class="lead" style="margin-top:12px"><strong>Some libraries just draw circles and call them fireworks.</strong> Grand Fireworks renders genuine pyrotechnic geometry — crossettes that split mid-air, weeping willows that trail gravity-realistic embers, galactic spirals, and chrysanthemum shells that <em>bloom</em>. Built for landing pages, hero sections, celebrations, and anyone who refuses to ship a half-baked effect.</p><p><a href="https://github.com/travisjmac/grand-fireworks-js">View source on GitHub</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/archive/refs/heads/main.zip">Download source ZIP</a> · <a href="https://travisjmac.github.io/grand-fireworks-js/">Open the GitHub Pages site</a> · <a href="https://github.com/travisjmac/grand-fireworks-js/blob/main/CHANGELOG.md">What changed in 1.9.2</a></p></header><main>
 <section class="compare-strip"><h2>WebGL vs Canvas</h2><div class="table-wrap compare-table"><table><thead><tr><th>Render path</th><th>Why it matters</th><th>Verdict</th></tr></thead><tbody><tr><td>WebGL 2</td><td>Handles denser particle clouds, brighter blending, and richer trails without making the show feel like it is dragging a refrigerator uphill.</td><td>The main stage. This is the path that keeps the fireworks feeling alive.</td></tr><tr><td>Canvas 2D</td><td>Works as a fallback, but it is still a 2D paint loop from another era.</td><td>Fine for compatibility. Not the path we want when the show needs to breathe.</td></tr><tr><td>Old-school DOM tricks</td><td>Easy to start, brittle fast, and nowhere near the particle budget needed for the good stuff.</td><td>Leave them in the museum.</td></tr></tbody></table></div><p class="compare-note">The engine is built to prefer WebGL 2 first, because that is where the real headroom lives. Canvas 2D is the emergency parachute, not the headline act.</p></section>
 <h2 id="quick-start">Quick start</h2><div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="GrandFireworks.js"&gt;&lt;/script&gt;
 &lt;script&gt;
@@ -15,7 +15,7 @@
 <h2 id="cdn">CDN</h2><p>Load directly from GitHub via jsDelivr — no build step, no bundler required.</p>
 <div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks.min.js"&gt;&lt;/script&gt;</code></pre></div>
 <p>To stay on one release rather than following the latest, pin its tag:</p>
-<div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.1/dist/GrandFireworks.min.js"&gt;&lt;/script&gt;</code></pre></div>
+<div class="code"><button class="copy">Copy</button><pre><code>&lt;script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.2/dist/GrandFireworks.min.js"&gt;&lt;/script&gt;</code></pre></div>
 <div id="generated-config" class="code-block"><button class="copy-btn" id="gen-copy">Copy</button><pre id="gen-config-display"></pre></div>
 <h2 id="examples">Experiences</h2><p>Two focused ways to explore Grand Fireworks: a cinematic scene, and a hands-on feature lab.</p><div class="grid">
 <a class="card featured horizon-card" href="examples/moonlit-horizon.html"><strong>Moonlit Horizon ✦</strong><span>A layered parallax night scene with a moon, drifting sky layers, and the horizon placard treatment front and center.</span></a>
@@ -139,6 +139,7 @@ fireworks.stop({ finale: false });   // Skip one configured finale
 fireworks.finalize();                // Graceful stop with finale</code></pre></div>
 <h2 id="depth">Depth-staged horizon</h2><p><code>visuals.zoom</code> changes the visible field of view: values below <code>1</code> pull back to reveal more of the launch horizon, while values above <code>1</code> move closer. <code>show.launchHorizon</code> defines the total launch area in screen widths. Each shell is staged as near, middle, or far, so distance affects its apparent size, flight speed, burst height, stereo position, loudness, and the small sound delay on distant booms. Use <code>zAngleRange</code> and <code>zAngleStrength</code> to tune its depth drift. For a live reference, open the <a href="examples/guided-builder.html?mode=features">Feature Demo panel</a>.</p>
 <p>The horizon is counted in screen widths, so a value of <code>1</code> covers one screen-width however far the view is pulled back - zoom out and the shells stay in a central band instead of reaching the edges. Tie the horizon to the zoom to keep them firing across the full viewport: <code>fireworks.setOptions({ visuals: { zoom }, show: { launchHorizon: 1 / zoom } })</code>. The rocket count per launch is <code>Math.min(show.launchHorizon, 1 / zoom)</code>, which exists to hold density steady as the field widens, so matching the horizon to the view also stops that count being capped below the area it has to fill. Apply it wherever the camera moves - including style presets, which can carry their own <code>visuals.zoom</code>.</p>
+<p>A share below <code>1</code> holds the launchers over a fixed part of the view and leaves the outer margin clear, which matters because shells are drawn at their largest when zoomed in and a band reaching the edge has its outer bursts clipped there first. The homepage uses <code>0.9</code>. Any share from <code>0.75</code> to <code>1</code> holds constant across a zoom range of <code>0.25</code>-<code>1.5</code>; below that the engine's floor on <code>launchHorizon</code> takes over at the zoomed-in end.</p>
 <h2 id="text">Text fireworks</h2><div class="code"><button class="copy">Copy</button><pre><code>fireworks.launchText('I love you very much. You are the best.', {
   renderMode: 'hybrid',
   maxLines: 3,
@@ -181,7 +182,7 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
 <h2 id="methods">Methods</h2><p><code>launch()</code>, <code>launchText()</code>, <code>launchTextSequence()</code>, and <code>launchFinale()</code> work even when the regular show is not running. They temporarily wake the renderer, play only the requested effect, and fade away when it finishes—without restarting automatic launches.</p><p><code>setRenderPass()</code>, <code>renderFrame()</code>, <code>placeburst()</code>, and <code>launchTo()</code> let you drive the engine instead of letting it run the show. A render pass lends the engine's canvas to your own drawing code — your callback runs every frame after the canvas is cleared and before the fireworks are drawn, so your scene sits behind them — and hands frame pacing to you, because the engine stops its own loop. <code>placeburst()</code> detonates a shell at a point, or at an element's centre, with no flight time. <code>launchTo()</code> fires a real rocket — trail, flash, burst and audio — from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. <code>examples/fireworks-command/</code> is a complete game built this way.</p><div class="table-wrap responsive-stack"><table><tbody><tr><th>Method</th><th>Purpose</th></tr><tr><td><code>start(options?)</code></td><td>Start the show. A run-specific duration may be supplied.</td></tr><tr><td><code>stop(options?)</code></td><td>Gracefully finish and return a Promise.</td></tr><tr><td><code>pause() / resume()</code></td><td>Pause or resume without launching a new show.</td></tr><tr><td><code>launch(options?)</code></td><td>Launch one regular firework, including while stopped.</td></tr><tr><td><code>launchText(text, options?)</code></td><td>Launch synchronized or staggered text rockets.</td></tr><tr><td><code>launchTextSequence(messages, options?)</code></td><td>Show cancellable text messages one at a time and return a completion result.</td></tr><tr><td><code>cancelTextSequence(options?)</code></td><td>Cancel the active message queue and optionally clear its current text.</td></tr><tr><td><code>launchFinale()</code></td><td>Launch the standalone staged Super Grand Finale.</td></tr><tr><td><code>finalize()</code></td><td>Gracefully end with the finale.</td></tr><tr><td><code>clear()</code></td><td>Remove active fireworks.</td></tr><tr><td><code>setRenderPass(callback)</code></td><td>Draw your own scene on the engine's canvas, behind the fireworks. Attaching a pass stops the engine's own loop and hands frame pacing to you. Pass <code>null</code> to detach.</td></tr><tr><td><code>renderFrame(dt)</code></td><td>Advance the simulation by <code>dt</code> ms and draw one frame. <code>dt</code> is capped at 50 ms; <code>renderFrame(0)</code> renders without advancing, so a paused host keeps its scene on screen.</td></tr><tr><td><code>placeburst(options)</code></td><td>Detonate a shell immediately at <code>x</code>/<code>y</code>, or at an element's centre via <code>element</code>. Accepts <code>radius</code>, <code>type</code>, <code>colors</code>, <code>density</code> and <code>sound</code>.</td></tr><tr><td><code>launchTo(options)</code></td><td>Fly a real rocket from an origin to a target over your own travel time, then burst there. Use it to keep gameplay and fireworks in lockstep.</td></tr><tr><td><code>setOptions(partial)</code></td><td>Merge settings and apply live opacity and DPR changes.</td></tr><tr><td><code>getOptions()</code></td><td>Return resolved configuration.</td></tr><tr><td><code>getStats()</code></td><td>Return renderer, FPS, particles, rockets, state, and timer.</td></tr><tr><td><code>destroy()</code></td><td>Remove layers, listeners, audio, observers, and renderer resources.</td></tr></tbody></table></div>
 <h2 id="events">Events</h2><div class="table-wrap responsive-stack"><table><tbody><tr><th>Event</th><th>Dispatched when</th></tr><tr><td><code>start</code></td><td>The show begins or resumes its main loop.</td></tr><tr><td><code>pause</code></td><td>The show is manually paused.</td></tr><tr><td><code>resume</code></td><td>The show is manually resumed after a pause.</td></tr><tr><td><code>stop</code></td><td>The show has fully stopped and the canvas is hidden.</td></tr><tr><td><code>textlaunch</code></td><td>A text firework is launched.</td></tr><tr><td><code>textsequencestart</code></td><td>A text sequence begins.</td></tr><tr><td><code>textsequenceitem</code></td><td>Each individual text message in a sequence fires.</td></tr><tr><td><code>textsequenceend</code></td><td>The full text sequence completes.</td></tr><tr><td><code>textsequencecancel</code></td><td>An active text sequence is cancelled.</td></tr><tr><td><code>finalestage</code></td><td>A stage of the Super Grand Finale begins (carrier, trails, secondary-burst).</td></tr><tr><td><code>rendererchange</code></td><td>The renderer falls back from WebGL to Canvas 2D.</td></tr></tbody></table></div>
 </main></div><!-- end page-content -->
-<footer>GrandFireworks 1.9.1 · <a href="https://github.com/travisjmac/grand-fireworks-js">GitHub</a> · <a href="examples/lucky.html">I'm Feeling Lucky</a> · <a href="examples/themes.html">Color Themes</a></footer><script>document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.nextElementSibling.innerText);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200);});</script>
+<footer>GrandFireworks 1.9.2 · <a href="https://github.com/travisjmac/grand-fireworks-js">GitHub</a> · <a href="examples/lucky.html">I'm Feeling Lucky</a> · <a href="examples/themes.html">Color Themes</a></footer><script>document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.nextElementSibling.innerText);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200);});</script>
 <style>
   body::before{content:"";position:fixed;z-index:1;inset:0 max(12px,calc((100vw - 1160px)/2));pointer-events:none;opacity:0;background:linear-gradient(90deg,rgba(4,6,20,.20),rgba(4,6,20,.48) 18%,rgba(7,8,22,.60) 50%,rgba(4,6,20,.48) 82%,rgba(4,6,20,.20));border-inline:1px solid rgba(151,177,255,.13);box-shadow:0 0 70px rgba(0,0,0,.36);backdrop-filter:blur(2px);animation:page-content-backdrop 1.2s ease-out 5s forwards;transition:opacity .45s ease}
   .page-content{position:relative;z-index:2}
@@ -260,6 +261,7 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
   const toggleBtn = document.querySelector('#toggle-btn');
   const panelCollapseBtn = document.querySelector('#panel-collapse');
   const panelRandomBtn = document.querySelector('#panel-random');
+  const panelEnderBtn = document.querySelector('#panel-ender');
   const panelSoundBtn = document.querySelector('#panel-sound');
   const panelExitBtn = document.querySelector('#panel-exit');
   // Phones get a slim bar locked to the bottom centre instead of a draggable panel.
@@ -267,11 +269,15 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
   const randomBtn = document.querySelector('#random-btn');
   const styleSelect = document.querySelector('#style-select');
   const autoRotateStyles = document.querySelector('#auto-rotate-styles');
+  const autoTextControl = document.querySelector('#auto-text');
   const autoRotateControl = autoRotateStyles.closest('.auto-rotate-control');
   const autoRotateLabel = autoRotateControl.querySelector('span');
   const autoRotateCountdown = document.createElement('output');
   autoRotateCountdown.className = 'auto-change-countdown';
-  autoRotateLabel.textContent = 'Auto style and colours';
+  autoRotateLabel.textContent = 'Auto style';
+  // Sits immediately after the words "Auto style" so the tick, the label and the count read
+  // as one control. It sits at "off" until the tick is on, when setStyleRotation counts
+  // down in it.
   autoRotateControl.append(autoRotateCountdown);
   const intensityAutoControl = document.createElement('label');
   intensityAutoControl.className = 'auto-rotate-control';
@@ -279,9 +285,11 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
   intensityAutoCheck.type = 'checkbox';
   intensityAutoCheck.checked = true;
   const intensityAutoLabel = document.createElement('span');
-  intensityAutoLabel.textContent = 'Auto intensity movement';
+  intensityAutoLabel.textContent = 'Auto intensity';
   intensityAutoControl.append(intensityAutoCheck, intensityAutoLabel);
-  autoRotateControl.after(intensityAutoControl);
+  // Placed before the Types button so the row reads Auto style, Auto text, Auto intensity,
+  // Types, with the Intensity slider sitting immediately to the left of the whole group.
+  document.querySelector('#types-btn').before(intensityAutoControl);
   const themeSelect = document.querySelector('#theme-select');
   const speedControl = document.querySelector('#speed-control');
   const speedValue = document.querySelector('#speed-value');
@@ -500,8 +508,9 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     }
   }, 3000);
 
-  // Toggle fullscreen mode
-  toggleBtn.addEventListener('click', () => {
+  // Toggle fullscreen mode. Wired to the panel's Show Fullscreen button, the slim bar's Exit
+  // button, and the sticky Show Fullscreen button that appears once the panel scrolls away.
+  function toggleFullscreen() {
     isFullscreen = !isFullscreen;
     if (isFullscreen) {
       // Enter fullscreen
@@ -542,10 +551,12 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
       document.body.classList.remove('showing-fireworks');
       fireworks.setOpacity(1);
     }
-  });
+  }
+  toggleBtn.addEventListener('click', toggleFullscreen);
 
-  // Random Config button — randomizes both style and color theme
-  randomBtn.addEventListener('click', () => {
+  // Randomises both the style and the colour theme. Driven by the panel's Random Config
+  // button and by the slim bar's Random button.
+  function randomizeConfig() {
     randomBtn.classList.add('spinning');
     setTimeout(() => {
       fireworks.setColorTheme('default');
@@ -555,7 +566,8 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
       themeSelect.value = 'random';
       randomBtn.classList.remove('spinning');
     }, 600);
-  });
+  }
+  randomBtn.addEventListener('click', randomizeConfig);
 
   // Style dropdown — ignore the disabled "random" option
   styleSelect.addEventListener('change', () => {
@@ -571,6 +583,12 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     setIntensityAutoChange(intensityAutoCheck.checked);
   });
 
+  // Switches the random text messages off and on. Without it the only way to stop the words
+  // appearing is to turn text fireworks off in the config entirely.
+  autoTextControl.addEventListener('change', () => {
+    textFireworksOn = autoTextControl.checked;
+  });
+
   // Color theme dropdown — ignore the disabled "random" option
   themeSelect.addEventListener('change', () => {
     if (themeSelect.value === 'random') return;
@@ -584,14 +602,22 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
   });
 
   // Zooming out pulls the camera back to reveal more of the launch horizon, but
-  // `show.launchHorizon` is measured in screen widths: at its default of 1 the shells spread
-  // across a single screen-width, so a wider field of view has launchers only in the middle
-  // and the fire stops short of the edges. Matching the horizon to 1 / zoom keeps them
-  // firing right across the viewport at any zoom (and narrows it when zoomed in, so the
-  // full width is still covered rather than just a central band). Zoom and horizon are set
-  // together in one place so they cannot drift out of step.
+  // `show.launchHorizon` is measured in screen widths: held at a fixed value the shells cover
+  // less and less of the viewport as the camera pulls back, so the fire stops short of the
+  // edges. Scaling it by the zoom instead holds the launchers over the same share of the
+  // screen at every zoom.
+  //
+  // That share is deliberately under 1. Shells are drawn at their largest on screen when
+  // zoomed in, so a band that reached the very edge had its outer bursts spill past the
+  // viewport there first; insetting it leaves room for them. The engine floors launchHorizon
+  // at 0.5, so this share must stay at or above 0.5 x the slider's maximum zoom, or the floor
+  // quietly takes over and the share starts drifting at the zoomed-in end.
+  const LAUNCH_BAND = 0.9;
   function applyZoom(zoom) {
-    fireworks.setOptions({ visuals: { zoom }, show: { launchHorizon: 1 / zoom } });
+    fireworks.setOptions({
+      visuals: { zoom },
+      show: { launchHorizon: LAUNCH_BAND / zoom }
+    });
   }
 
   zoomControl.addEventListener('input', () => {
@@ -599,6 +625,11 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     zoomValue.value = `${Math.round(zoom * 100)}%`;
     applyZoom(zoom);
   });
+
+  // Apply the band now as well. Without this the horizon keeps the engine default of 1 until
+  // the slider or a style change calls applyZoom, so the page would open with a full-width
+  // band and then visibly jump to the configured share on the first interaction.
+  applyZoom(Number(zoomControl.value));
 
   intensityControl.addEventListener('input', () => {
     setIntensityAutoChange(false);
@@ -614,14 +645,30 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     setPanelCollapsed(!heroPlayground.classList.contains('collapsed'));
   });
 
-  panelRandomBtn.addEventListener('click', () => randomBtn.click());
+  panelRandomBtn.addEventListener('click', randomizeConfig);
+
+  // Fires the engine's World Ender — the same effect Fireworks Command puts on a
+  // right-click. Its own defaults are unlimited particles and rockets, chaining for up
+  // to twenty seconds, which is not something to hand a public page on a single tap:
+  // one click could stall a phone. So it is held to this page's live particle budget,
+  // a rocket cap just above the ambient twenty, a shorter chain window and a shallower
+  // maximum depth. The engine merges these over its own worldEnder options.
+  panelEnderBtn.addEventListener('click', () => {
+    if (!fireworks) return;
+    fireworks.launchWorldEnder({
+      maxParticles: fireworks.options.show.maxParticles,
+      maxRockets: 28,
+      recursionDurationMs: 12000,
+      maxChainDepth: 4
+    });
+  });
 
   // Once the controls panel scrolls out of view, offer a compact Show
   // Fullscreen button just below the sticky menu so it is always one tap away.
   const scrollFullscreenBtn = document.querySelector('#scroll-fullscreen-btn');
   const sectionNav = document.querySelector('.section-nav');
   scrollFullscreenBtn.addEventListener('click', () => {
-    if (!isFullscreen) toggleBtn.click();
+    if (!isFullscreen) toggleFullscreen();
   });
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(([entry]) => {
@@ -631,11 +678,250 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     }).observe(heroPlayground);
   }
 
-  // Icon-only twin of the Sound button; both stay in sync through soundBtn.
-  panelSoundBtn.addEventListener('click', () => soundBtn.click());
+  // The slim bar's speaker button is now the only sound control.
+  panelSoundBtn.addEventListener('click', toggleSound);
 
   panelExitBtn.addEventListener('click', () => {
-    if (isFullscreen) toggleBtn.click();
+    if (isFullscreen) toggleFullscreen();
+  });
+
+  /* ── Firework types ─────────────────────────────────────────────────── */
+
+  // The 15 shells the engine ships, in catalogue order, with the readable names the Feature
+  // Lab's picker uses.
+  const SHELL_CATALOGUE = [
+    ['grand_peony', 'Grand Peony'],
+    ['imperial_chrysanthemum', 'Imperial Chrysanthemum'],
+    ['weeping_willow', 'Weeping Willow'],
+    ['royal_palm', 'Royal Palm'],
+    ['diamond_ring', 'Diamond Ring'],
+    ['crossette_supreme', 'Crossette Supreme'],
+    ['golden_brocade', 'Golden Brocade'],
+    ['dragon_fish', 'Dragon Fish'],
+    ['majestic_comet', 'Majestic Comet'],
+    ['cascading_horsetail', 'Cascading Horsetail'],
+    ['starburst', 'Starburst'],
+    ['glitter_nova', 'Glitter Nova'],
+    ['crown_jewel', 'Crown Jewel'],
+    ['thunder_clap', 'Thunder Clap'],
+    ['galactic_spiral', 'Galactic Spiral']
+  ];
+  const CLASSIC_SHELLS = ['grand_peony', 'starburst', 'imperial_chrysanthemum'];
+
+  // A small schematic of each break, matching the Feature Lab's picker. Drawn rather than
+  // simulated: fifteen live instances inside a dialog would cost far more than the picture
+  // is worth, and these have to appear the instant the dialog opens.
+  function drawShellPreview(canvas, type) {
+    const x = canvas.getContext('2d'),
+      w = 180,
+      h = 124,
+      cx = 90,
+      cy = 55,
+      colors = ['#fff8c8', '#ffd54f', '#ff6ea8', '#63d9ff', '#9d7bff'];
+    canvas.width = w;
+    canvas.height = h;
+    x.clearRect(0, 0, w, h);
+    x.lineCap = 'round';
+    x.globalCompositeOperation = 'lighter';
+    x.shadowBlur = 8;
+    const stroke = (color, width = 2) => {
+      x.strokeStyle = color;
+      x.shadowColor = color;
+      x.lineWidth = width;
+    };
+    const ray = (a, r1, r2, color, width = 2) => {
+      stroke(color, width);
+      x.beginPath();
+      x.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      x.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      x.stroke();
+    };
+    if (type === 'diamond_ring') {
+      stroke('#ffe27a', 3);
+      x.beginPath();
+      for (let i = 0; i <= 8; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / 4,
+          px = cx + Math.cos(a) * 35,
+          py = cy + Math.sin(a) * 35;
+        i ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.stroke();
+    } else if (type === 'galactic_spiral') {
+      for (let arm = 0; arm < 4; arm++) {
+        stroke(colors[arm + 1], 2);
+        x.beginPath();
+        for (let i = 0; i < 34; i++) {
+          const r = i * 1.15,
+            a = (arm * Math.PI) / 2 + i * 0.27,
+            px = cx + Math.cos(a) * r,
+            py = cy + Math.sin(a) * r;
+          i ? x.lineTo(px, py) : x.moveTo(px, py);
+        }
+        x.stroke();
+      }
+    } else if (
+      type === 'weeping_willow' ||
+      type === 'cascading_horsetail' ||
+      type === 'golden_brocade'
+    ) {
+      const count = type === 'cascading_horsetail' ? 9 : 15;
+      for (let i = 0; i < count; i++) {
+        const a = -Math.PI * 0.92 + (i / (count - 1)) * Math.PI * 0.84,
+          ex = cx + Math.cos(a) * 42,
+          ey = cy + Math.sin(a) * 30;
+        stroke(type === 'golden_brocade' ? '#ffd54f' : '#ffe6a0', 2);
+        x.beginPath();
+        x.moveTo(cx, cy);
+        x.quadraticCurveTo(ex, ey, ex + (i - count / 2) * 1.2, 104);
+        x.stroke();
+      }
+    } else if (type === 'royal_palm') {
+      for (let i = 0; i < 9; i++) {
+        const a = -Math.PI * 0.95 + (i / 8) * Math.PI * 0.9;
+        stroke(colors[i % colors.length], 3);
+        x.beginPath();
+        x.moveTo(cx, cy);
+        x.quadraticCurveTo(
+          cx + Math.cos(a) * 25,
+          cy + Math.sin(a) * 25,
+          cx + Math.cos(a) * 48,
+          cy + Math.sin(a) * 38 + 12
+        );
+        x.stroke();
+      }
+    } else if (type === 'crossette_supreme') {
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        ray(a, 3, 32, colors[i % colors.length], 2);
+        ray(a - 0.25, 34, 45, '#fff3bc', 2);
+        ray(a + 0.25, 34, 45, '#fff3bc', 2);
+      }
+    } else if (type === 'dragon_fish') {
+      for (let i = 0; i < 7; i++) {
+        stroke(colors[(i + 2) % colors.length], 2);
+        x.beginPath();
+        for (let n = 0; n < 22; n++) {
+          const px = 35 + n * 5,
+            py = 24 + i * 10 + Math.sin(n * 0.65 + i) * 5;
+          n ? x.lineTo(px, py) : x.moveTo(px, py);
+        }
+        x.stroke();
+      }
+    } else if (type === 'majestic_comet') {
+      stroke('#fff4b0', 6);
+      x.beginPath();
+      x.moveTo(30, 100);
+      x.quadraticCurveTo(68, 70, cx, cy);
+      x.stroke();
+      stroke('#ff9b42', 2);
+      for (let i = 0; i < 7; i++) {
+        x.beginPath();
+        x.moveTo(25 + i * 4, 104 - i * 2);
+        x.lineTo(68 + i * 2, 68);
+        x.stroke();
+      }
+    } else if (type === 'thunder_clap') {
+      const g = x.createRadialGradient(cx, cy, 1, cx, cy, 43);
+      g.addColorStop(0, '#fff');
+      g.addColorStop(0.18, '#fff9b0');
+      g.addColorStop(0.5, 'rgba(255,170,60,.35)');
+      g.addColorStop(1, 'transparent');
+      x.fillStyle = g;
+      x.fillRect(35, 0, 110, 110);
+      for (let i = 0; i < 16; i++) ray((i * Math.PI) / 8, 12, 46, '#fff4c2', 3);
+    } else if (type === 'crown_jewel') {
+      for (let i = 0; i < 11; i++)
+        ray(-Math.PI * 0.9 + (i / 10) * Math.PI * 0.8, 5, 38 + (i % 2) * 8, colors[i % colors.length], 3);
+      stroke('#ffd54f', 3);
+      x.beginPath();
+      x.arc(cx, cy + 24, 28, Math.PI, Math.PI * 2);
+      x.stroke();
+    } else {
+      const count =
+        type === 'starburst' ? 12 : type === 'glitter_nova' ? 28 : type === 'imperial_chrysanthemum' ? 24 : 18;
+      for (let i = 0; i < count; i++) {
+        const a = (i / count) * Math.PI * 2,
+          r = type === 'starburst' ? (i % 2 ? 30 : 48) : 32 + (i % 5) * 3;
+        ray(a, 4, r, colors[i % colors.length], type === 'starburst' ? 3 : 2);
+      }
+      if (type === 'glitter_nova')
+        for (let i = 0; i < 24; i++) {
+          x.fillStyle = colors[i % colors.length];
+          x.fillRect(24 + ((i * 37) % 132), 12 + ((i * 53) % 88), 2, 2);
+        }
+    }
+    x.globalCompositeOperation = 'source-over';
+    x.shadowBlur = 0;
+  }
+
+  const typesDialog = document.querySelector('#types-dialog');
+  const typesGrid = document.querySelector('#types-grid');
+
+  // What the engine is currently firing. "all" is the engine's own shorthand, so it is
+  // expanded to the catalogue to give the boxes something to tick.
+  function enabledTypes() {
+    const current = fireworks.options.show.enabledTypes;
+    return current === 'all' ? SHELL_CATALOGUE.map(([type]) => type) : current.slice();
+  }
+
+  function applyEnabledTypes(list) {
+    // An empty array would leave the engine with nothing to draw from, so the last shell
+    // standing is kept rather than letting the show quietly stop.
+    const chosen = list.length ? list : [SHELL_CATALOGUE[0][0]];
+    fireworks.setOptions({ show: { enabledTypes: chosen } });
+    typesGrid.querySelectorAll('input').forEach(input => {
+      const on = chosen.includes(input.value);
+      input.checked = on;
+      input.closest('.shell-card').classList.toggle('selected', on);
+    });
+  }
+
+  function buildTypesGrid() {
+    const chosen = enabledTypes();
+    typesGrid.innerHTML = '';
+    for (const [type, label] of SHELL_CATALOGUE) {
+      const card = document.createElement('label');
+      card.className = 'shell-card' + (chosen.includes(type) ? ' selected' : '');
+      const canvas = document.createElement('canvas');
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', label + ' shell preview');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = type;
+      input.checked = chosen.includes(type);
+      const name = document.createElement('span');
+      name.textContent = label;
+      input.addEventListener('change', () => {
+        const picked = [...typesGrid.querySelectorAll('input:checked')].map(entry => entry.value);
+        applyEnabledTypes(picked);
+      });
+      card.append(canvas, input, name);
+      typesGrid.appendChild(card);
+      drawShellPreview(canvas, type);
+    }
+  }
+
+  function openTypesDialog() {
+    // Rebuilt on open so the boxes always show what the engine is actually firing, even if
+    // a style change or Random Config moved it on since last time.
+    buildTypesGrid();
+    if (typeof typesDialog.showModal === 'function') typesDialog.showModal();
+    else typesDialog.setAttribute('open', '');
+  }
+
+  for (const button of [document.querySelector('#panel-types'), document.querySelector('#types-btn')])
+    button.addEventListener('click', openTypesDialog);
+
+  document.querySelector('#types-all').addEventListener('click', () =>
+    applyEnabledTypes(SHELL_CATALOGUE.map(([type]) => type))
+  );
+  document.querySelector('#types-classic').addEventListener('click', () =>
+    applyEnabledTypes(CLASSIC_SHELLS.slice())
+  );
+  document.querySelector('#types-close').addEventListener('click', () => typesDialog.close());
+  // Clicking the dimmed backdrop closes it, as a dialog that fills the screen should.
+  typesDialog.addEventListener('click', event => {
+    if (event.target === typesDialog) typesDialog.close();
   });
 
   heroDragHandle.addEventListener('pointerdown', event => {
@@ -736,16 +1022,21 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
   // instead of beating on a fixed period. Both walk the same area series, and the series
   // advances per launch, so two that land close together still take different spots
   // rather than stacking on top of each other.
+  // The firers keep re-arming whether or not the messages are switched on, so switching them
+  // back on takes effect at the next gap rather than needing the timers restarted. A message
+  // already in the air is left to finish.
+  let textFireworksOn = true;
   function textFireworkLoop() {
-    shootTextFirework();
+    if (textFireworksOn) shootTextFirework();
     setTimeout(textFireworkLoop, 1000 + Math.random() * 9000);
   }
   const TEXT_FIRERS = 2;
   for (let i = 0; i < TEXT_FIRERS; i++)
     setTimeout(textFireworkLoop, 1500 + i * 2500);
 
-  // Sound toggle
-  soundBtn.addEventListener('click', () => {
+  // Sound toggle. The panel's Sound button and the slim bar's speaker button both drive it,
+  // so the two stay in sync.
+  function toggleSound() {
     soundOn = !soundOn;
     if (soundOn) fireworks.enableSound();
     else fireworks.disableSound();
@@ -755,7 +1046,8 @@ timers.push(setTimeout(() =&gt; fireworks.launchFinale(), 9000)); // other effec
     panelSoundBtn.textContent = soundOn ? '🔊' : '🔇';
     panelSoundBtn.setAttribute('aria-pressed', String(soundOn));
     panelSoundBtn.setAttribute('aria-label', soundOn ? 'Sound on. Turn sound off' : 'Sound off. Turn sound on');
-  });
+  }
+  soundBtn.addEventListener('click', toggleSound);
 
   // Copy Config: slide content back, scroll to CDN + config, copy
   copyConfigBtn.addEventListener('click', () => {
@@ -887,4 +1179,4 @@ document.querySelector('#timed-demo-replay').addEventListener('click', play);
 <script>
   document.getElementById('timed-demo-code').textContent =
     document.getElementById('timed-demo-script').textContent.trim();
-</script><footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.9.1 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:rgba(255,255,255,.22);text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:rgba(255,255,255,.22);text-decoration:none">GitHub</a></footer></body></html>
+</script><footer class="grand-fireworks-creator-credit" style="position:fixed;left:0;right:0;bottom:6px;z-index:2147483646;text-align:center;font:400 11px/1 system-ui,sans-serif;color:rgba(255,255,255,.22);pointer-events:none;user-select:none">Grand Fireworks JS v1.9.2 · <a href="http://travisandjoelyweareaperfect.fit/" style="color:rgba(255,255,255,.22);text-decoration:none">Travis MacDonald</a> · <a href="https://github.com/travisjmac/grand-fireworks-js" style="color:rgba(255,255,255,.22);text-decoration:none">GitHub</a></footer></body></html>

@@ -525,6 +525,11 @@ body.showing-fireworks .grand-fireworks-creator-credit {
 #panel-sound[aria-pressed="true"] {
   color: #8fd4ff;
 }
+/* The World Ender button carries two labels: the full name on the roomy desktop bar,
+   a short one on phones, where the bar shares the viewport with four other controls. */
+#panel-ender .ender-short {
+  display: none;
+}
 .hero-playground.collapsed .hero-controls {
   display: none;
 }
@@ -572,9 +577,15 @@ select option {
 }
 .hero-range span {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+/* The word sits left, its value right, so the caption row stays a single tidy line. */
+.hero-word {
+  font-weight: inherit;
 }
 .hero-range output {
+  margin-left: auto;
   color: #ffdc68;
 }
 .hero-range input {
@@ -606,10 +617,138 @@ select option {
   margin: 0;
   accent-color: var(--gold);
 }
+/* The two switches, the types button and the appended auto-intensity switch, held as one row
+   so their order survives whatever the grid around them does. Spanning three columns puts
+   them on the same line as the Intensity slider, which is what sits to their left. */
+.auto-controls {
+  grid-column: span 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.auto-controls .auto-rotate-control {
+  grid-column: auto;
+}
+/* Matches the panel's other buttons exactly — same height, radius, padding, weight and
+   colour treatment — so it reads as a peer in the row rather than a differently built
+   control. It is outside .hero-actions, so it cannot inherit that rule. */
+.types-panel-btn {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+  font: 500 13px/1 system-ui, sans-serif;
+}
+.types-panel-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+/* Sits immediately right of its own tick, so the two read as one control. */
 .auto-change-countdown {
-  margin-left: auto;
   color: #ffdc68;
   font-variant-numeric: tabular-nums;
+}
+/* The firework type picker. A native dialog, so it lands in the top layer and traps focus —
+   both needed, because the control panel is fixed above the page. */
+.types-dialog {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(84vh, 720px);
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #0b0e22;
+  color: #f7f8ff;
+  font: 400 14px/1.5 system-ui, sans-serif;
+  overflow: auto;
+}
+.types-dialog::backdrop {
+  background: rgba(2, 3, 13, 0.72);
+  backdrop-filter: blur(3px);
+}
+.types-dialog h2 {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 1.15rem;
+}
+.types-dialog p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 9px;
+}
+.shell-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: 62px auto;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+}
+.shell-card:hover {
+  border-color: rgba(255, 215, 0, 0.32);
+  background: rgba(255, 215, 0, 0.05);
+}
+.shell-card.selected {
+  border-color: rgba(255, 215, 0, 0.58);
+  background: rgba(255, 215, 0, 0.09);
+}
+.shell-card canvas {
+  display: block;
+  width: 100%;
+  height: 62px;
+  border-radius: 6px;
+  background: radial-gradient(circle at 50% 46%, rgba(28, 38, 72, 0.5), rgba(2, 3, 13, 0.9));
+}
+.shell-card span {
+  color: #e9ecff;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+.shell-card input {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--gold);
+}
+.types-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.types-actions button {
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  background: rgba(255, 215, 0, 0.08);
+  color: #ffe27b;
+  border-radius: 9px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font: 600 13px/1 system-ui, sans-serif;
+}
+.types-actions button:hover {
+  background: rgba(255, 215, 0, 0.16);
+}
+.types-actions #types-close {
+  margin-left: auto;
+  border-color: rgba(143, 212, 255, 0.3);
+  background: rgba(143, 212, 255, 0.1);
+  color: #8fd4ff;
 }
 .hero-playground.fullscreen-controls {
   position: fixed;
@@ -662,23 +801,69 @@ select option {
   background: rgba(100, 200, 255, 0.06);
   color: #8fd4ff;
 }
-/* Links to the full Workbench and Feature Demo, on the page and in fullscreen. */
-.hero-links {
-  grid-column: 1 / -1;
+/* Slim drops the button row: it is the bulkiest thing in the panel, and the strip is meant
+   to be a single line. The controls it carried stay reachable from the slim bar. */
+.hero-playground.collapsed .hero-actions {
+  display: none;
+}
+/* Slim keeps the controls instead of hiding them. The slider captions collapse to an icon and
+   the controls lose their height, so the set packs onto one line and wraps to a second when
+   there is not room. Only the collapsed state changes; Full keeps the taller controls. */
+.hero-playground.collapsed .hero-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 6px 14px;
-  color: var(--muted);
-  font-size: 0.8rem;
+  gap: 8px 10px;
+  padding: 8px 10px;
 }
-.hero-links a {
-  display: inline-flex;
+.hero-playground.collapsed .hero-field > span {
+  display: none;
+}
+.hero-playground.collapsed .hero-field select {
+  min-height: 30px;
+  padding: 5px 26px 5px 9px;
+  font-size: 12px;
+}
+.hero-playground.collapsed .hero-range {
+  display: flex;
   align-items: center;
-  min-height: 32px;
-  color: #8fd4ff;
-  font-weight: 600;
+  gap: 6px;
+  flex: 1 1 150px;
+  min-width: 0;
+}
+/* Slim shows the slider's icon and its value and drops only the word, which is the part that
+   was forcing the strip onto an extra line. */
+.hero-playground.collapsed .hero-word {
+  display: none;
+}
+.hero-playground.collapsed .hero-range > span .hero-ico {
+  font-size: 0.9rem;
+}
+.hero-playground.collapsed .hero-range > span output {
+  font-size: 0.7rem;
+}
+.hero-playground.collapsed .hero-range input {
+  flex: 1 1 auto;
+  min-width: 56px;
+  min-height: 24px;
+}
+.hero-playground.collapsed .auto-rotate-control {
+  grid-column: auto;
+  gap: 6px;
+  min-height: 26px;
+  font-size: 0.72rem;
+}
+.hero-playground.collapsed .auto-rotate-control input {
+  width: 14px;
+  height: 14px;
+}
+.hero-playground.collapsed .auto-controls {
+  gap: 6px 10px;
+}
+.hero-playground.collapsed .types-panel-btn {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
 }
 .toggle-btn {
   position: relative;
@@ -923,8 +1108,12 @@ select option {
     max-height: 60dvh;
   }
   .hero-playground.fullscreen-controls.collapsed {
+    /* The collapsed panel now carries the controls, so max-content can be wider than the
+       phone. Capping it lets the strip wrap inside the viewport instead of running off the
+       edge, and a strip that can wrap needs a corner radius that is not a pill. */
     width: max-content;
-    border-radius: 999px;
+    max-width: calc(100vw - 16px);
+    border-radius: 16px;
   }
   .fullscreen-controls .hero-drag-handle,
   .fullscreen-controls .hero-drag-handle:active {
@@ -954,9 +1143,15 @@ select option {
     padding: 6px 10px;
     background: transparent;
   }
-  /* The "|" separators between Full, Random and Exit. */
+  /* The "|" separators between Full, Random, World Ender, Sound and Exit. */
   .fullscreen-controls .handle-btn + .handle-btn {
     border-left: 1px solid rgba(255, 215, 0, 0.3);
+  }
+  #panel-ender .ender-long {
+    display: none;
+  }
+  #panel-ender .ender-short {
+    display: inline;
   }
   .toggle-btn {
     padding: 6px 10px;

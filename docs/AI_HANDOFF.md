@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.9.1**
+- Current release: **v1.9.2**
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -154,7 +154,7 @@ The homepage is both documentation and a live showcase. It starts Cinematic by d
 - periodic Grand Finale launches;
 - two independent text-firework firers over a declared series of areas, with the ambient show deliberately left running behind them;
 - a Timed Show demo beside Fireworks Command (`.use-case-grid`, `#timed-demo`): a second, contained instance with `autoStart: false` that fires nine cues off `setTimeout` against a clock counting from `play()`, replays by cancelling every pending timer first, and is started and stopped by an `IntersectionObserver` so it only runs on screen. Its displayed source is read out of the live `<script id="timed-demo-script">` element, so the code shown cannot drift from the code that runs. It is added to `PAGE_CONTROLS` so clicking the box does not also detonate a shell;
-- sound, random configuration, copy configuration, and fullscreen controls.
+- sound, random configuration, copy configuration, and fullscreen controls. The compact fullscreen bar reads Full/Slim, Random, World Ender, sound, Exit: the World Ender button calls `launchWorldEnder()` with capped limits rather than the engine's `Infinity` defaults, because a single tap on a public page must not be able to request unlimited particles.
 
 Homepage-specific show logic belongs in its inline script, not in the core engine. The homepage may use high-intensity moments, but it must retain sensible safety caps. It currently permits up to 20 active rockets to make 700% intensity visually meaningful.
 
@@ -229,7 +229,7 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.1/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.2/dist/GrandFireworks.min.js"></script>
 ```
 
 For the moving development branch, use:

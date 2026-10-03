@@ -3,7 +3,11 @@
 > **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.9.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.9.2** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+
+## Version 1.9.2
+
+The homepage control panel is rebuilt. It **keeps its controls when slimmed** instead of hiding them, gains an **Auto text** switch for the random messages, and adds a **firework type picker** — a Types button in the bar and in the panel opens a dialog of all fifteen shells with drawn previews and checkboxes, applied live. The launch band also now holds a fixed 90% of the view at every zoom so bursts are not clipped at the edges.
 
 ## Version 1.9.1
 
@@ -40,7 +44,7 @@ For a no-build webpage, use the stable CDN filename:
 To stay on one release, pin its tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.1/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.2/dist/GrandFireworks.min.js"></script>
 ```
 
 ### TypeScript

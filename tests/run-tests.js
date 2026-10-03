@@ -2322,10 +2322,120 @@ test('tilted text draws its crisp layer at the same angle as its sparks', () => 
   fireworks.destroy();
 });
 
-test('the homepage widens the launch horizon as the view pulls back', () => {
+test('the homepage can choose which firework types it fires', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.ok(/launchHorizon: 1 \/ zoom/.test(html), 'the horizon must follow the zoom');
+  // A Types button in the top bar beside Slim/Full, and one in the panel for the page view.
+  const bar = html.match(/<div id="hero-drag-handle"[\s\S]*?<\/div>/);
+  assert.ok(bar, 'the handle bar must exist');
+  assert.ok(bar[0].includes('id="panel-types"'), 'the bar needs a Types button');
+  assert.ok(
+    bar[0].indexOf('panel-types') > bar[0].indexOf('panel-collapse'),
+    'it belongs beside the Slim/Full button',
+  );
+  assert.ok(html.includes('id="types-btn"'), 'the panel needs its own Types button');
+  assert.ok(
+    /document\.querySelector\('#panel-types'\), document\.querySelector\('#types-btn'\)/.test(html),
+    'both buttons must open the same picker',
+  );
+
+  // The dialog must offer exactly what the engine can fire, or the boxes drift from reality.
+  assert.ok(/<dialog id="types-dialog"/.test(html), 'the picker dialog must exist');
+  const catalogue = html.match(/const SHELL_CATALOGUE = \[([\s\S]*?)\];/);
+  assert.ok(catalogue, 'the shell catalogue must be declared');
+  const listed = [...catalogue[1].matchAll(/\['([a-z_]+)',/g)].map(match => match[1]);
+  const { GrandFireworks } = createRuntime();
+  assert.equal(listed.length, GrandFireworks.TYPES.length, 'every shell type must be offered');
+  for (const type of GrandFireworks.TYPES)
+    assert.ok(listed.includes(type), `the picker is missing ${type}`);
+
+  // Ticking a box has to reach the live engine, and must never leave it with nothing to fire.
+  assert.ok(
+    /fireworks\.setOptions\(\{ show: \{ enabledTypes: chosen \} \}\)/.test(html),
+    'the picker must set enabledTypes on the engine',
+  );
+  assert.ok(
+    /const chosen = list\.length \? list : \[SHELL_CATALOGUE\[0\]\[0\]\]/.test(html),
+    'an empty selection must not be handed to the engine',
+  );
+
+  // And the page must read the engine's current set when it opens, not a remembered one.
+  assert.ok(
+    /current === 'all' \? SHELL_CATALOGUE\.map/.test(html),
+    'the dialog must reflect what is actually enabled',
+  );
+});
+
+test('the homepage can switch the random text messages off', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  // The switch must exist and default to on, or the messages stop for everyone on load.
+  const control = html.match(/<input id="auto-text" type="checkbox"([^>]*)>/);
+  assert.ok(control, 'the Auto text switch must exist');
+  assert.ok(/\bchecked\b/.test(control[1]), 'and be on by default');
+
+  assert.ok(
+    /autoTextControl\.addEventListener\('change'/.test(html),
+    'the switch must be wired to a change handler',
+  );
+  assert.ok(
+    /textFireworksOn = autoTextControl\.checked/.test(html),
+    'which has to set the flag the firers read',
+  );
+
+  // The point of the switch: the firers must consult the flag, or it does nothing at all.
+  const loop = html.match(/function textFireworkLoop\(\)[\s\S]*?\n  \}/);
+  assert.ok(loop, 'the text firer must exist');
+  assert.ok(
+    /if \(textFireworksOn\) shootTextFirework\(\)/.test(loop[0]),
+    'and the firer must honour the switch',
+  );
+});
+
+test('the homepage control panel closes before the rest of the page', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const from = html.indexOf('<div id="hero-playground"');
+  const to = html.indexOf('<div class="pill-row"');
+  assert.ok(from > -1 && to > from, 'the panel and what follows it must both be findable');
+
+  // Removing the "More controls" row from this region once took a closing </div> with it, so
+  // the panel never closed and everything after it — the version pills, the lead paragraphs,
+  // the links — rendered inside the control box. Balance is the thing that catches that.
+  const region = html.slice(from, to);
+  const opens = (region.match(/<div\b/g) || []).length;
+  const closes = (region.match(/<\/div>/g) || []).length;
+  assert.equal(closes, opens, `the panel region has ${opens} <div> but ${closes} </div>`);
+});
+
+test('the homepage holds the launch band at a fixed share of the viewport', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  // The band has to scale with the zoom, or a wider field of view leaves the fire short of
+  // the edges. It used to be a bare 1 / zoom, which pinned the launchers to the exact edges
+  // at every zoom; it is now a named share of the viewport so bursts have room to expand into
+  // and the same share is held whether the camera is pulled back or pushed in.
+  const band = html.match(/const LAUNCH_BAND = ([\d.]+)/);
+  assert.ok(band, 'the band share must be a named constant');
+  const share = Number(band[1]);
+  assert.ok(share > 0 && share <= 1, `a share of the viewport, got ${share}`);
+  assert.ok(
+    /launchHorizon: LAUNCH_BAND \/ zoom/.test(html),
+    'the horizon must be that share of the visible width',
+  );
+
+  // The engine floors launchHorizon at 0.5. Above that floor the share is held exactly; below
+  // it the floor takes over and the band stops holding. Checked against the real slider
+  // maximum rather than a copied number, so widening the slider fails here instead of
+  // silently changing what the page looks like.
+  const slider = html.match(/id="zoom-control"[^>]*max="([\d.]+)"/);
+  assert.ok(slider, 'the zoom slider must be findable');
+  const maxZoom = Number(slider[1]);
+  assert.ok(maxZoom > 1, 'the slider must be able to zoom in');
+  assert.ok(
+    share / maxZoom >= 0.5,
+    `at zoom ${maxZoom} a share of ${share} falls to ${(share / maxZoom).toFixed(3)}, under the engine floor of 0.5`,
+  );
+
   assert.ok(/function applyZoom\(zoom\)/.test(html), 'applied through a single helper');
 
   // Both camera controls have to go through that helper, or the horizon drifts out of step
@@ -2453,6 +2563,47 @@ test('the homepage timed-show demo fires its cues in order, and can be cancelled
     /PAGE_CONTROLS = '[^']*#timed-demo/.test(html),
     'the demo box must be excluded from click-to-burst',
   );
+});
+
+test('the slim control bar fires a budgeted World Ender beside Random', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  const bar = html.match(/<div id="hero-drag-handle"[\s\S]*?<\/div>/);
+  assert.ok(bar, 'the handle bar must exist');
+  assert.ok(bar[0].includes('id="panel-random"'), 'Random must stay in the bar');
+  assert.ok(bar[0].includes('id="panel-ender"'), 'and the World Ender button must be there');
+  assert.ok(
+    bar[0].indexOf('panel-ender') > bar[0].indexOf('panel-random'),
+    'the World Ender button must sit straight after Random',
+  );
+  // Order the user asked for: Full/Slim, Random, World Ender, sound, Exit.
+  assert.ok(
+    bar[0].indexOf('panel-ender') < bar[0].indexOf('panel-sound'),
+    'and before the sound toggle',
+  );
+
+  const wiring = html.match(/panelEnderBtn = document\.querySelector\('([^']+)'\)/);
+  assert.ok(wiring, 'the button must be looked up');
+  // The captured selector carries its leading "#"; the markup carries the bare id.
+  assert.ok(
+    html.includes(`id="${wiring[1].replace(/^#/, '')}"`),
+    'and that id must exist in the markup',
+  );
+
+  const handler = html.match(/panelEnderBtn\.addEventListener\('click',[\s\S]*?\n  \}\);/);
+  assert.ok(handler, 'the button must be wired to a click handler');
+  assert.ok(
+    /fireworks\.launchWorldEnder\(/.test(handler[0]),
+    'the handler must fire the World Ender',
+  );
+
+  // The engine's own defaults are Infinity particles and rockets chaining for twenty
+  // seconds. One tap on a public page must not be able to ask for that, so the page
+  // has to pass its own ceilings.
+  assert.ok(/maxParticles:/.test(handler[0]), 'particles must be capped');
+  assert.ok(/maxRockets:/.test(handler[0]), 'rockets must be capped');
+  assert.ok(/recursionDurationMs:/.test(handler[0]), 'and the chain window bounded');
+  assert.ok(!/Infinity/.test(handler[0]), 'nothing may be left unlimited');
 });
 
 test('the builder import accepts every shape a config gets pasted in', () => {

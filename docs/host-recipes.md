@@ -279,6 +279,22 @@ Call it from **every** control that moves the camera. Style presets can carry th
 out of step. At `zoom > 1` the expressions are equal, so this only changes zoomed-out
 behaviour.
 
+### Leaving room at the edges
+
+A share **below** 1 holds the launchers over a fixed part of the view and keeps the outer
+margin clear. Shells are drawn at their largest on screen when zoomed in, so a band that
+reaches the very edge has its outer bursts clipped there first. The homepage uses `0.9`:
+
+```js
+const LAUNCH_BAND = 0.9; // launchers cover 90% of the view, 5% clear either side
+fireworks.setOptions({ visuals: { zoom }, show: { launchHorizon: LAUNCH_BAND / zoom } });
+```
+
+Any share from `0.75` to `1` holds a constant fraction of the viewport across a zoom range
+of `0.25`–`1.5`. Below that the engine's own floor on `launchHorizon` (0.5) takes over at
+the zoomed-in end and the share starts growing again, because the floor is a fixed number
+while the share has to shrink with the zoom.
+
 ---
 
 ## 6. Palette modes

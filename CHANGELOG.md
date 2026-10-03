@@ -2,6 +2,24 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.9.2] — October 3, 2026
+
+The homepage control panel is rebuilt: it keeps its controls when slimmed, can switch the random text off, and gains a firework type picker.
+
+### Added
+
+- **A firework type picker on the homepage.** A **Types** button in the compact bar — beside Slim/Full — and a second one in the panel both open a dialog listing all fifteen shells, each with a drawn preview, a checkbox and its readable name, plus **Select all**, **Classic shells** and **Done**. Ticking a box applies to the live show immediately; a native `<dialog>` is used so it lands in the top layer and traps focus, which matters because the panel itself is fixed above the page.
+- **An Auto text switch**, beside the other two auto switches, which stops the random text messages — previously the only way to stop them was to disable text fireworks in the config entirely. A message already in the air is left to finish, and the firers keep their timers, so switching back on resumes at the next gap rather than restarting the irregular spacing.
+- **A World Ender button in the homepage's slim control bar**, between Random and the sound toggle. It calls `launchWorldEnder()`, which the homepage never reached before, having only ever fired the finale. The engine's own defaults are `maxParticles: Infinity` and `maxRockets: Infinity` chaining for twenty seconds, which is more than one tap should be able to ask of a public page, so the button passes this page's live particle budget, a rocket cap of 28 (just above the ambient 20), a twelve-second recursion window and a maximum chain depth of 4. On 600px screens and narrower the label shortens to **Ender** so the bar still fits.
+
+### Changed
+
+- **Slim keeps the controls instead of hiding them.** Everything except the button row stays reachable in a single wrapping line. The word captions on the Speed, Zoom and Intensity sliders collapse to an icon — ⚡ 🔍 💥, with hover text — while their values stay visible, and the two dropdowns lose their captions, which only repeated what the options already said. The button row is the one thing Slim drops, being the bulkiest part of the panel; everything it carried is still reachable from the slim bar.
+- **The homepage keeps its fireworks inside the viewport at every zoom.** The launch band used to be pinned to the exact viewport edges, which clipped the outer bursts once zoomed in, because shells are drawn at their largest on screen there. It now covers a fixed **90%** of the view, whatever the zoom, with a clear margin at each edge to expand into. The share is a named constant on the page (`LAUNCH_BAND`) and holds exactly across the whole zoom range instead of drifting at the zoomed-in end; zooming out still multiplies the number of rockets per launch, as before.
+- The auto switches and the Types button are held in one row, on the same line as the Intensity slider and to its right.
+- The auto-style countdown sits immediately after the words "Auto style" rather than at the far end of the row.
+- The **"More controls" link row was removed** from the panel. The Config Workbench and Feature Demo are still linked from the Experience and Configuration sections further down the page.
+
 ## [1.9.1] — October 3, 2026
 
 The homepage gains a timed show, next to Fireworks Command.
