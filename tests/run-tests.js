@@ -2058,6 +2058,48 @@ test('text can be shown without halting the rest of the show', () => {
     });
 });
 
+test('text shrinks with the camera when the view pulls back', () => {
+  const { GrandFireworks } = createRuntime();
+  const near = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const far = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    visuals: { zoom: 0.5 },
+  });
+
+  const atOne = near._textPlans(['BOOM'], near.options.textFirework)[0];
+  const pulled = far._textPlans(['BOOM'], far.options.textFirework)[0];
+
+  // Text plans are sampled in screen pixels and then divided by the zoom, so drawing the
+  // block at the configured size made the words immune to the camera: pulling back left
+  // them full size. They have to follow the perspective like everything else.
+  assert.ok(pulled.fontSize < atOne.fontSize, 'zooming out must shrink the block');
+  assert.equal(pulled.fontSize, Math.round(atOne.fontSize / 2), 'and by the zoom factor');
+  // Only the size changes - the requested position must not drift sideways.
+  assert.equal(pulled.x, atOne.x, 'the block must not move sideways with the zoom');
+  near.destroy();
+  far.destroy();
+});
+
+test('the homepage widens the launch horizon as the view pulls back', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  assert.ok(/launchHorizon: 1 \/ zoom/.test(html), 'the horizon must follow the zoom');
+  assert.ok(/function applyZoom\(zoom\)/.test(html), 'applied through a single helper');
+
+  // Both camera controls have to go through that helper, or the horizon drifts out of step
+  // with the zoom: the slider changes it directly, and a style preset can change it too.
+  const uses = html.match(/applyZoom\(/g) || [];
+  assert.ok(uses.length >= 3, 'the helper must be defined and used by the slider and styles');
+  assert.ok(
+    /zoomControl\.addEventListener\('input'[\s\S]{0,200}?applyZoom\(zoom\)/.test(html),
+    'the zoom slider must set both together',
+  );
+  assert.ok(
+    /applyZoom\(options\.visuals\.zoom\)/.test(html),
+    'and a style change must re-apply the horizon',
+  );
+});
+
 test('the homepage walks a set series of areas for text, without stopping the show', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 

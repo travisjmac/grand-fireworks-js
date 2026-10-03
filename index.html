@@ -316,6 +316,8 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     speedValue.value = `${Math.round(options.speedMultiplier * 100)}%`;
     zoomControl.value = String(options.visuals.zoom);
     zoomValue.value = `${Math.round(options.visuals.zoom * 100)}%`;
+    // A style preset can move the camera, so the launch horizon has to follow it here too.
+    applyZoom(options.visuals.zoom);
     intensityControl.value = String(options.show.intensity);
     intensityValue.value = `${Math.round(options.show.intensity * 100)}%`;
     homepageIntensity = options.show.intensity;
@@ -552,10 +554,21 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     fireworks.setOptions({ speedMultiplier: speed });
   });
 
+  // Zooming out pulls the camera back to reveal more of the launch horizon, but
+  // `show.launchHorizon` is measured in screen widths: at its default of 1 the shells spread
+  // across a single screen-width, so a wider field of view has launchers only in the middle
+  // and the fire stops short of the edges. Matching the horizon to 1 / zoom keeps them
+  // firing right across the viewport at any zoom (and narrows it when zoomed in, so the
+  // full width is still covered rather than just a central band). Zoom and horizon are set
+  // together in one place so they cannot drift out of step.
+  function applyZoom(zoom) {
+    fireworks.setOptions({ visuals: { zoom }, show: { launchHorizon: 1 / zoom } });
+  }
+
   zoomControl.addEventListener('input', () => {
     const zoom = Number(zoomControl.value);
     zoomValue.value = `${Math.round(zoom * 100)}%`;
-    fireworks.setZoom(zoom);
+    applyZoom(zoom);
   });
 
   intensityControl.addEventListener('input', () => {

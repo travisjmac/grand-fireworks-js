@@ -2519,20 +2519,27 @@
     _textPlans(lines, cfg) {
       const inset = 4,
         lineWidth = Math.max(280, Math.floor(this.width * cfg.maxWidth)),
-        measure = document.createElement("canvas").getContext("2d");
+        measure = document.createElement("canvas").getContext("2d"),
+        // Plans are sampled in screen pixels and _explodeType then divides every point by
+        // the zoom to undo the camera, so the block used to hold the same on-screen size
+        // however far the view pulled back - the words ignored the perspective entirely.
+        // Scaling the base size by the zoom puts the block back under the camera: it now
+        // shrinks and grows with everything else. The requested position still holds,
+        // because the centre is not scaled; only the block's extent is.
+        zoom = this.zoom || 1,
+        baseFont = cfg.fontSize * zoom;
       // fillText squeezes text that is wider than its maxWidth horizontally,
       // which makes long lines look tall and narrow on small screens. Shrink
       // the font for the whole block instead so every line keeps its shape.
-      measure.font = `${cfg.fontWeight} ${cfg.fontSize}px ${cfg.fontFamily}`;
+      // Measuring at the scaled size keeps that fit correct at any zoom.
+      measure.font = `${cfg.fontWeight} ${baseFont}px ${cfg.fontFamily}`;
       const widest = Math.max(
           1,
           ...lines.map((line) => measure.measureText(line).width || 0),
         ),
         fontSize = Math.max(
           1,
-          Math.floor(
-            cfg.fontSize * Math.min(1, (lineWidth - inset * 2) / widest),
-          ),
+          Math.floor(baseFont * Math.min(1, (lineWidth - inset * 2) / widest)),
         );
       const plans = [],
         block = fontSize * cfg.lineHeight * lines.length,
