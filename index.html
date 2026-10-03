@@ -630,6 +630,36 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
     fireworks.placeburst({ x: event.clientX, y: event.clientY });
   });
 
+  // Text fireworks drifting up somewhere different each time, so the page shows off the
+  // text effect on its own.
+  const TEXT_PHRASES = ['BOOM', 'Grand Fireworks', 'boom', 'GRAND FIREWORKS'];
+  const TEXT_COLOURS = [
+    ['#FFFFFF', '#FFD700', '#FF69B4'],
+    ['#7FDBFF', '#FFFFFF', '#B9F6CA'],
+    ['#FFD700', '#FF8A80', '#FFFFFF'],
+    ['#D17FE0', '#7FDBFF', '#FFFFFF']
+  ];
+  const randomFrom = list => list[Math.floor(Math.random() * list.length)];
+  function shootTextFirework() {
+    fireworks.launchText(randomFrom(TEXT_PHRASES), {
+      // Narrow enough that an off-centre block still fits, which is what lets the text
+      // appear somewhere new each time rather than always dead centre.
+      maxWidth: 0.45,
+      horizontalPosition: 0.3 + Math.random() * 0.4,
+      verticalPosition: 0.26 + Math.random() * 0.22,
+      colors: randomFrom(TEXT_COLOURS),
+      fontSize: 84,
+      holdDuration: 1100,
+      dissolveDuration: 800,
+      fallDuration: 2600,
+      // Reserving particles is what keeps the words legible, at the cost of pausing other
+      // launches for the second or two the text is assembling. Worth it to read clearly.
+      exclusive: true
+    }).catch(() => {});
+  }
+  setTimeout(shootTextFirework, 4000);
+  setInterval(shootTextFirework, 16000);
+
   // Sound toggle
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;

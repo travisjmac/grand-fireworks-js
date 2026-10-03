@@ -578,6 +578,9 @@
       overflow: "ellipsis",
       maxWidth: 0.82,
       verticalPosition: 0.42,
+      // Where the block is centred, as a fraction of the width. Clamped so the block stays
+      // on screen; narrow maxWidth to move it further off centre.
+      horizontalPosition: 0.5,
       textAlign: "center",
       lineHeight: 1.15,
       fontFamily: "system-ui, sans-serif",
@@ -2533,7 +2536,15 @@
         );
       const plans = [],
         block = fontSize * cfg.lineHeight * lines.length,
-        top = this.height * cfg.verticalPosition - block / 2;
+        top = this.height * cfg.verticalPosition - block / 2,
+        // The block is centred on the requested position, kept inside the canvas so a
+        // position near an edge cannot push the text half off screen.
+        halfBlock = lineWidth / 2,
+        centreX = clamp(
+          this.width * (cfg.horizontalPosition ?? 0.5),
+          halfBlock,
+          this.width - halfBlock,
+        );
       lines.forEach((line, i) => {
         // Render the line to an off-screen canvas at the fitted font size
         const off = document.createElement("canvas"),
@@ -2568,7 +2579,7 @@
           for (let px = 0; px < off.width; px += step)
             if (data[(py * off.width + px) * 4 + 3] > 100)
               points.push({
-                x: this.width / 2 - off.width / 2 + px,
+                x: centreX - off.width / 2 + px,
                 y: top + i * fontSize * cfg.lineHeight + py,
               });
         plans.push({
@@ -2577,10 +2588,10 @@
           points,
           x:
             x.textAlign === "left"
-              ? this.width / 2 - off.width / 2
+              ? centreX - off.width / 2
               : x.textAlign === "right"
-                ? this.width / 2 + off.width / 2
-                : this.width / 2,
+                ? centreX + off.width / 2
+                : centreX,
           y: top + i * fontSize * cfg.lineHeight + off.height / 2,
         });
       });

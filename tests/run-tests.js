@@ -2005,6 +2005,52 @@ test('a placed burst with no colours follows the configured palette', () => {
   fireworks.destroy();
 });
 
+test('text fireworks can be placed off-centre, and default to centred', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+
+  const centred = fireworks._textPlans(['BOOM'], fireworks.options.textFirework);
+  assert.equal(centred[0].x, fireworks.width / 2, 'centred by default, as it always was');
+
+  const quarter = fireworks._textPlans(['BOOM'], {
+    ...fireworks.options.textFirework,
+    horizontalPosition: .25
+  });
+  assert.ok(quarter[0].x < centred[0].x, 'a quarter across must sit left of centre');
+
+  // The block is kept on screen: a position hard against the edge is pulled in by half the
+  // block, so text can never be half off the canvas.
+  const extreme = fireworks._textPlans(['BOOM'], {
+    ...fireworks.options.textFirework,
+    horizontalPosition: 0
+  });
+  assert.ok(extreme[0].x > 0, 'the block must not be pushed off the left edge');
+  assert.ok(
+    extreme[0].points.every(p => p.x >= 0),
+    'no sampled point may land off the canvas',
+  );
+  fireworks.destroy();
+});
+
+test('the homepage launches text fireworks at random spots', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'the page must launch text');
+  assert.ok(/setInterval\(shootTextFirework/.test(html), 'and keep doing it');
+  assert.ok(/BOOM/.test(html) && /Grand Fireworks/.test(html), 'the phrases must include the ones asked for');
+  // Different places each time is the point, so both axes must be randomised.
+  assert.ok(
+    /horizontalPosition: 0\.3 \+ Math\.random\(\)/.test(html),
+    'each launch must take a fresh horizontal position',
+  );
+  assert.ok(
+    /verticalPosition: 0\.26 \+ Math\.random\(\)/.test(html),
+    'and a fresh vertical one',
+  );
+  // A wide block could not be placed off-centre, so the page narrows it first.
+  assert.ok(/maxWidth: 0\.45/.test(html), 'the block must be narrow enough to move around');
+});
+
 test('the builder import accepts every shape a config gets pasted in', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
   const match = source.match(/function parseConfigText[\s\S]*?\n\}/);

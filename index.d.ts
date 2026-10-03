@@ -276,6 +276,11 @@ export interface TextFireworkOptions {
   overflow?: 'ellipsis' | 'clip';
   maxWidth?: number;
   verticalPosition?: number;
+  /**
+   * Where the text block is centred across the width, as a fraction. Defaults to 0.5.
+   * Clamped so the block stays on screen — narrow `maxWidth` to move it further off centre.
+   */
+  horizontalPosition?: number;
   textAlign?: TextAlign;
   lineHeight?: number;
   fontFamily?: string;

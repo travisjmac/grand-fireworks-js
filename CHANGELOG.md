@@ -2,6 +2,13 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [Unreleased]
+
+### Added
+
+- **`horizontalPosition` on text fireworks.** The text block can be centred anywhere across the width as a fraction, clamped so it can never be pushed half off the canvas — narrow `maxWidth` to move it further off centre. Defaults to `0.5`, so existing text renders exactly as it did.
+- The homepage shoots up a text firework reading **BOOM** or **Grand Fireworks** at a random spot every sixteen seconds, and clicking anywhere detonates a shell at that point.
+
 ## [1.8.0] — October 2, 2026
 
 The engine can now be driven by a host: lend it your scene, detonate shells at exact points, and launch rockets from wherever your own logic says they start.
