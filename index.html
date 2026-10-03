@@ -648,8 +648,19 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
   });
 
   // Text fireworks drifting up somewhere different each time, so the page shows off the
-  // text effect on its own.
-  const TEXT_PHRASES = ['BOOM', 'Grand Fireworks', 'boom', 'GRAND FIREWORKS'];
+  // text effect on its own. Every launch picks one of these at random.
+  const TEXT_PHRASES = [
+    'BOOM',
+    'Boom!',
+    'Kaboom!',
+    'Grand Fireworks',
+    'GRAND FIREWORKS',
+    'Look up!',
+    'Ooh!',
+    'Aah!',
+    'Sparkle!',
+    'Nice one!'
+  ];
   const TEXT_COLOURS = [
     ['#FFFFFF', '#FFD700', '#FF69B4'],
     ['#7FDBFF', '#FFFFFF', '#B9F6CA'],
@@ -689,8 +700,18 @@ fireworks.cancelTextSequence();</code></pre></div><p>Text wraps at word boundari
       fallDuration: 2600
     }).catch(() => {});
   }
-  setTimeout(shootTextFirework, 4000);
-  setInterval(shootTextFirework, 16000);
+  // Two independent firers rather than one repeating timer. Each picks its own next moment
+  // somewhere in the next one to ten seconds, so the gaps between messages stay irregular
+  // instead of beating on a fixed period. Both walk the same area series, and the series
+  // advances per launch, so two that land close together still take different spots
+  // rather than stacking on top of each other.
+  function textFireworkLoop() {
+    shootTextFirework();
+    setTimeout(textFireworkLoop, 1000 + Math.random() * 9000);
+  }
+  const TEXT_FIRERS = 2;
+  for (let i = 0; i < TEXT_FIRERS; i++)
+    setTimeout(textFireworkLoop, 1500 + i * 2500);
 
   // Sound toggle
   soundBtn.addEventListener('click', () => {

@@ -10,7 +10,7 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ### Changed
 
-- The homepage now shoots a text firework reading **BOOM** or **Grand Fireworks** every sixteen seconds from a **set series of areas** — left, centre-high, right, centre-low — walked in order, so each message lands somewhere deliberate and every area is used. The exact spot is randomised within the chosen area rather than anywhere on the page.
+- The homepage shoots a text firework from **two independent firers**, each choosing its own next moment somewhere in the next **one to ten seconds** and a random phrase from a list of ten, so the messages arrive irregularly instead of on a fixed period. Both walk a **set series of areas** — left, centre-high, right, centre-low — in order, so two that land together still take different spots rather than stacking, and every area gets used. The exact spot is randomised within the chosen area rather than anywhere on the page.
 - The homepage sets `textFirework.exclusive: false`, so the ambient show **keeps launching while the words assemble** instead of pausing for the text's whole lifecycle. The engine default is unchanged: `exclusive: true` remains right for a deliberate message that should be read without competition.
 - The homepage matches `show.launchHorizon` to `1 / zoom`, so shells keep launching across **100% of the viewport** at any field of view. With the default horizon of `1`, pulling the camera back revealed more world than there were launchers in, so the fire stopped short of the edges.
 

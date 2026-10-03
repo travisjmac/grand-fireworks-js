@@ -2100,11 +2100,46 @@ test('the homepage widens the launch horizon as the view pulls back', () => {
   );
 });
 
+test('the homepage fires text from two independent random intervals', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  // Around ten phrases, and a different one chosen each time.
+  const declared = html.match(/const TEXT_PHRASES = \[([\s\S]*?)\];/);
+  assert.ok(declared, 'the phrases must be a declared list');
+  const phrases = declared[1].match(/'[^']*'/g) || [];
+  assert.ok(
+    phrases.length >= 8 && phrases.length <= 12,
+    `expected about ten phrases, found ${phrases.length}`,
+  );
+  assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'each launch picks one at random');
+
+  // Two firers, each re-arming itself somewhere in the next one to ten seconds. A fixed
+  // period would make every gap identical, which is the opposite of what was asked for.
+  assert.ok(/const TEXT_FIRERS = 2/.test(html), 'there must be two firers');
+  assert.ok(
+    /setTimeout\(textFireworkLoop, 1000 \+ Math\.random\(\) \* 9000\)/.test(html),
+    'each firer must re-arm itself between one and ten seconds later',
+  );
+  assert.ok(
+    /for \(let i = 0; i < TEXT_FIRERS; i\+\+\)/.test(html),
+    'both firers must be started',
+  );
+  const firing = html.slice(
+    html.indexOf('function textFireworkLoop'),
+    html.indexOf('// Sound toggle'),
+  );
+  assert.ok(firing.length > 0, 'the firing loop must be locatable');
+  assert.ok(!/setInterval\(/.test(firing), 'the firers must not fall back on a fixed interval');
+});
+
 test('the homepage walks a set series of areas for text, without stopping the show', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
   assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'the page must launch text');
-  assert.ok(/setInterval\(shootTextFirework/.test(html), 'and keep doing it');
+  assert.ok(
+    /setTimeout\(textFireworkLoop, 1000 \+ Math\.random\(\) \* 9000\)/.test(html),
+    'and keep doing it',
+  );
   assert.ok(/BOOM/.test(html) && /Grand Fireworks/.test(html), 'the phrases must include the ones asked for');
 
   // The spot is drawn from a declared series of areas, stepped in order, so every area is
@@ -2128,7 +2163,7 @@ test('the homepage walks a set series of areas for text, without stopping the sh
   );
   const launcher = html.slice(
     html.indexOf('function shootTextFirework'),
-    html.indexOf('setTimeout(shootTextFirework'),
+    html.indexOf('const TEXT_FIRERS'),
   );
   assert.ok(launcher.length > 0, 'the launcher must exist');
   // Match the option assignment, not the word: the launcher's comment explains why
