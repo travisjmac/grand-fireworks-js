@@ -289,6 +289,12 @@ export interface TextFireworkOptions {
    * Clamped so the block stays on screen — narrow `maxWidth` to move it further off centre.
    */
   horizontalPosition?: number;
+  /**
+   * Tilts the whole block, in degrees, clockwise positive. Pass a number for a fixed angle,
+   * or `[min, max]` to pick a fresh angle for every launch. Limited to ±45. Defaults to 0.
+   * A tilted block is also kept on screen vertically, since its corners rise and fall.
+   */
+  tilt?: number | [number, number];
   textAlign?: TextAlign;
   lineHeight?: number;
   fontFamily?: string;
@@ -562,8 +568,9 @@ export class GrandFireworks extends EventTarget {
    * The callback runs each frame after the canvas has been cleared (or
    * trail-faded) and before the fireworks are drawn, so host artwork sits behind
    * them. Attaching a pass makes the host responsible for frame pacing: the
-   * engine stops starting its own animation loop and expects renderFrame(dt) to
-   * be called each frame. Pass null to detach.
+   * engine stops starting its own animation loop (including from start() and
+   * stop()) and expects renderFrame(dt) to be called each frame. Pass null to
+   * detach.
    */
   setRenderPass(callback: RenderPass | null): this;
 
@@ -571,6 +578,9 @@ export class GrandFireworks extends EventTarget {
    * Advances the simulation by dt milliseconds and draws one frame. For hosts
    * that own the animation loop alongside a render pass. dt is capped at 50ms
    * internally. Pass 0 to render the current frame without advancing anything.
+   * A show `duration` and a `stop()` wind-down are carried out here, so the
+   * stop() promise resolves; the canvas stays visible afterwards because the
+   * host's scene is drawn on it.
    */
   renderFrame(dt?: number): this;
 

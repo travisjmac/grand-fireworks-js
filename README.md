@@ -3,11 +3,13 @@
 > **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.8.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.9.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.8.0
+## Version 1.9.0
 
-The engine can now be driven by a host. **`setRenderPass(callback)`** lends the engine's canvas to your own drawing code — your scene is composited after the canvas is cleared and before the fireworks are drawn, so it sits behind them — and hands frame pacing to you, because the engine stops its own loop. **`renderFrame(dt)`** advances the simulation and draws one frame, with `dt` capped at 50 ms and `renderFrame(0)` rendering without advancing. **`placeburst()`** detonates a shell at a point, or at an element's centre, with no rocket and no flight time, fitted to an on-screen `radius`. **`launchTo()`** flies a real rocket from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. Fireworks Command is rebuilt on that API, and rockets with `gravity: 0` no longer fall.
+Text fireworks can be **placed and tilted**: `textFirework.horizontalPosition` sets where the block sits across the screen, and `textFirework.tilt` turns it, by a fixed angle or a fresh one from a `[min, max]` range on each launch. Text now **scales with the camera zoom**, and the Config Workbench has sliders for position and tilt. It also fixes `start()`/`stop()` under a host render pass, overlapping World Enders, options lost when a World Ender ended, and text off centre on very narrow screens.
+
+Version 1.8.0 let a host drive the engine. **`setRenderPass(callback)`** lends the engine's canvas to your own drawing code — your scene is composited after the canvas is cleared and before the fireworks are drawn, so it sits behind them — and hands frame pacing to you, because the engine stops its own loop. **`renderFrame(dt)`** advances the simulation and draws one frame, with `dt` capped at 50 ms and `renderFrame(0)` rendering without advancing. **`placeburst()`** detonates a shell at a point, or at an element's centre, with no rocket and no flight time, fitted to an on-screen `radius`. **`launchTo()`** flies a real rocket from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. Fireworks Command is rebuilt on that API, and rockets with `gravity: 0` no longer fall.
 
 Version 1.7.1 made text fireworks shrink to fit narrow screens instead of being squeezed tall and thin, fixed the Workbench's **Old School** style falling back to Medium, and added a **Show Fullscreen** shortcut plus links from the homepage controls to the Config Workbench and Feature Demo.
 
@@ -29,6 +31,12 @@ For a no-build webpage, use the stable CDN filename:
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@main/dist/GrandFireworks.min.js"></script>
+```
+
+To stay on one release, pin its tag:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.0/dist/GrandFireworks.min.js"></script>
 ```
 
 ### TypeScript
@@ -188,7 +196,7 @@ Sequence events are `textsequencestart`, `textsequenceitem`, `textsequenceend`, 
 
 #### Placing a message
 
-`textFirework.verticalPosition` and `textFirework.horizontalPosition` are fractions of the viewport, and the block is centred on them. Both are clamped so a wide block can never be pushed half off the canvas — narrow `maxWidth` to let the text travel further off centre:
+`textFirework.verticalPosition` and `textFirework.horizontalPosition` are fractions of the viewport, and the block is centred on them. The horizontal position is clamped so a wide block can never be pushed half off the canvas — narrow `maxWidth` to let the text travel further off centre:
 
 ```js
 fireworks.launchText('BOOM', {
@@ -197,6 +205,30 @@ fireworks.launchText('BOOM', {
   verticalPosition: 0.35   // centred 35% down
 });
 ```
+
+`textFirework.tilt` turns the block, in degrees, clockwise positive: a number for a fixed angle, or `[min, max]` for a fresh angle on every launch. The block turns as one piece about its centre, it is limited to ±45°, and a tilted block is kept on screen vertically as well. The default is `0`.
+
+```js
+fireworks.launchText('Kaboom!', { tilt: [-30, 30] });
+```
+
+#### Several messages, at the times you choose
+
+Every text option works per call, so each message can have its own position, angle, colours and size, and messages can overlap. `launchTextSequence` shows them one after another; to place them at set moments, keep a list of cues:
+
+```js
+const cues = [
+  { at: 0,    text: 'HAPPY',    options: { horizontalPosition: 0.3, tilt: -15 } },
+  { at: 600,  text: 'BIRTHDAY', options: { horizontalPosition: 0.7, tilt: 15 } },
+  { at: 4000, text: 'SAM!',     options: { fontSize: 120 } },
+];
+const timers = cues.map(cue => setTimeout(() =>
+  fireworks.launchText(cue.text, { maxWidth: 0.45, exclusive: false, ...cue.options }), cue.at));
+timers.push(setTimeout(() => fireworks.launchFinale(), 9000)); // other effects fit the same list
+// timers.forEach(clearTimeout) cancels whatever has not fired yet.
+```
+
+The homepage runs its text this way, with random times. The timers use the page clock, so they keep counting through `pause()` and a hidden tab. [docs/host-recipes.md](docs/host-recipes.md) covers the particle budget that overlapping messages share.
 
 Text scales with the camera. The block is sized against `visuals.zoom`, so pulling the view back shrinks the words with everything else instead of leaving them full size; at `zoom: 1` nothing changes.
 

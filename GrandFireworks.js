@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.8.0
+ * Version: 1.9.0
  *
  * @author Travis MacDonald
- * @version 1.8.0
+ * @version 1.9.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -581,6 +581,9 @@
       // Where the block is centred, as a fraction of the width. Clamped so the block stays
       // on screen; narrow maxWidth to move it further off centre.
       horizontalPosition: 0.5,
+      // Tilt in degrees, clockwise positive: a number, or [min, max] to pick a fresh
+      // angle for every launch. Limited to ±45.
+      tilt: 0,
       textAlign: "center",
       lineHeight: 1.15,
       fontFamily: "system-ui, sans-serif",
@@ -1079,6 +1082,7 @@
       this.worldEnders = new Set();
       this.worldEnderSeq = 0;
       this.worldEnderPrevious = null;
+      this.worldEnderApplied = null;
       this.worldEnderListener = null;
       this.worldEnderResumeRequested = false;
       this.lastLaunch = 0;
@@ -1551,7 +1555,7 @@
       if (this.autoPauseReasons.size) {
         this.pausedState = "running";
         this.state = "paused";
-      } else this._loop();
+      } else if (!this.renderPass) this._loop();
       this.dispatchEvent(new Event("start"));
       return this;
     }
@@ -1647,7 +1651,9 @@
           ? this._finaleTriggered("stop")
           : Boolean(options.finale);
       this.stopPromise = new Promise((resolve) => (this.stopResolve = resolve));
-      if (!this.raf) {
+      // Under a host render pass the wind-down is driven by renderFrame(), so the
+      // engine must not start a second loop here.
+      if (!this.raf && !this.renderPass) {
         this.lastTime = performance.now();
         this._loop();
       }
@@ -1858,6 +1864,14 @@
       if (active) {
         this.elapsed += realDt * 1000;
         this.fps += (1 / (realDt || 0.016) - this.fps) * 0.05;
+        // A show started with a duration has to end on schedule here too, since
+        // the engine's own loop is not running to check it.
+        if (
+          this.state === "running" &&
+          this.runtimeDuration > 0 &&
+          this.elapsed >= this.runtimeDuration
+        )
+          this._durationReached(performance.now());
         this._update(now, step);
       }
       const trailFade = this.options.visuals.trails
@@ -1872,6 +1886,12 @@
         this.hostPass,
       );
       this._drawText(now);
+      // Carry out a wind-down the host asked for with stop() or a duration, so its
+      // promise resolves. The "manual" auto-fade is deliberately left out: a host
+      // places bursts one at a time, and fading out every time the sky empties
+      // would end the effects between shots.
+      if (this.state === "finishing" || this.state === "finale")
+        this._finish(performance.now());
       return this;
     }
     // The descriptor handed to a host render pass: which context to draw with,
@@ -2108,6 +2128,7 @@
         this.removeEventListener("finalestage", effect.listener);
       this.worldEnders.clear();
       this.worldEnderPrevious = null;
+      this.worldEnderApplied = null;
     }
     _worldEnderColors() {
       const palettes = this.options.show.palettes;
@@ -2158,40 +2179,35 @@
       // the first has finished must not treat the first effect's own inflated
       // limits as the values to restore, or the caps ratchet down permanently with
       // every repeat.
-      const previous = this.worldEnderPrevious || {
-        accepting: this.accepting,
-        finale: { ...this.options.finale },
-        show: { ...this.options.show },
-        sound: {
-          volume: this.options.sound.volume,
-          tuning: { ...this.options.sound.tuning },
-        },
-      };
-      this.worldEnderPrevious = previous;
+      // Only the keys the effect overrides are recorded, so restoring them cannot undo
+      // anything else the host changed while the effect was running.
+      if (!this.worldEnderPrevious)
+        this.worldEnderPrevious = {
+          accepting: this.accepting,
+          ...this._worldEnderSnapshot(),
+        };
       // Applied to the live options rather than through setOptions(). Resolving
       // again would re-run the renderer's own adjustments — the Canvas2D path
       // halves the particle budget on every pass — so a restore could never put the
-      // host back where it started. The engine's own ceilings are still enforced
-      // here, exactly as the resolver would; only the renderer accommodation and
-      // the write into the host's saved options are skipped.
-      // Only a floor, no ceiling: whatever the host configured for the effect is what it
-      // gets, and Infinity stays Infinity.
+      // host back where it started. Only a floor, no ceiling: whatever the host
+      // configured for the effect is what it gets, and Infinity stays Infinity.
       const cap = (value, min) => Math.max(min, Number(value) || min);
-      Object.assign(this.options.show, {
-        maxParticles: cap(cfg.maxParticles, 100),
-        maxRockets: cap(cfg.maxRockets, 1),
-        enabledTypes: "all",
-      });
-      Object.assign(this.options.finale, {
-        trails: cfg.firstSplitCount,
-        trailFlight: cfg.secondSplitDelayMs,
-        trailSpread: cfg.firstSplitSpreadDegrees,
-        burstScale: 1.25,
-        particleScale: 1.2,
-      });
-      this.options.sound.volume = 1;
-      this.options.sound.tuning.launchGain =
-        previous.sound.tuning.launchGain * cfg.soundBoost;
+      this.worldEnderApplied = {
+        show: {
+          maxParticles: cap(cfg.maxParticles, 100),
+          maxRockets: cap(cfg.maxRockets, 1),
+          enabledTypes: "all",
+        },
+        finale: {
+          trails: cfg.firstSplitCount,
+          trailFlight: cfg.secondSplitDelayMs,
+          trailSpread: cfg.firstSplitSpreadDegrees,
+          burstScale: 1.25,
+          particleScale: 1.2,
+        },
+        soundBoost: cfg.soundBoost,
+      };
+      this._applyWorldEnderLimits();
       // Keep the engine in its manually-launchable state for the carrier;
       // unlike launchFinale(), this effect manages its own completion timer.
       this._activateManual("manual");
@@ -2206,15 +2222,13 @@
         const detail = event.detail || {};
         if (detail.stage !== "secondary-burst") return;
         const source = detail.source || {};
-        if (source.worldEnderBranch) {
-          if (source.worldEnderId !== id) return;
-          // Chaining stays exactly as it was: only promoted shells branch onward, even
-          // though every branch now reports to the host.
-          if (source.type !== "grand-finale-burst") return;
-        } else if (this.worldEnders.size && [...this.worldEnders][0].id !== id) {
-          // The carrier's own trails belong to the oldest live effect.
-          return;
-        }
+        // Every carrier, trail and branch carries the id of the effect that launched
+        // it, so overlapping enders each chain from their own bursts. Trails from an
+        // ordinary finale carry no id and are left alone.
+        if (source.worldEnderId !== id) return;
+        // Chaining stays exactly as it was: only promoted shells branch onward, even
+        // though every branch now reports to the host.
+        if (source.worldEnderBranch && source.type !== "grand-finale-burst") return;
         if (!source.worldEnderBranch && ++primaryBursts > cfg.firstSplitCount) return;
         const depth = source.worldEnderDepth || 0;
         this._spawnWorldEnderShells({ x: detail.x, y: detail.y }, cfg.secondSplitCount, {
@@ -2237,15 +2251,52 @@
         // Only the last one out restores the host's configuration, so a second ender
         // cannot drop the limits back down while the first is still running.
         if (this.worldEnders.size) return;
+        // Read at restore time rather than captured at launch: setOptions() during
+        // the effect refreshes this record with whatever the host asked for.
+        const previous = this.worldEnderPrevious;
         this.worldEnderPrevious = null;
+        this.worldEnderApplied = null;
+        if (!previous) return;
         Object.assign(this.options.show, previous.show);
         Object.assign(this.options.finale, previous.finale);
         this.options.sound.volume = previous.sound.volume;
-        Object.assign(this.options.sound.tuning, previous.sound.tuning);
+        this.options.sound.tuning.launchGain = previous.sound.launchGain;
         this.accepting = this.worldEnderResumeRequested || previous.accepting;
       });
-      this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: this.effectTime + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0 });
+      this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: this.effectTime + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0, worldEnderId: id });
       return this;
+    }
+    // The host's values for exactly the options a World Ender overrides.
+    _worldEnderSnapshot() {
+      const { show, finale, sound } = this.options;
+      return {
+        show: {
+          maxParticles: show.maxParticles,
+          maxRockets: show.maxRockets,
+          enabledTypes: show.enabledTypes,
+        },
+        finale: {
+          trails: finale.trails,
+          trailFlight: finale.trailFlight,
+          trailSpread: finale.trailSpread,
+          burstScale: finale.burstScale,
+          particleScale: finale.particleScale,
+        },
+        sound: { volume: sound.volume, launchGain: sound.tuning.launchGain },
+      };
+    }
+    // Writes the running effect's limits over the live options. Also called by
+    // setOptions(), which rebuilds the options from scratch and would otherwise drop
+    // the effect's limits part-way through.
+    _applyWorldEnderLimits() {
+      const applied = this.worldEnderApplied,
+        previous = this.worldEnderPrevious;
+      if (!applied || !previous) return;
+      Object.assign(this.options.show, applied.show);
+      Object.assign(this.options.finale, applied.finale);
+      this.options.sound.volume = 1;
+      this.options.sound.tuning.launchGain =
+        previous.sound.launchGain * applied.soundBoost;
     }
     /**
      * Rasterizes text to a hidden canvas, samples pixel data to generate
@@ -2307,14 +2358,14 @@
       for (let i = 0; i < plans.length; i++) {
         const plan = plans[i],
           syncAt = sync + (cfg.synchronizeExplosions ? 0 : i * 250),
-          travel = (this.height + 30 - plan.y) / 0.62;
+          travel = (this.height + 30 - plan.burstY) / 0.62;
         this.pendingRockets.push({
           launchAt: syncAt - travel,
           textPlan: plan,
           type: "text",
           x: this.width / 2,
           y: this.height + 25,
-          burstY: plan.y,
+          burstY: plan.burstY,
           syncAt,
           colors: cfg.colors,
           cfg,
@@ -2543,15 +2594,49 @@
         );
       const plans = [],
         block = fontSize * cfg.lineHeight * lines.length,
-        top = this.height * cfg.verticalPosition - block / 2,
+        // One angle for the whole block, so a multi-line message tilts as a unit
+        // rather than as separately rotated strips.
+        angle = this._textTilt(cfg.tilt),
+        cos = Math.cos(angle),
+        sin = Math.sin(angle),
+        // How far the drawn lines reach from the block's centre, vertically. Each line
+        // is rasterised into a box taller than its line spacing, so the last box hangs
+        // below the block; take whichever side reaches further.
+        reach = Math.max(
+          block / 2,
+          fontSize * cfg.lineHeight * (lines.length - 1) +
+            Math.ceil(fontSize * 1.45) -
+            block / 2,
+        ),
+        // Half the size of the block's bounding box once tilted. At no tilt the
+        // horizontal extent is exactly the flat block, so untilted placement is
+        // unchanged.
+        extentX = (lineWidth / 2) * Math.abs(cos) + reach * Math.abs(sin),
+        extentY = (lineWidth / 2) * Math.abs(sin) + reach * Math.abs(cos),
+        // Keeps a block inside the canvas. A block wider than the canvas cannot fit
+        // either way, so it is centred rather than pushed hard against one edge.
+        fit = (value, half, size) =>
+          half * 2 >= size ? size / 2 : clamp(value, half, size - half),
         // The block is centred on the requested position, kept inside the canvas so a
         // position near an edge cannot push the text half off screen.
-        halfBlock = lineWidth / 2,
-        centreX = clamp(
+        centreX = fit(
           this.width * (cfg.horizontalPosition ?? 0.5),
-          halfBlock,
-          this.width - halfBlock,
-        );
+          extentX,
+          this.width,
+        ),
+        // Untilted text keeps its vertical position exactly as asked. A tilted block's
+        // corners rise and fall past it, so that block is kept on screen vertically too.
+        centreY = angle
+          ? fit(this.height * cfg.verticalPosition, extentY, this.height)
+          : this.height * cfg.verticalPosition,
+        top = centreY - block / 2,
+        rotate = (px, py) =>
+          angle
+            ? {
+                x: centreX + (px - centreX) * cos - (py - centreY) * sin,
+                y: centreY + (px - centreX) * sin + (py - centreY) * cos,
+              }
+            : { x: px, y: py };
       lines.forEach((line, i) => {
         // Render the line to an off-screen canvas at the fitted font size
         const off = document.createElement("canvas"),
@@ -2585,24 +2670,45 @@
         for (let py = 0; py < off.height; py += step)
           for (let px = 0; px < off.width; px += step)
             if (data[(py * off.width + px) * 4 + 3] > 100)
-              points.push({
-                x: centreX - off.width / 2 + px,
-                y: top + i * fontSize * cfg.lineHeight + py,
-              });
+              points.push(
+                rotate(
+                  centreX - off.width / 2 + px,
+                  top + i * fontSize * cfg.lineHeight + py,
+                ),
+              );
+        const lineY = top + i * fontSize * cfg.lineHeight + off.height / 2;
         plans.push({
           line,
           fontSize,
           points,
+          // x/y anchor the crisp text before rotation; _drawText applies the same
+          // angle about the same pivot, so it lands on the particles.
           x:
             x.textAlign === "left"
               ? centreX - off.width / 2
               : x.textAlign === "right"
                 ? centreX + off.width / 2
                 : centreX,
-          y: top + i * fontSize * cfg.lineHeight + off.height / 2,
+          y: lineY,
+          angle,
+          pivotX: centreX,
+          pivotY: centreY,
+          // Where this line's centre actually sits once tilted: the height its
+          // rocket has to reach.
+          burstY: rotate(centreX, lineY).y,
         });
       });
       return plans;
+    }
+    // Resolves textFirework.tilt to radians: a number of degrees, or a [min, max]
+    // range to pick from per launch. Positive tilts clockwise. Held to ±45° so a
+    // message can never be turned on its side or upside down.
+    _textTilt(tilt) {
+      const degrees = Array.isArray(tilt)
+        ? (Number(tilt[0]) || 0) +
+          Math.random() * ((Number(tilt[1]) || 0) - (Number(tilt[0]) || 0))
+        : Number(tilt) || 0;
+      return (clamp(degrees, -45, 45) * Math.PI) / 180;
     }
     // Schedules a rocket for future launch. Used for the opening salvo
     // and grouped salvo follow-up shots.
@@ -3157,6 +3263,7 @@
         sparkClock: 0,
         audioGain: depth,
         soundType,
+        worldEnderId: o.worldEnderId,
       });
     }
     // Picks a random shell type from the enabled list.
@@ -3354,7 +3461,7 @@
               ? {
                   type: "text",
                   x: 0.5,
-                  burstHeight: q.textPlan.y / this.height,
+                  burstHeight: q.textPlan.burstY / this.height,
                   colors: q.colors,
                   textPlan: q.textPlan,
                   cfg: q.cfg,
@@ -4008,6 +4115,9 @@
           detonateAt: now + flight * (0.84 + Math.random() * 0.3),
           sparkClock: 0,
           angle: a,
+          // A World Ender carrier hands its id to its trails, so the effect that
+          // launched the carrier is the one that chains from them.
+          worldEnderId: r.worldEnderId,
         });
       }
       this.dispatchEvent(
@@ -4263,6 +4373,9 @@
             fontSize: r.textPlan.fontSize,
             x: r.textPlan.x,
             y: r.textPlan.y,
+            angle: r.textPlan.angle,
+            pivotX: r.textPlan.pivotX,
+            pivotY: r.textPlan.pivotY,
             birth: now,
             cfg,
           });
@@ -4549,6 +4662,13 @@
             1 - (age - c.revealDuration - c.holdDuration) / c.dissolveDuration;
         x.save();
         x.globalAlpha = clamp(alpha, 0, 1);
+        // Same angle and pivot as the particle plan, so the crisp text and the
+        // sparks that assemble it stay on top of each other.
+        if (b.angle) {
+          x.translate(b.pivotX, b.pivotY);
+          x.rotate(b.angle);
+          x.translate(-b.pivotX, -b.pivotY);
+        }
         x.font = `${c.fontWeight} ${b.fontSize || c.fontSize}px ${c.fontFamily}`;
         x.textAlign = ["left", "right"].includes(c.textAlign)
           ? c.textAlign
@@ -4674,7 +4794,9 @@
         cancelAnimationFrame(this.raf);
         this.raf = 0;
         if (clear || this.options.transition.clearOnHide) this.clear();
-        this.root.style.display = "none";
+        // A host render pass draws its own scene on this canvas, so hiding it
+        // would take the host's artwork down with the fireworks.
+        if (!this.renderPass) this.root.style.display = "none";
         this.state = "stopped";
         const resolve = this.stopResolve;
         this.stopResolve = null;
@@ -4697,6 +4819,12 @@
       const previousZoom = this.zoom || (previous && previous.visuals && previous.visuals.zoom) || 1;
       this.userOptions = merge(this.userOptions, partial);
       this.options = this._resolve(this.userOptions);
+      // A World Ender in progress: what the host just asked for becomes the value to
+      // restore when the effect ends, and the effect keeps its own limits until then.
+      if (this.worldEnderApplied && this.worldEnderPrevious) {
+        Object.assign(this.worldEnderPrevious, this._worldEnderSnapshot());
+        this._applyWorldEnderLimits();
+      }
       this.zoom = this.options.visuals.zoom;
       if (previous && previousZoom !== this.zoom)
         this._recenterActiveWorld(previousZoom, this.zoom);
@@ -5020,7 +5148,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.8.0";
+  GrandFireworks.VERSION = "1.9.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

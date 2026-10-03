@@ -69,6 +69,10 @@ Rules that are easy to get wrong:
 - `renderFrame(0)` renders the current frame without advancing anything. That is how you
   pause the effects while keeping your scene on screen.
 - Pass `null` to `setRenderPass` to hand pacing back to the engine.
+- `start()` and `stop()` work as usual and do not start an engine loop. A show `duration`
+  and a `stop()` wind-down are carried out by `renderFrame`, so the `stop()` promise
+  resolves as long as you keep calling it. The canvas is not hidden when the show stops,
+  because your scene is drawn on it.
 
 The Canvas 2D path draws the render pass **before** the zoomed particle transform, so host
 artwork is never scaled by engine zoom. The WebGL path runs it after the clear/trail-fade
@@ -145,8 +149,8 @@ put every blast at the wrong distance.
 ### Placement
 
 `verticalPosition` and `horizontalPosition` are fractions of the viewport and the block is
-centred on them. Both are clamped so a wide block can never be pushed half off the canvas,
-which means **narrowing `maxWidth` is what lets text travel further off centre**:
+centred on them. The horizontal position is clamped so a wide block can never be pushed half
+off the canvas, which means **narrowing `maxWidth` is what lets text travel further off centre**:
 
 ```js
 fireworks.launchText('BOOM', {
@@ -163,6 +167,21 @@ range the block can actually reach.
 
 The block is sized against `visuals.zoom`, so it shrinks and grows with the camera. At
 `zoom: 1` it renders exactly as it always did.
+
+### Tilt
+
+`tilt` turns the whole block, in degrees, clockwise positive. Pass a number for a fixed
+angle, or `[min, max]` to pick a fresh one for each launch:
+
+```js
+fireworks.launchText('Kaboom!', { tilt: [-30, 30] });
+```
+
+The block turns as one piece about its centre, so a multi-line message stays together, and
+the crisp text layer turns with the sparks. It is held to ±45° so nothing ends up on its
+side. A tilted block's corners rise and fall past its centre, so it is also kept on screen
+vertically, which an untilted block is not; near the top or bottom edge, a tilted message
+sits slightly further in than an untilted one would.
 
 ### Interrupting the show, or not
 
@@ -202,6 +221,37 @@ function textLoop() {
   setTimeout(textLoop, 1000 + Math.random() * 9000); // one to ten seconds later
 }
 ```
+
+### Several messages, each with its own angle and time
+
+Every text option can be passed per call, so each message can have its own position, tilt,
+colours and size. Nothing limits you to one block at a time: call `launchText` again while
+the first is still up, and with `exclusive: false` the two share the sky with the show.
+`launchTextSequence` is the one-after-another case; when messages should overlap or land at
+chosen moments, a short list of cues does it:
+
+```js
+const cues = [
+  { at: 0,    text: 'HAPPY',    options: { horizontalPosition: 0.3, tilt: -15 } },
+  { at: 600,  text: 'BIRTHDAY', options: { horizontalPosition: 0.7, tilt: 15 } },
+  { at: 4000, text: 'SAM!',     options: { fontSize: 120, colors: ['#FFD700'] } },
+];
+
+const timers = cues.map(cue => setTimeout(() => {
+  fireworks.launchText(cue.text, { maxWidth: 0.45, exclusive: false, ...cue.options });
+}, cue.at));
+
+// Other effects fit the same list: a finale at the nine-second mark.
+timers.push(setTimeout(() => fireworks.launchFinale(), 9000));
+
+// Cancel whatever has not fired yet.
+function cancelCues() { timers.forEach(clearTimeout); }
+```
+
+This is how the homepage runs its text, with random times instead of fixed ones. Two things
+to know: the timers run on the page clock, so they keep counting through `pause()`, a hidden
+tab, and `speedMultiplier`; and blocks on screen together share the particle budget (see
+above), so keep overlapping messages short or raise `particleSpacing`.
 
 ---
 

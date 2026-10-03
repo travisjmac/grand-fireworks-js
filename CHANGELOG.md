@@ -2,11 +2,17 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
-## [Unreleased]
+## [1.9.0] — October 3, 2026
+
+Text fireworks can be placed anywhere across the screen and tilted, they scale with the camera, and the Config Workbench exposes both.
 
 ### Added
 
 - **`horizontalPosition` on text fireworks.** The text block can be centred anywhere across the width as a fraction, clamped so it can never be pushed half off the canvas — narrow `maxWidth` to move it further off centre. Defaults to `0.5`, so existing text renders exactly as it did.
+- **`tilt` on text fireworks.** Turns the whole block, in degrees, clockwise positive: a number for a fixed angle, or `[min, max]` for a fresh angle on every launch. The block turns as one piece about its centre, the crisp text layer turns with the sparks, and each line's rocket climbs to where the tilted line actually sits. Limited to ±45°, and a tilted block is kept on screen vertically as well as horizontally. Defaults to `0`, so existing text is unchanged. The homepage tilts each message by up to 30° either way.
+- **Text position and tilt in the Config Workbench.** The Text tab has sliders for horizontal and vertical position and a Tilt from / Tilt to pair, all applied live. Matching ends save a single angle; different ends save a `[from, to]` range. A pasted config with either shape loads into the sliders.
+- **Documentation for several messages at chosen times.** The README, the homepage and `docs/host-recipes.md` show how to give each message its own position and angle, overlap them, and fire them (and other effects such as the finale) from a list of timed cues, the way the homepage runs its own text.
+- **A pinned CDN URL** (`@v1.9.0`) alongside the moving one in the README and on the homepage.
 
 ### Changed
 
@@ -17,6 +23,10 @@ All notable changes to Grand Fireworks JS are documented here.
 ### Fixed
 
 - **Text fireworks ignored the camera.** The block was drawn at the configured font size however far the view pulled back, because text plans are sampled in screen pixels and then divided by the zoom to undo the camera. The block's base size is now scaled by the zoom, so it shrinks and grows with everything else. The requested position is untouched, and the fit against `maxWidth` is measured at the scaled size so the block still cannot overflow. At zoom `1` nothing changes.
+- **`start()` and `stop()` started a second loop under a host render pass.** `setRenderPass` hands frame pacing to the host, and `resume()` respected that, but `start()` and `stop()` still started the engine's own animation loop, so the simulation stepped twice per frame. Neither does now. `renderFrame()` carries out a show `duration` and a `stop()` wind-down itself, so the `stop()` promise resolves, and the canvas is no longer hidden when the show ends because the host's scene is drawn on it.
+- **A second overlapping World Ender did not chain.** The carrier's trails were all handed to the oldest running effect, which had already used its trail allowance, so a second ender went off without spawning any follow-up shells. Each carrier now carries the id of the effect that launched it and passes it to its trails, so every ender chains from its own. Trails from an ordinary finale are no longer picked up by a running ender either.
+- **A World Ender undid options changed while it ran.** It saved the whole `show`, `finale` and `sound.tuning` sections and restored them wholesale, so anything the host changed in the meantime (the homepage zoom slider sets `launchHorizon`) snapped back when the effect ended. And because `setOptions()` rebuilds the options, the same change also dropped the effect's raised budget part-way through. Only the keys the effect overrides are saved now; a `setOptions()` during the effect updates what will be restored and keeps the effect's limits until it ends.
+- **Text sat off centre on screens narrower than 280px.** The block never shrinks below 280px, so on a narrower screen the on-screen clamp could not be satisfied and pinned the block to the left. A block that cannot fit is now centred.
 
 ## [1.8.0] — October 2, 2026
 

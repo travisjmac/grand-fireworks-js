@@ -2080,6 +2080,248 @@ test('text shrinks with the camera when the view pulls back', () => {
   far.destroy();
 });
 
+test('start and stop leave frame pacing to a host render pass', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    transition: { fadeOut: 0 },
+  });
+  fireworks.setRenderPass(() => {});
+
+  // A host that attached a render pass is already calling renderFrame() every frame. An
+  // engine loop on top of that would step the whole simulation twice per frame.
+  fireworks.start();
+  assert.equal(fireworks.state, 'running');
+  assert.equal(fireworks.raf, 0, 'start() must not start an engine loop under a render pass');
+  for (let i = 0; i < 20; i++) fireworks.renderFrame(50);
+
+  const stopped = fireworks.stop({ finale: false });
+  assert.equal(fireworks.raf, 0, 'neither may stop()');
+  // The wind-down is driven by the host's frames, so it has to finish without any
+  // engine loop at all, and resolve the promise the host is waiting on.
+  for (let i = 0; i < 2000 && fireworks.state === 'finishing'; i++) fireworks.renderFrame(50);
+  assert.notEqual(fireworks.state, 'finishing', 'renderFrame must carry out the wind-down');
+
+  return stopped.then(() => {
+    assert.equal(fireworks.state, 'stopped');
+    assert.notEqual(
+      fireworks.root.style.display,
+      'none',
+      'the shared canvas must stay visible, because the host draws its scene on it',
+    );
+
+    // A show with a duration ends on schedule under a render pass too.
+    fireworks.start({ duration: 500 });
+    for (let i = 0; i < 12; i++) fireworks.renderFrame(50);
+    assert.notEqual(fireworks.state, 'running', 'the duration must end the show');
+    assert.equal(fireworks.raf, 0);
+    fireworks.destroy();
+  });
+});
+
+test('overlapping World Enders each chain from their own carrier', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    container: '#stage',
+    renderer: { preferred: 'canvas2d' },
+    visuals: { trails: false },
+  });
+  fireworks.setRenderPass(() => {});
+  // Count the follow-up shells each effect spawns, by the effect that spawned them.
+  const spawned = {};
+  const spawn = fireworks._spawnWorldEnderShells.bind(fireworks);
+  fireworks._spawnWorldEnderShells = (point, count, options) => {
+    spawned[options.worldEnderId] = (spawned[options.worldEnderId] || 0) + count;
+    return spawn(point, count, options);
+  };
+  const caps = {
+    maxParticles: 6000,
+    maxRockets: 25,
+    firstSplitCount: 3,
+    secondSplitCount: 2,
+    secondSplitDelayMs: 100,
+    recursionDurationMs: 30000,
+    maxChainDepth: 0,
+    promotionChance: 0,
+  };
+  fireworks.launchWorldEnder({ ...caps });
+  fireworks.launchWorldEnder({ ...caps });
+  for (let i = 0; i < 200; i++) fireworks.renderFrame(50);
+
+  // Three trails per carrier, two shells per trail. The second carrier's trails used to
+  // be handed to the first effect, which had already used up its three, so the second
+  // ender went off without chaining at all.
+  assert.deepEqual(
+    { ...spawned },
+    { 1: 6, 2: 6 },
+    'each ender must chain from its own three trails',
+  );
+  fireworks.destroy();
+});
+
+test('options changed during a World Ender survive its restore', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    show: { launchHorizon: 1, maxParticles: 5000 },
+  });
+  fireworks.setRenderPass(() => {});
+  fireworks.launchWorldEnder({ maxParticles: 9000, recursionDurationMs: 20 });
+
+  // The homepage zoom slider does exactly this while an ender is running.
+  fireworks.setOptions({ show: { launchHorizon: 2, maxParticles: 3000 } });
+  assert.equal(
+    fireworks.options.show.maxParticles,
+    9000,
+    'rebuilding the options must not drop the running effect\'s budget',
+  );
+  assert.equal(fireworks.options.show.launchHorizon, 2, 'unrelated changes apply at once');
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        assert.equal(
+          fireworks.options.show.launchHorizon,
+          2,
+          'the restore must not undo an option the effect never touched',
+        );
+        assert.equal(
+          fireworks.options.show.maxParticles,
+          3000,
+          'and must restore what the host asked for most recently',
+        );
+        fireworks.destroy();
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    }, 80);
+  });
+});
+
+test('text stays centred on a screen narrower than its block', () => {
+  const { GrandFireworks, sandbox } = createRuntime();
+  // The block is never narrower than 280px, so on a smaller screen it cannot fit either
+  // way. Clamping it against both edges used to pin it to the left one instead.
+  sandbox.innerWidth = 250;
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  assert.equal(fireworks.width, 250);
+  for (const horizontalPosition of [0, 0.5, 1]) {
+    const [plan] = fireworks._textPlans(['BOOM'], {
+      ...fireworks.options.textFirework,
+      horizontalPosition,
+    });
+    assert.equal(plan.x, 125, `position ${horizontalPosition} must centre the block`);
+  }
+  fireworks.destroy();
+});
+
+test('tilted text turns as one block about its centre and stays on screen', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  // The mock canvas reads back as fully transparent, which samples no points at all.
+  // Read every pixel back as opaque, so each line samples its whole box.
+  fireworks.renderer.ctx.getImageData = (x, y, w, h) => ({
+    data: new Uint8ClampedArray(w * h * 4).fill(255),
+  });
+  const base = { ...fireworks.options.textFirework, horizontalPosition: 0.5, verticalPosition: 0.5 };
+  const lines = ['GRAND', 'FIREWORKS'];
+
+  // No tilt by default, and an untilted block is laid out exactly as before.
+  const flat = fireworks._textPlans(lines, base);
+  assert.equal(fireworks.options.textFirework.tilt, 0, 'tilt must default to none');
+  assert.equal(flat[0].angle, 0);
+  assert.equal(flat[0].burstY, flat[0].y, 'an untilted line bursts where it always did');
+  assert.ok(flat[0].points.length > 0, 'the opaque read-back must sample points');
+
+  // A fixed tilt rotates every point of every line about one shared centre, so the
+  // lines turn together rather than as separately rotated strips.
+  const tilted = fireworks._textPlans(lines, { ...base, tilt: 20 });
+  const angle = (20 * Math.PI) / 180;
+  for (let line = 0; line < lines.length; line++) {
+    const plan = tilted[line];
+    assert.ok(Math.abs(plan.angle - angle) < 1e-12, 'the angle is given in degrees');
+    assert.equal(plan.pivotX, fireworks.width / 2, 'one pivot for the whole block');
+    assert.equal(plan.pivotY, fireworks.height / 2);
+    assert.equal(plan.points.length, flat[line].points.length);
+    plan.points.forEach((point, i) => {
+      const dx = flat[line].points[i].x - plan.pivotX,
+        dy = flat[line].points[i].y - plan.pivotY;
+      assert.ok(
+        Math.abs(point.x - (plan.pivotX + dx * Math.cos(angle) - dy * Math.sin(angle))) < 1e-6 &&
+          Math.abs(point.y - (plan.pivotY + dx * Math.sin(angle) + dy * Math.cos(angle))) < 1e-6,
+        'every point must be the flat point turned about the pivot',
+      );
+    });
+    // The rocket has to climb to where the line now sits, not where it would have.
+    assert.ok(
+      Math.abs(plan.burstY - (plan.pivotY + (plan.y - plan.pivotY) * Math.cos(angle))) < 1e-9,
+      'each line must burst at its tilted height',
+    );
+  }
+
+  // A range picks a fresh angle for each launch, and either way is allowed.
+  const angles = Array.from({ length: 50 }, () =>
+    fireworks._textPlans(['BOOM'], { ...base, tilt: [-30, 30] })[0].angle,
+  );
+  const limit = (30 * Math.PI) / 180 + 1e-12;
+  assert.ok(angles.every(a => Math.abs(a) <= limit), 'a range must stay inside its bounds');
+  assert.ok(angles.some(a => a < 0) && angles.some(a => a > 0), 'and tilt both ways');
+
+  // Held to 45 degrees, so a message can never be turned on its side.
+  assert.ok(
+    Math.abs(fireworks._textPlans(['BOOM'], { ...base, tilt: 90 })[0].angle - Math.PI / 4) < 1e-12,
+    'a tilt past 45 degrees must be limited to 45',
+  );
+
+  // Hard in a corner and fully tilted, every sampled point must still be on the canvas.
+  const cornered = fireworks._textPlans(['BOOM'], {
+    ...base,
+    tilt: -45,
+    horizontalPosition: 0,
+    verticalPosition: 0,
+  })[0];
+  assert.ok(
+    cornered.points.every(
+      p => p.x >= 0 && p.x <= fireworks.width && p.y >= 0 && p.y <= fireworks.height,
+    ),
+    'a tilted block must be kept on screen, corners and all',
+  );
+  fireworks.destroy();
+});
+
+test('tilted text draws its crisp layer at the same angle as its sparks', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  const calls = [];
+  const ctx = fireworks.textCtx;
+  ctx.rotate = angle => calls.push(['rotate', angle]);
+  ctx.translate = (x, y) => calls.push(['translate', x, y]);
+  ctx.fillText = () => calls.push(['fillText']);
+  const angle = (15 * Math.PI) / 180;
+  fireworks.textBlocks.push({
+    text: 'BOOM', fontSize: 40, x: 500, y: 300, angle, pivotX: 512, pivotY: 384,
+    birth: fireworks.effectTime, cfg: fireworks.options.textFirework,
+  });
+  fireworks._drawText(fireworks.effectTime + 100);
+  assert.deepEqual(
+    calls.slice(0, 4),
+    [['translate', 512, 384], ['rotate', angle], ['translate', -512, -384], ['fillText']],
+    'the crisp text must be turned about the block pivot before it is drawn',
+  );
+
+  // An untilted block draws exactly as before, with no transform at all.
+  calls.length = 0;
+  fireworks.textBlocks.length = 0;
+  fireworks.textBlocks.push({
+    text: 'BOOM', fontSize: 40, x: 500, y: 300, angle: 0, pivotX: 512, pivotY: 384,
+    birth: fireworks.effectTime, cfg: fireworks.options.textFirework,
+  });
+  fireworks._drawText(fireworks.effectTime + 100);
+  assert.deepEqual(calls[0], ['fillText'], 'no rotation for untilted text');
+  fireworks.destroy();
+});
+
 test('the homepage widens the launch horizon as the view pulls back', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
@@ -2150,6 +2392,7 @@ test('the homepage walks a set series of areas for text, without stopping the sh
   assert.ok(areas.length >= 3, 'the series must define several areas, one per axis range');
   assert.ok(/horizontalPosition: within\(area\.x\)/.test(html), 'the horizontal spot must come from the area');
   assert.ok(/verticalPosition: within\(area\.y\)/.test(html), 'as must the vertical one');
+  assert.ok(/tilt: \[-30, 30\]/.test(html), 'each message must take a fresh tilt of up to 30 degrees');
 
   // A wide block could not be placed off-centre, so the page narrows it first.
   assert.ok(/maxWidth: 0\.45/.test(html), 'the block must be narrow enough to move around');
@@ -2259,6 +2502,47 @@ test('the builder import accepts every option the engine ships', () => {
   const unreachable = expected.filter(key => !accepted.includes(key) && !resolved.includes(key));
   assert.deepEqual(unreachable, [], `engine exposes section(s) the import cannot accept: ${unreachable.join(', ')}`);
   instance.destroy();
+});
+
+test('the Workbench Text tab exposes text position and tilt', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'guided-builder.html'), 'utf8');
+  for (const id of ['textFirework.horizontalPosition', 'textFirework.verticalPosition', 'textFirework.tiltFrom', 'textFirework.tiltTo'])
+    assert.ok(source.includes(`id: '${id}'`), `the Text tab is missing ${id}`);
+
+  // Exercise the real tilt helpers, extracted from the page with the two
+  // utilities they lean on.
+  const pick = name => {
+    const found = source.match(new RegExp(`function ${name}[\\s\\S]*?\\n\\}`));
+    assert.ok(found, `${name} should exist in the Workbench`);
+    return found[0];
+  };
+  const { textTiltRange, applyTextTilt } = new Function(
+    [pick('deepMerge'), pick('getDeep'), pick('textTiltRange'), pick('applyTextTilt')].join('\n') +
+      '\nreturn { textTiltRange, applyTextTilt };',
+  )();
+
+  // Either shape the engine accepts reads back as a from/to pair.
+  assert.deepEqual(textTiltRange({}), [0, 0]);
+  assert.deepEqual(textTiltRange({ textFirework: { tilt: 12 } }), [12, 12]);
+  assert.deepEqual(textTiltRange({ textFirework: { tilt: [-30, 30] } }), [-30, 30]);
+
+  // Moving one slider keeps the other end, and a matching pair collapses to a number.
+  const sent = [];
+  const fw = { setOptions: options => sent.push(options) };
+  const config = { textFirework: { fontSize: 60 } };
+  applyTextTilt(config, 0, -30, fw);
+  applyTextTilt(config, 1, 30, fw);
+  assert.deepEqual(config.textFirework, { fontSize: 60, tilt: [-30, 30] });
+  assert.deepEqual(sent.at(-1), { textFirework: { tilt: [-30, 30] } });
+  applyTextTilt(config, 0, 30, fw);
+  assert.equal(config.textFirework.tilt, 30);
+
+  // The engine takes the range live rather than merging it into the old one.
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' }, textFirework: { tilt: [-10, 10] } });
+  fireworks.setOptions({ textFirework: { tilt: [-30, 30] } });
+  assert.deepEqual(fireworks.options.textFirework.tilt, [-30, 30]);
+  fireworks.destroy();
 });
 
 test('the builder style picker offers every engine style under its real name', () => {

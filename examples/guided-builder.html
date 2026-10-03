@@ -487,6 +487,23 @@ function getDeep(obj, path) {
   return cur;
 }
 
+// textFirework.tilt is one angle or a [from, to] range. The Workbench shows it
+// as two sliders, so read either shape as a pair and write back a single number
+// when both ends match.
+function textTiltRange(config) {
+  const tilt = getDeep(config, 'textFirework.tilt');
+  const [from, to] = Array.isArray(tilt) ? tilt : [tilt, tilt];
+  return [Number(from) || 0, Number(to) || 0];
+}
+
+function applyTextTilt(config, end, degrees, fireworks) {
+  const range = textTiltRange(config);
+  range[end] = degrees;
+  const tilt = range[0] === range[1] ? range[0] : range;
+  config.textFirework = deepMerge(config.textFirework || {}, { tilt });
+  fireworks.setOptions({ textFirework: { tilt } });
+}
+
 function shallowEqual(a, b) {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -881,6 +898,20 @@ const SECTIONS = {
         choices: [{label:'⬅ Left',value:'left'},{label:'↔ Center',value:'center'},{label:'➡ Right',value:'right'}],
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {textAlign:v}); fw.setOptions({textFirework:{textAlign:v}}); },
         tooltip: 'Align every configured text line to the left, center, or right edge of the text area' },
+      { id: 'textFirework.horizontalPosition', label: 'Horizontal position', type: 'number', min: 0, max: 1, step: .01, def: .5, slider: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {horizontalPosition:v}); fw.setOptions({textFirework:{horizontalPosition:v}}); },
+        tooltip: 'Horizontal centre of the message as a fraction of the display width: 0 is the left edge, .5 the middle, 1 the right edge' },
+      { id: 'textFirework.verticalPosition', label: 'Vertical position', type: 'number', min: 0, max: 1, step: .01, def: .42, slider: true, updateMode: 'live',
+        apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {verticalPosition:v}); fw.setOptions({textFirework:{verticalPosition:v}}); },
+        tooltip: 'Vertical centre of the message as a fraction of the display height: 0 is the top edge, 1 the bottom' },
+      { id: 'textFirework.tiltFrom',        label: 'Tilt from',         type: 'number', min: -45, max: 45, step: 1, def: 0, slider: true, unit: '°', updateMode: 'live',
+        read: c => textTiltRange(c)[0],
+        apply: (c,v,fw) => applyTextTilt(c, 0, v, fw),
+        tooltip: 'One end of the tilt range in degrees; positive turns clockwise. Set From and To equal for a fixed tilt' },
+      { id: 'textFirework.tiltTo',          label: 'Tilt to',           type: 'number', min: -45, max: 45, step: 1, def: 0, slider: true, unit: '°', updateMode: 'live',
+        read: c => textTiltRange(c)[1],
+        apply: (c,v,fw) => applyTextTilt(c, 1, v, fw),
+        tooltip: 'Other end of the tilt range in degrees. Each launch picks a random angle between From and To' },
       { id: 'textFirework.fontSize',        label: 'Font size',         type: 'number', min: 24, max: 200, step: 4, def: 92, slider: true, unit: ' px', updateMode: 'live',
         apply: (c,v,fw) => { c.textFirework = deepMerge(c.textFirework||{}, {fontSize:v}); fw.setOptions({textFirework:{fontSize:v}}); },
         tooltip: 'Text size in CSS pixels' },
@@ -1457,7 +1488,7 @@ function buildCategoryTab(sec) {
       inp.type = o.slider ? 'range' : 'number';
       inp.id = `opt-${o.id}`;
       inp.min = o.min; inp.max = o.max; inp.step = o.step;
-      const val = getDeep(state.committedConfig, o.id);
+      const val = o.read ? o.read(state.committedConfig) : getDeep(state.committedConfig, o.id);
       inp.value = val != null ? val : (o.def ?? '');
       if (o.slider) {
         ctrl.classList.add('slider-control');

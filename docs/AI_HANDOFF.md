@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.8.0**
+- Current release: **v1.9.0**
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -30,12 +30,16 @@ The v1.8.0 release turns the engine into something a host can drive. `setRenderP
 
 Development happens on `dev` and is merged into `main` for releases. The developer-platform plan (see `docs/developer-platform-plan.md`) is implemented one sprint at a time. Sprint 1 (TypeScript and public API contract) is complete: the package now ships first-party types in `index.d.ts`, resolved automatically through `package.json`. TypeScript is a dev-only dependency; the published runtime stays zero-dependency.
 
-Since v1.8.0 (unreleased at the time of writing), all of it documented in `docs/host-recipes.md`:
+The v1.9.0 release (October 3, 2026), all of it documented in `docs/host-recipes.md`:
 
 - Text fireworks gained `textFirework.horizontalPosition`, and the block now **scales with `visuals.zoom`**. Text plans are sampled in screen pixels and `_explodeType` divides each point by the zoom to undo the camera, so the block's base font is now scaled by the zoom while its centre is deliberately left alone — the requested position still holds exactly, and at `zoom: 1` nothing changed.
 - `textFirework.exclusive` is the opt-in that halts other launches for the whole text lifecycle and reserves the particle budget. It is right for a message someone should read, and wrong for text layered over a show that must never stop — the homepage sets it to `false`.
 - `show.launchHorizon` is measured in screen widths, so the homepage ties it to `1 / zoom` to keep launches across the full viewport at any zoom. That also un-caps the per-launch rocket count, `Math.min(launchHorizon, 1 / zoom)`, which exists to hold density steady as the field widens.
 - The homepage fires text from two independent self-scheduling loops, each waiting one to ten seconds and picking a random phrase from ten, walking a declared series of four areas. A fixed `setInterval` would have made every gap identical, which is why the loop re-arms through `setTimeout`.
+- `textFirework.tilt` (degrees, or `[min, max]`, held to ±45) rotates the sampled points about the block's centre in `_textPlans`. Each plan keeps its **unrotated** `x`/`y` for the crisp layer, which `_drawText` turns about the same `pivotX`/`pivotY`, and a separate `burstY` (the tilted line centre) that the text rocket climbs to. Anything reading a text plan's height for the rocket must use `burstY`, not `y`.
+- Under a host render pass, `start()` and `stop()` no longer start the engine loop; `renderFrame` runs the `duration` check and the `finishing`/`finale` wind-down (but deliberately not the `manual` auto-fade, which would end a game's effects between shots), and `_fade` leaves the shared canvas visible.
+- World Enders tag their carrier with `worldEnderId`, which `_launchFinaleTrails` passes on to the trails, so overlapping enders each chain from their own. The restore saves only the keys the effect overrides (`_worldEnderSnapshot`), and `setOptions` during an effect refreshes that record and re-applies the effect's limits (`_applyWorldEnderLimits`).
+- The Workbench Text tab exposes horizontal/vertical position and a Tilt from / Tilt to pair (`textTiltRange`/`applyTextTilt` in `guided-builder.html`). Several messages at chosen times are documented as a host-side cue list over `launchText`; an engine-clock timeline (`playTimeline`) was discussed and deliberately deferred.
 
 Important: **never hand-edit `dist/`**. Make source changes in `GrandFireworks.js`, then run `npm run build`.
 
@@ -224,7 +228,7 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.7.1/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.0/dist/GrandFireworks.min.js"></script>
 ```
 
 For the moving development branch, use:

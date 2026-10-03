@@ -54,7 +54,7 @@ const full = new GrandFireworks({
   },
   finale: { enabled: true, type: 'super-grand-finale', triggers: ['stop', 'duration'], trails: 10 },
   worldEnder: { carrierX: 0.5, firstSplitCount: 8, secondSplitCount: 8, maxChainDepth: 8 },
-  textFirework: { enabled: true, textAlign: 'center', colors: ['#FFFFFF', '#FFD700'], maxCharacters: 72 },
+  textFirework: { enabled: true, textAlign: 'center', colors: ['#FFFFFF', '#FFD700'], maxCharacters: 72, tilt: 10 },
 });
 
 // Methods return the instance for chaining.
@@ -88,7 +88,7 @@ const finalePromise: Promise<GrandFireworks> = full.finalize();
 const cleared: GrandFireworks = full.clear();
 
 // launchText resolves with the rendered lines.
-const textPromise: Promise<string[]> = full.launchText('WISH BIG', { textAlign: 'center', colors: ['#fff'] });
+const textPromise: Promise<string[]> = full.launchText('WISH BIG', { textAlign: 'center', colors: ['#fff'], tilt: [-30, 30] });
 
 // launchTextSequence accepts a single string or an array of items.
 const seq1: Promise<TextSequenceResult> = full.launchTextSequence(['ONE', { text: 'TWO', overrides: { colors: ['#fff'] } }], {
