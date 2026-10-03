@@ -4,6 +4,10 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Wind is now off in every style. The Cinematic style used to push sparks sideways (`windStrength: 0.06`); it is now `0`, like every other style. You can still turn wind on with `visuals.windStrength`.
+
 ### Removed
 
 - Removed the Starlight Intercept example game and its logo. It never used the fireworks engine. Its Mars backdrop is kept for Fireworks Command and renamed `assets/fireworks-command-mars.png`.

@@ -234,7 +234,7 @@
         sparkleChance: 0.58,
         pyroBurn: true,
         sphereBurst: true,
-        windStrength: 0.06,
+        windStrength: 0,
         starChance: 0.085,
         groupedSalvos: false,
         secondaryCrackle: true,
