@@ -1,6 +1,6 @@
 {
   "name": "grand-fireworks-js",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Photorealistic WebGL 2 fireworks engine with 15 shell types, multi-line text effects, adaptive performance, Canvas fallback, and a choreographed Super Grand Finale. Zero dependencies.",
   "main": "./GrandFireworks.js",
   "types": "./index.d.ts",

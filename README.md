@@ -3,11 +3,13 @@
 > **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.7.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
+Version **1.8.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
 
-## Version 1.7.1
+## Version 1.8.0
 
-Text fireworks now shrink to fit narrow screens instead of being squeezed tall and thin, the Workbench's **Old School** style no longer falls back to Medium, and the homepage adds a **Show Fullscreen** shortcut after scrolling plus links from its controls to the Config Workbench and Feature Demo.
+The engine can now be driven by a host. **`setRenderPass(callback)`** lends the engine's canvas to your own drawing code — your scene is composited after the canvas is cleared and before the fireworks are drawn, so it sits behind them — and hands frame pacing to you, because the engine stops its own loop. **`renderFrame(dt)`** advances the simulation and draws one frame, with `dt` capped at 50 ms and `renderFrame(0)` rendering without advancing. **`placeburst()`** detonates a shell at a point, or at an element's centre, with no rocket and no flight time, fitted to an on-screen `radius`. **`launchTo()`** flies a real rocket from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. Fireworks Command is rebuilt on that API, and rockets with `gravity: 0` no longer fall.
+
+Version 1.7.1 made text fireworks shrink to fit narrow screens instead of being squeezed tall and thin, fixed the Workbench's **Old School** style falling back to Medium, and added a **Show Fullscreen** shortcut plus links from the homepage controls to the Config Workbench and Feature Demo.
 
 Version 1.7.0 shipped first-party TypeScript declarations, fixed a set of engine bugs (Canvas 2D memory growth, `durationMode: 'immediate'`, mobile point sizes, iOS audio unlock, resize churn, and webfont timing in text fireworks), made the guided builder's config import accept pasted JavaScript as well as JSON, fixed unreadable dropdowns, and gave the homepage a compact, phone-friendly fullscreen control bar. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
 
@@ -85,9 +87,81 @@ The same files can be browsed directly inside the repository through the relativ
 
 `duration: 0` runs indefinitely. `stop()` is graceful by default: it stops new launches, finishes active fireworks, optionally plays the configured finale, then fades out.
 
-The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `launchWorldEnder`, `finalize`, `setOptions`, `setOpacity`, `setZoom`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, and `getStats`.
+The library exposes `start`, `stop`, `pause`, `resume`, `clear`, `destroy`, `launch`, `launchText`, `launchTextSequence`, `cancelTextSequence`, `launchFinale`, `launchWorldEnder`, `finalize`, `setOptions`, `setOpacity`, `setZoom`, `setStyle`, `setColorTheme`, `feelingLucky`, `getOptions`, `getStats`, `setRenderPass`, `renderFrame`, `placeburst`, and `launchTo`.
+
+### Effects at a point, and driving your own game
+
+`placeburst()` detonates a shell at a point you choose, with no rocket and no flight time. Positions are CSS pixels relative to the container, or pass `element` to burst at that element's centre — which is what makes it easy to tie explosions to buttons, cards, or clicks:
+
+```js
+fireworks.placeburst({ element: '#buy-button', radius: 120, type: 'glitter_nova' });
+fireworks.placeburst({ x: event.clientX, y: event.clientY, radius: 90 });
+```
+
+`radius` is the on-screen size the sparks are fitted to, in CSS pixels. The engine scales every star's speed and gravity by the same factor, so the shell keeps its shape at any size, and the fit targets the rim of the break — a few of the fastest stars deliberately travel past the radius. Omit it to keep the shell's natural size. `type`, `colors`, and `density` (a spark multiplier) are per-call, and `sound: false` silences one burst without touching the engine's sound setting.
+
+`reachTime` sets how many milliseconds the sparks take to reach `radius`. Supply it whenever your own hit detection has to agree with what the player can see: without it the fit targets the *asymptotic* reach, so the stars keep coasting outward and the break is still only about a third of the way to its radius by the time a blast has gone fully lethal — which is how enemies end up dying outside the visible explosion. The sparks are retuned to arrive on time, with gravity compensated so they fall at the same rate and only the expansion speeds up.
+
+```js
+// A hit circle that grows at 0.26 px/ms toward 120px: draw the fire 15% larger and
+// have it arrive in 60% of that time, so the fire always leads the damage.
+const max = 120;
+fireworks.placeburst({
+  x, y,
+  radius: max * 1.15,
+  reachTime: (max / 0.26) * 0.6,
+});
+```
+
+Two more options shape the aftermath. `lifeScale` below 1 fades the sparks over the fall rather than letting them outlive the explosion, and `gravityScale` slows the descent — `0.1` makes a break hang and settle at a tenth of the usual fall rate:
+
+```js
+fireworks.placeburst({ x, y, radius: 140, reachTime: 260, lifeScale: 0.55, gravityScale: 0.1 });
+```
+
+`launchTo()` fires the engine's real rocket — trail, exhaust, flash, burst, and audio — from an origin and travel time you supply, which is how a game keeps its own projectile logic and its visuals in lockstep:
+
+```js
+fireworks.launchTo({ x: tip.x, y: tip.y, targetX: x, targetY: y, duration: shot.flight, radius: shot.max });
+```
+
+For games where the engine should render the whole scene rather than just the fireworks, `setRenderPass()` lends the engine's canvas to your drawing code. Your callback runs every frame after the canvas is cleared and before the fireworks are drawn, so your artwork sits behind them:
+
+```js
+fireworks.setRenderPass(frame => {
+  // frame: { gl, ctx, canvas, width, height, dpr }
+  // Exactly one of gl/ctx is set, matching the renderer in use.
+  drawMyScene(frame.ctx ?? null);
+});
+
+// Attaching a pass makes you responsible for frame pacing:
+let last = performance.now();
+requestAnimationFrame(function loop(now) {
+  fireworks.renderFrame(now - last);
+  last = now;
+  requestAnimationFrame(loop);
+});
+```
+
+Attaching a render pass stops the engine's own animation loop, so the engine never steps the simulation twice. `renderFrame(dt)` caps `dt` at 50ms internally, and `renderFrame(0)` renders the current frame without advancing anything — which is how you keep a scene on screen while effects are paused. The engine still owns the canvas, the renderer choice, and the WebGL state; your callback only draws. `examples/fireworks-command/` is a complete game built this way.
 
 Use `setStyle('cinematic')` for a restrained, realistic show with warm pyrotechnic colours, longer ember trails, softer bloom, slower launches, and fewer simultaneous shells.
+
+A shell normally breaks in a multi-colour ramp. Set `show.palettes` to `'single'` for one solid colour per shell, which is what makes a volley read as several distinct colours at once rather than a wash of gradients — each shell still gets a different hue:
+
+```js
+const fireworks = new GrandFireworks({ show: { palettes: 'single' } });
+```
+
+Pass a flat array of colours instead to choose the pool yourself. Each shell then breaks in exactly one of them:
+
+```js
+const fireworks = new GrandFireworks({
+  show: { palettes: ['#FF3B30', '#0A84FF', '#FFD60A', '#34C759'] }
+});
+```
+
+A *nested* array still means what it always did: each inner array is a full palette, normalized per shell. So `palettes: [['#FF0000', '#FFFF00']]` ramps red to yellow, while `palettes: ['#FF0000', '#FFFF00']` is two solid shells.
 
 `launch()`, `launchText()`, and `launchFinale()` are standalone-safe: they wake the renderer when the regular show is idle, stopped, paused, or fading, play only the requested effect, then fade away automatically. They do not restart automatic launches.
 

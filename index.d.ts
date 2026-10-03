@@ -222,7 +222,12 @@ export interface ShowOptions {
   angleStrength?: number;
   textRocketAngle?: number;
   enabledTypes?: ShellType[] | 'all';
-  palettes?: ColorString[][] | 'default';
+  /**
+   * `'default'` cycles the built-in multi-colour palettes, `'single'` gives every
+   * shell one solid colour instead of a ramp, an array of palettes is normalized
+   * per shell, and a flat array of colour strings is a pool of solid shells.
+   */
+  palettes?: ColorString[][] | ColorString[] | 'default' | 'single';
   /** Total launch area in screen-width units. */
   launchHorizon?: number;
   zAngleRange?: number;
@@ -313,6 +318,95 @@ export interface LaunchOptions {
   finale?: boolean;
   syncAt?: number;
 }
+
+/**
+ * Options for placeburst() — detonates a shell at a point, with no flight time.
+ *
+ * Positions are CSS pixels relative to the engine's container, which is what
+ * pointer events already give you. Pass `element` instead to burst at that
+ * element's centre, which is the common case for tying effects to buttons,
+ * cards or clicks.
+ */
+export interface BurstOptions {
+  /** CSS pixels from the container's left edge. */
+  x?: number;
+  /** CSS pixels from the container's top edge. */
+  y?: number;
+  /** Burst at this element's centre instead of at x/y. */
+  element?: Element | string;
+  /**
+   * Target on-screen burst radius in CSS pixels. The sparks are fitted to it by
+   * scaling velocity and gravity together, so the shell keeps its shape. The
+   * fit targets the rim of the break, so a few of the fastest stars travel past
+   * the radius. Omit for the shell's natural size.
+   */
+  radius?: number;
+  /**
+   * Milliseconds for the stars to reach `radius`. Omit it and the fit targets the
+   * asymptotic reach, so the break keeps coasting outward for well over a second
+   * — which lets a game that damages on impact kill things the visible explosion
+   * has not reached. Set it to your blast's rise time so the rim arrives on
+   * schedule. Star types that override their own drag (willow, palm, horsetail)
+   * keep the asymptotic fit.
+   */
+  reachTime?: number;
+  /**
+   * Multiplies the spark fall after the radius fit. `0.1` makes the break drift down
+   * at a tenth of the usual rate instead of dropping.
+   */
+  gravityScale?: number;
+  /**
+   * Multiplies how long the sparks live. Below 1 they fade over the fall rather than
+   * outliving the explosion.
+   */
+  lifeScale?: number;
+  /** Shell type. Structural types (text, finale carriers) fall back to grand_peony. */
+  type?: ShellType | (string & {});
+  /** Palette for the burst. */
+  colors?: ColorString[];
+  /** Spark multiplier; 1 is normal. */
+  density?: number;
+  /** false silences this burst only, leaving the engine's sound setting alone. */
+  sound?: boolean;
+}
+
+/**
+ * Options for launchTo() — an engine rocket from a host-supplied origin that
+ * bursts on arrival, using the host's own travel time.
+ */
+export interface LaunchToOptions extends BurstOptions {
+  /** Launch point, CSS pixels relative to the container. */
+  x: number;
+  /** Launch point, CSS pixels relative to the container. */
+  y: number;
+  /** Detonation point, CSS pixels relative to the container. */
+  targetX: number;
+  /** Detonation point, CSS pixels relative to the container. */
+  targetY: number;
+  /** Flight time in milliseconds. Defaults to 600. */
+  duration?: number;
+}
+
+/**
+ * Descriptor handed to a render pass once per frame. Exactly one of `gl`/`ctx`
+ * is non-null, matching whichever renderer the engine fell back to. `width` and
+ * `height` are CSS pixels and `dpr` is the device pixel ratio, so the context is
+ * already scaled for you.
+ */
+export interface RenderPassFrame {
+  gl: WebGL2RenderingContext | null;
+  ctx: CanvasRenderingContext2D | null;
+  canvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  dpr: number;
+}
+
+/**
+ * A host render pass: draws your scene on the engine's canvas, behind its
+ * fireworks. Must not clear the frame — the engine has already done that.
+ */
+export type RenderPass = (frame: RenderPassFrame) => void;
 
 /** A single text-sequence item: a string or an object with overrides. */
 export type TextSequenceItem =
@@ -442,6 +536,37 @@ export class GrandFireworks extends EventTarget {
   launch(options?: LaunchOptions): this;
 
   /**
+   * Registers a host render pass — the engine lends its canvas and the host
+   * draws the scene.
+   *
+   * The callback runs each frame after the canvas has been cleared (or
+   * trail-faded) and before the fireworks are drawn, so host artwork sits behind
+   * them. Attaching a pass makes the host responsible for frame pacing: the
+   * engine stops starting its own animation loop and expects renderFrame(dt) to
+   * be called each frame. Pass null to detach.
+   */
+  setRenderPass(callback: RenderPass | null): this;
+
+  /**
+   * Advances the simulation by dt milliseconds and draws one frame. For hosts
+   * that own the animation loop alongside a render pass. dt is capped at 50ms
+   * internally. Pass 0 to render the current frame without advancing anything.
+   */
+  renderFrame(dt?: number): this;
+
+  /**
+   * Detonates a shell immediately at a point, fitted to the requested on-screen
+   * radius. No rocket and no flight time.
+   */
+  placeburst(options?: BurstOptions): this;
+
+  /**
+   * Flies a rocket from one point to another and bursts on arrival, using the
+   * same origin and travel time the host is simulating.
+   */
+  launchTo(options: LaunchToOptions): this;
+
+  /**
    * Rasterizes text to a hidden canvas and fires rockets that assemble into
    * the text shape mid-air. Resolves with the rendered lines.
    */
@@ -502,7 +627,7 @@ export namespace GrandFireworks {
   const PRESETS: Record<PerformancePreset, PerformancePresetOptions>;
   const TYPES: ShellType[];
   const STYLES: Record<Exclude<StyleName, 'mixed'>, { visuals?: VisualOptions; show?: ShowOptions; performance?: PerformanceOptions }>;
-  const COLOR_THEMES: Record<string, { palettes?: ColorString[][] | 'default' }>;
+  const COLOR_THEMES: Record<string, { palettes?: ColorString[][] | 'default' | 'single' }>;
 }
 
 export default GrandFireworks;

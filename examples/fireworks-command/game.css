@@ -21,10 +21,12 @@ body {
 #game {
   position: fixed;
   z-index: 2;
+  inset: 0;
   display: block;
   width: 100vw;
   height: 100svh;
-  cursor: crosshair;
+  cursor: none;
+  touch-action: none;
   background: transparent;
 }
 .hud {
@@ -83,6 +85,8 @@ body {
   box-shadow: 0 28px 90px #0009;
   text-align: center;
   backdrop-filter: blur(10px);
+  max-height: calc(100svh - 32px);
+  overflow-y: auto;
 }
 .game-logo {
   display: block;
@@ -128,10 +132,23 @@ body {
   background: #071023e8;
 }
 .panel.round-next .game-logo,
-.panel.round-next h1,
-.panel.round-next p,
+.panel.round-next .intro,
 .panel.round-next #start-muted {
   display: none;
+}
+.panel.round-lost .intro {
+  display: none;
+}
+.round-status[hidden] {
+  display: none;
+}
+.round-status h2 {
+  margin: 0 0 10px;
+  color: #ffda80;
+  font: 700 clamp(1.4rem, 5vw, 2rem) ui-monospace, monospace;
+}
+.round-status p {
+  font-size: 13px;
 }
 .panel.round-next .start-actions {
   display: block;
@@ -167,11 +184,14 @@ body {
   position: fixed;
   z-index: 3;
   left: 50%;
-  bottom: 18px;
+  top: 64px;
   transform: translateX(-50%);
   color: #a7c8ff99;
   font-size: 12px;
-  white-space: nowrap;
+  width: min(560px, calc(100vw - 24px));
+  text-align: center;
+  white-space: normal;
+  line-height: 1.5;
   pointer-events: none;
 }
 .settings-toggle {
@@ -233,35 +253,20 @@ body {
   background: #1e795f;
   color: #e9fff7;
 }
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid #9deaf4;
+  outline-offset: 3px;
+}
+@media (max-width: 520px) {
+  .hud { inset: 12px 12px auto; }
+  .hud span { font-size: 0.62rem; }
+  .panel { padding: 18px; }
+  .settings-toggle { right: 10px; bottom: 12px; }
+  .settings { right: 10px; }
+  .supernova { left: 12px; bottom: 12px; transform: none; }
+  .hint { top: 56px; font-size: 10px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .settings {
-    backdrop-filter: none;
-  }
-}
-body {
-  background: #170305 url("../../assets/fireworks-command-mars.png") center /
-    cover no-repeat;
-}
-.dust-wind {
-  position: fixed;
-  inset: -20%;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.28;
-  background: repeating-linear-gradient(
-    165deg,
-    transparent 0 28px,
-    rgba(255, 95, 50, 0.16) 34px 42px,
-    transparent 52px 92px
-  );
-  mix-blend-mode: screen;
-  animation: dust-drift 13s linear infinite;
-}
-@keyframes dust-drift {
-  from {
-    transform: translate3d(-9%, -3%, 0);
-  }
-  to {
-    transform: translate3d(9%, 3%, 0);
-  }
+  .settings, .panel { backdrop-filter: none; }
 }

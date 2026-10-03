@@ -8,19 +8,36 @@
  */
 (() => {
   "use strict";
-  const canvas = document.querySelector("#game"),
-    ctx = canvas.getContext("2d"),
+  const surface = document.querySelector("#game"),
     panel = document.querySelector("#panel"),
+    status = document.querySelector("#round-status"),
+    statusTitle = document.querySelector("#status-title"),
+    statusMessage = document.querySelector("#status-message"),
     scoreEl = document.querySelector("#score"),
     waveEl = document.querySelector("#wave"),
     music = document.querySelector("#game-music"),
     supernovaButton = document.querySelector("#supernova"),
     nextButton = document.querySelector("#start-music"),
-    settings = { sound: true, palette: "rainbow", effect: "arcade" },
-    upgrades = { shield: 0, reload: 0, blast: 0, chain: 0, payload: 0 };
+    settings = { sound: false, palette: "rainbow", effect: "arcade" },
+    upgrades = { shield: 0, reload: 0, blast: 0, chain: 0, payload: 0 },
+    scene = new FireworksCommandScene(),
+    engine = new GrandFireworks({
+      container: "#game",
+      mode: "contained",
+      zIndex: 0,
+      renderer: { preferred: "webgl2", fallback: "canvas2d" },
+      visuals: { zoom: 0.55, windStrength: 0, trails: false, flashBangChance: 0 },
+      performance: { preset: "high", adaptive: true, secondary: 2 },
+      show: { maxParticles: 30000 },
+      sound: { enabled: false },
+    });
+  // ── Shield dome ─────────────────────────────────────────────────────────────
+  // A glassy force field arcing edge to edge over the cities. It absorbs four hits
+  // before it fails, and every hit leaves a crack exactly where it landed.
+  const DOME_HITS = 4;
+  const DOME_RISE = 0.22;
   let w = 0,
     h = 0,
-    dpr = 1,
     playing = false,
     paused = false,
     score = 0,
@@ -35,20 +52,20 @@
     last = 0,
     roundStart = 0,
     pauseAt = 0,
+    raf = 0,
+    disposed = false,
     roundWon = false,
     supernovas = 1,
+    dome = { hp: DOME_HITS, cracks: [] },
+    worldBlasts = [],
     selectedUpgrade = "",
     aim = { x: 0, y: 0 },
     audioCtx;
-  // Canvas lifecycle and persistent round state.
+  // One visible canvas, owned by the engine. The scene owns only detached
+  // Canvas2D artwork; its render pass uploads that artwork to the shared GL
+  // context (or uses drawImage in the engine's Canvas2D fallback).
   music.volume = 0.38;
-  function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 2);
-    w = innerWidth;
-    h = innerHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  function resetDefenses() {
     cities = Array.from({ length: 6 }, (_, i) => ({
       x: w * (0.12 + i * 0.152),
       alive: true,
@@ -62,17 +79,52 @@
       ammo: 45,
       maxAmmo: 45,
     }));
+  }
+  function resize(width = surface.clientWidth, height = surface.clientHeight) {
+    w = width;
+    h = height;
+    if (!cities.length) resetDefenses();
+    else {
+      cities.forEach((c, i) => (c.x = w * (0.12 + i * 0.152)));
+      bunkers.forEach((b, i) => {
+        b.x = w * [0.18, 0.5, 0.82][i];
+        b.y = h - 38;
+      });
+    }
     if (!aim.x) {
       aim = { x: w * 0.5, y: h * 0.35 };
     }
   }
-  addEventListener("resize", resize);
+  const onResize = () => resize();
+  addEventListener("resize", onResize);
   resize();
+  engine.setRenderPass((frame) => {
+    if (frame.width !== w || frame.height !== h) resize(frame.width, frame.height);
+    scene.render(frame, {
+      cities, bunkers, enemy, shots, aim, upgrades, wave, paused, cannonTip,
+      dome: {
+        hp: dome.hp,
+        maxHp: DOME_HITS,
+        geo: domeGeometry(),
+        // Projected here so the scene never has to re-derive the dome's curve.
+        cracks: dome.cracks.map((c) => ({
+          x: c.t * w,
+          y: domeYAt(c.t * w),
+          seed: c.seed,
+        })),
+      },
+    });
+  });
   function start(fresh = true) {
+    engine.clear();
+    engine.resume();
     playing = true;
     paused = false;
     roundWon = false;
     panel.classList.remove("round-next");
+    panel.classList.remove("round-lost");
+    status.hidden = true;
+    nextButton.disabled = false;
     if (fresh) {
       score = 0;
       wave = 1;
@@ -83,13 +135,15 @@
         chain: 0,
         payload: 0,
       });
-      resize();
+      resetDefenses();
     } else
       for (const b of bunkers)
         if (b.alive) b.ammo = Math.min(b.maxAmmo, b.ammo + 18);
     enemy = [];
     shots = [];
     bursts = [];
+    dome = { hp: DOME_HITS, cracks: [] };
+    worldBlasts = [];
     supernovas = 1;
     supernovaButton.disabled = false;
     supernovaButton.textContent = "Use SuperNova";
@@ -99,7 +153,6 @@
     roundStart = last;
     nextEnemy = last + 700;
     nextHarasser = last + 9000;
-    requestAnimationFrame(loop);
   }
   function cannonTip(bunker, x, y) {
     const pivotY = h - 64,
@@ -113,9 +166,45 @@
       theta,
     };
   }
-  // Lightweight synthesized effects keep the example dependency-free.
+  // The dome is the circular arc that passes through both edges of the screen and
+  // its own crown, so it is derived from w and h and survives a resize. Cracks are
+  // stored as a fraction across the dome for the same reason.
+  function domeGeometry() {
+    const baseY = h - 60,
+      rise = h * DOME_RISE,
+      half = w / 2,
+      r = (half * half + rise * rise) / (2 * rise);
+    return { baseY, rise, r, cx: half, cy: baseY - rise + r };
+  }
+  function domeYAt(x) {
+    const { r, cx, cy, baseY } = domeGeometry(),
+      inner = r * r - (x - cx) * (x - cx);
+    return inner <= 0 ? baseY : cy - Math.sqrt(inner);
+  }
+  function hitDome(m) {
+    const x = Math.min(w, Math.max(0, m.x)),
+      y = domeYAt(x);
+    dome.hp--;
+    dome.cracks.push({ t: x / w, seed: (Math.random() * 1e6) | 0 });
+    bursts.push({ x, y, life: 0, radius: Math.min(w, h) * 0.12, destructive: true });
+    if (dome.hp <= 0) {
+      // The field is gone, so its cracks go with it, all along its length.
+      dome.cracks.length = 0;
+      for (let i = 0; i < 7; i++) {
+        const bx = w * (0.08 + i * 0.13);
+        bursts.push({
+          x: bx,
+          y: domeYAt(bx),
+          life: -i * 40,
+          radius: Math.min(w, h) * 0.17,
+          type: "thunder_clap",
+        });
+      }
+    }
+  }
+  // Only the victory cue is game-owned; rocket/boom/crackle audio is the engine's.
   function sound(type) {
-    if (!settings.sound) return;
+    if (!settings.sound || type !== "victory") return;
     audioCtx ??= new (window.AudioContext || window.webkitAudioContext)();
     const t = audioCtx.currentTime;
     if (type === "victory") {
@@ -132,32 +221,113 @@
       });
       return;
     }
-    const o = audioCtx.createOscillator(),
-      g = audioCtx.createGain();
-    o.connect(g).connect(audioCtx.destination);
-    if (type === "pew") {
-      o.type = "square";
-      o.frequency.setValueAtTime(880, t);
-      o.frequency.exponentialRampToValueAtTime(155, t + 0.12);
-      g.gain.setValueAtTime(0.06, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    } else {
-      const heavy = type === "bomb";
-      o.type = heavy ? "sawtooth" : "triangle";
-      o.frequency.setValueAtTime(heavy ? 95 : 180, t);
-      o.frequency.exponentialRampToValueAtTime(
-        heavy ? 30 : 55,
-        t + (heavy ? 0.4 : 0.24),
-      );
-      g.gain.setValueAtTime(heavy ? 0.16 : 0.1, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + (heavy ? 0.48 : 0.3));
+  }
+  // Solid hues for the "One colour each" palette: every shell breaks in a single
+  // colour instead of a ramp, so one volley shows several distinct colours.
+  const SOLID_PALETTE = [
+    "#ff3b30",
+    "#ff9500",
+    "#ffd60a",
+    "#34c759",
+    "#00e5c0",
+    "#0a84ff",
+    "#5e5ce6",
+    "#ff2d92",
+  ];
+  // The engine's palettes ramp a single colour toward white, so a solid shell
+  // repeats its colour across all four entries.
+  const solidColors = (index) => {
+    const c = SOLID_PALETTE[index % SOLID_PALETTE.length];
+    return [c, c, c, c];
+  };
+  let solidCursor = 0;
+  function colors() {
+    // Each successive shell takes the next hue, so two bursts in the same volley
+    // never share a colour. This runs once per burst, never per frame.
+    if (settings.palette === "single") return solidColors(solidCursor++);
+    return settings.palette === "redblue"
+      ? ["#ff4d5f", "#53a8ff", "#ffffff"]
+      : ["#ff5d73", "#ffcf58", "#66e6bd", "#53a8ff", "#bd7aff"];
+  }
+  // The blast's hit circle grows at BLAST_RISE_RATE pixels per millisecond. The
+  // visible explosion is drawn BLAST_OVERSHOOT times larger than that circle, and
+  // reaches full size in BLAST_LEAD of the time the circle takes to go lethal, so
+  // the fire is always ahead of the damage. Without both, the hit circle outruns
+  // the fire and enemies die in empty space next to a slowly swelling puff.
+  const BLAST_RISE_RATE = 0.26;
+  const BLAST_OVERSHOOT = 1.15;
+  const BLAST_LEAD = 0.6;
+  // Every burst snaps open instead of swelling slowly, which is what made the
+  // explosion look like it was crawling toward the enemy it had already killed.
+  // Bursts that carry a hit circle pass their own schedule so the fire leads the
+  // damage.
+  const DEFAULT_BURST_REACH = 260;
+  // The sparks fade out over the fall rather than hanging in the sky for the
+  // shell's full lifetime, which kept the screen full of old explosions.
+  const BURST_LIFE_SCALE = 0.55;
+  // And they drift down at a tenth of the usual rate, so a break hangs and settles
+  // instead of dropping like a stone.
+  const BURST_GRAVITY_SCALE = 0.1;
+  // The size of a hit marker: the small puff that confirms an enemy died. It has
+  // no collision meaning, so it stays deliberately compact. Spectacle bursts
+  // (SuperNova, round clear) must pass their own radius instead of landing here,
+  // or a screen-filling celebration becomes 40 tiny puffs.
+  const HIT_MARKER_RADIUS = 48;
+  // Showy but non-destructive shells, used where the game wants variety rather
+  // than the player's selected effect.
+  const CELEBRATION_TYPES = [
+    "grand_peony",
+    "glitter_nova",
+    "crown_jewel",
+    "imperial_chrysanthemum",
+    "diamond_ring",
+    "galactic_spiral",
+  ];
+  const celebrationType = () =>
+    CELEBRATION_TYPES[(Math.random() * CELEBRATION_TYPES.length) | 0];
+  function burstOptions(radius, destructive = false, extras = {}) {
+    return {
+      radius,
+      type:
+        extras.type ||
+        (destructive
+          ? "thunder_clap"
+          : settings.effect === "bold"
+            ? "glitter_nova"
+            : "grand_peony"),
+      colors:
+        extras.colors ||
+        (destructive ? ["#ffffff", "#ff9b36", "#ff382b"] : colors()),
+      density: (settings.effect === "bold" ? 1.4 : 1) * (1 + upgrades.payload * 0.12),
+      sound: settings.sound,
+      reachTime: extras.reachTime || DEFAULT_BURST_REACH,
+      lifeScale: BURST_LIFE_SCALE,
+      gravityScale: BURST_GRAVITY_SCALE,
+    };
+  }
+  // Timers remain game-owned. Emit exactly once when a queued timer crosses zero;
+  // there are no drawn collision circles or legacy burst sprites.
+  function updateBursts(dt) {
+    for (let i = bursts.length - 1; i >= 0; i--) {
+      const b = bursts[i];
+      b.life += dt;
+      if (!b.emitted && b.life >= 0) {
+        b.emitted = true;
+        engine.placeburst({
+          x: b.x,
+          y: b.y,
+          ...burstOptions(b.radius || HIT_MARKER_RADIUS, b.destructive, {
+            type: b.type,
+            colors: b.colors,
+          }),
+        });
+      }
+      if (b.emitted && b.life > 440) bursts.splice(i, 1);
     }
-    o.start(t);
-    o.stop(t + 0.55);
   }
   // Pick the nearest live bunker, then launch a player interceptor.
   function launch(x, y) {
-    if (!playing) return;
+    if (!playing || paused) return;
     const available = bunkers.filter(
         (b) => b.alive && !b.cooldown && b.ammo > 0,
       ),
@@ -169,8 +339,7 @@
     const tip = cannonTip(bunker, x, y);
     bunker.ammo--;
     bunker.cooldown = Math.max(220, 780 * (1 - upgrades.reload * 0.16));
-    sound("pew");
-    shots.push({
+    const shot = {
       x: tip.x,
       y: tip.y,
       sx: tip.x,
@@ -185,6 +354,22 @@
         Math.min(520, Math.hypot(x - tip.x, y - tip.y) * 0.65),
       ),
       bursting: false,
+    };
+    shots.push(shot);
+    // Schedule before the next game step: shot.life and the engine effect clock
+    // then advance by the identical capped dt. Arrival bursts are engine-owned.
+    engine.launchTo({
+      x: tip.x,
+      y: tip.y,
+      targetX: x,
+      targetY: y,
+      duration: shot.flight,
+      ...burstOptions(shot.max * BLAST_OVERSHOOT, false, {
+        // The fire leads the damage: it is oversized, and reaches full size before
+        // the hit circle has finished growing, so every kill is visibly inside the
+        // explosion that caused it.
+        reachTime: (shot.max / BLAST_RISE_RATE) * BLAST_LEAD,
+      }),
     });
   }
   function spawn() {
@@ -200,7 +385,6 @@
       tx: target.x,
       ty: h - 62,
       speed,
-      trail: [],
     });
   }
   function spawnHarasser() {
@@ -212,13 +396,15 @@
       vx: (fromLeft ? 1 : -1) * (42 + wave * 4),
       hp: 5 + (wave - 1) * 2,
       nextDrop: performance.now() + 650,
-      trail: [],
     });
   }
   function explodeEnemy(m) {
     score += m.kind === "harasser" ? 1000 : 100;
-    bursts.push({ x: m.x, y: m.y, life: 0 });
-    if (upgrades.chain && Math.random() < Math.min(0.6, upgrades.chain * 0.12))
+    bursts.push({ x: m.x, y: m.y, life: 0, radius: HIT_MARKER_RADIUS });
+    if (upgrades.chain && Math.random() < Math.min(0.6, upgrades.chain * 0.12)) {
+      // The chain burst is lethal in its own right, so it gets the same treatment
+      // as an interceptor: oversized fire on the hit circle's own schedule.
+      const chainMax = Math.min(w, h) * 0.42;
       shots.push({
         x: m.x,
         y: m.y,
@@ -227,28 +413,116 @@
         tx: m.x,
         ty: m.y,
         r: 0,
-        max: Math.min(w, h) * 0.42,
+        max: chainMax,
         life: 0,
         flight: 0,
         bursting: true,
       });
-    sound(m.kind === "harasser" ? "bomb" : "enemy");
+      engine.placeburst({
+        x: m.x,
+        y: m.y,
+        ...burstOptions(chainMax * BLAST_OVERSHOOT, false, {
+          reachTime: (chainMax / BLAST_RISE_RATE) * BLAST_LEAD,
+        }),
+      });
+    }
+  }
+  // ── World Ender ─────────────────────────────────────────────────────────────
+  // The engine's staged apocalypse: a carrier splits into a radial volley, and
+  // every one of those shells bursts again, and those can branch too. Each
+  // secondary explosion reports its own position, so damage here is positional
+  // rather than a free screen clear — what dies is what the fire actually
+  // covered, which is the interesting part of the effect.
+  // Every secondary explosion reports how far its own break reaches, in world units,
+  // so the damage matches the fire the player can see. The floor covers a shell that
+  // reports nothing at all, and WORLD_ENDER_MIN_BLAST is only ever a fallback.
+  const WORLD_ENDER_MIN_BLAST = 0.12;
+  // A secondary explosion stays lethal for as long as its fire is still burning. It
+  // used to hit once, at the instant it detonated, so anything that flew into the
+  // blaze a moment later sat there unharmed inside a visible explosion.
+  const WORLD_ENDER_BURN = 1500;
+  const WORLD_ENDER_LIMITS = {
+    // Asked for with no cap: the engine's own limits come off for the duration and nothing
+    // is substituted in their place, so the full volley spawns every star it wants. This is
+    // the effect's whole point and also the way it can hang a tab — adaptive quality is the
+    // only brake left, so if frames collapse, drop these numbers rather than the effect.
+    maxParticles: Infinity,
+    maxRockets: Infinity,
+    firstSplitCount: 12,
+    secondSplitCount: 6,
+    promotionChance: 0.03,
+    maxChainDepth: 2,
+    recursionDurationMs: 9000,
+  };
+  // Scores a kill without queueing a burst: the World Ender is already wall-to-wall
+  // explosions, and a hit marker per kill would only add noise.
+  function worldEnderDamage(x, y, radius) {
+    for (let i = enemy.length - 1; i >= 0; i--) {
+      const m = enemy[i];
+      if (Math.hypot(m.x - x, m.y - y) > radius) continue;
+      // The saucer takes a beating rather than popping on the first blast.
+      if (m.kind === "harasser") {
+        m.hp -= 3;
+        if (m.hp > 0) continue;
+      }
+      score += m.kind === "harasser" ? 1000 : 100;
+      enemy.splice(i, 1);
+    }
+  }
+  // Secondary explosions arrive in the engine's world space, so they are scaled back to
+  // screen pixels through the zoom, exactly as the launcher does. The engine reports the
+  // size each break was built for even when the particle cap throttled it, so there is no
+  // need to remember an earlier blast: doing that made a throttled burst lethal across
+  // half the screen and enemies vanished well outside any fire.
+  engine.addEventListener("finalestage", (event) => {
+    const detail = event.detail || {};
+    if (detail.stage !== "secondary-burst") return;
+    const source = detail.source || {},
+      scale = (Number(source.dof) || 1) * (Number(source.styleScale) || 1),
+      measured = (Number(detail.radius) || 0) * engine.zoom,
+      radius = Math.max(
+        measured,
+        Math.min(w, h) * WORLD_ENDER_MIN_BLAST * Math.min(2, Math.max(0.6, scale)),
+      );
+    // Registered rather than applied once: update() keeps it lethal while it burns.
+    worldBlasts.push({
+      x: detail.x * engine.zoom,
+      y: detail.y * engine.zoom,
+      radius,
+      until: performance.now() + WORLD_ENDER_BURN,
+    });
+  });
+  function worldEnder() {
+    if (!playing || paused) return;
+    sound("victory");
+    engine.launchWorldEnder(WORLD_ENDER_LIMITS);
   }
   function supernova() {
-    if (!playing || !supernovas) return;
+    if (!playing || paused || !supernovas) return;
     supernovas = 0;
     supernovaButton.disabled = true;
     supernovaButton.textContent = "SuperNova used";
     sound("victory");
+    // SuperNova is pure spectacle, so every burst is sized to the screen and
+    // picks a shell at random rather than reusing the player's effect choice.
+    const nova = Math.min(w, h) * 0.2;
     for (const m of enemy) {
       score += m.kind === "harasser" ? 1000 : 100;
-      bursts.push({ x: m.x, y: m.y, life: -Math.random() * 260 });
+      bursts.push({
+        x: m.x,
+        y: m.y,
+        life: -Math.random() * 260,
+        radius: nova,
+        type: celebrationType(),
+      });
     }
-    for (let i = 0; i < 24; i++)
+    for (let i = 0; i < 20; i++)
       bursts.push({
         x: w * (0.08 + Math.random() * 0.84),
         y: h * (0.06 + Math.random() * 0.72),
         life: -Math.random() * 420,
+        radius: nova,
+        type: celebrationType(),
       });
     enemy = [];
   }
@@ -258,27 +532,20 @@
       cities[0],
     );
     c.hp--;
-    bursts.push({ x: c.x, y: h - 64, life: 0 });
-    sound(type === "bomb" ? "bomb" : "enemy");
+    bursts.push({ x: c.x, y: h - 64, life: 0, radius: type === "bomb" ? 95 : 75, destructive: true });
     if (c.hp <= 0) c.alive = false;
     if (!cities.some((c) => c.alive)) {
       playing = false;
       roundWon = false;
       panel.hidden = false;
-      panel.querySelector("h1").textContent = "Cities lost";
-      panel.querySelector("p").textContent =
+      panel.classList.add("round-lost");
+      status.hidden = false;
+      statusTitle.textContent = "Cities lost";
+      statusMessage.textContent =
         `Final score: ${score}. The horizon needs another defender.`;
       nextButton.textContent = "Try again with music";
       document.querySelector("#start-muted").textContent = "Try again muted";
     }
-  }
-  function celebrate(now, until) {
-    for (let i = bursts.length - 1; i >= 0; i--) {
-      bursts[i].life += 16;
-      if (bursts[i].life > 440) bursts.splice(i, 1);
-    }
-    draw();
-    if (now < until) requestAnimationFrame((t) => celebrate(t, until));
   }
   function finishRound() {
     playing = false;
@@ -289,16 +556,21 @@
       .forEach((b) => b.classList.remove("selected"));
     nextButton.disabled = true;
     sound("victory");
+    const fanfare = Math.min(w, h) * 0.16;
     for (let i = 0; i < 16; i++)
       bursts.push({
         x: w * (0.2 + Math.random() * 0.6),
         y: h * (0.12 + Math.random() * 0.48),
         life: -Math.random() * 380,
+        radius: fanfare,
+        type: celebrationType(),
       });
     panel.classList.add("round-next");
+    status.hidden = false;
+    statusTitle.textContent = "Colony defended";
+    statusMessage.textContent = `Round ${wave} cleared · ${score} points. Choose one upgrade for the next assault.`;
     panel.hidden = false;
     nextButton.textContent = "Choose an upgrade";
-    requestAnimationFrame((t) => celebrate(t, t + 2600));
   }
   // Simulation: movement, collision checks, round timer, and wave spawning.
   function update(now, dt) {
@@ -314,9 +586,16 @@
       nextHarasser = now + Math.max(8000, 16000 / (1 + (wave - 1) * 0.2));
     }
     for (const b of bunkers) b.cooldown = Math.max(0, b.cooldown - dt);
-    for (let i = bursts.length - 1; i >= 0; i--) {
-      bursts[i].life += dt;
-      if (bursts[i].life > 440) bursts.splice(i, 1);
+    // Active World Ender blasts burn for a while, so anything crossing the fire is
+    // caught by it. This is the same model the interceptor blasts already use: a
+    // live entry checked every frame, not a single hit.
+    for (let i = worldBlasts.length - 1; i >= 0; i--) {
+      const blast = worldBlasts[i];
+      if (now > blast.until) {
+        worldBlasts.splice(i, 1);
+        continue;
+      }
+      worldEnderDamage(blast.x, blast.y, blast.radius);
     }
     for (let i = shots.length - 1; i >= 0; i--) {
       const s = shots[i];
@@ -331,7 +610,7 @@
           s.x = s.tx;
           s.y = s.ty;
         }
-      } else s.r = Math.min(s.max, s.r + dt * 0.26);
+      } else s.r = Math.min(s.max, s.r + dt * BLAST_RISE_RATE);
       if (s.bursting && s.life > 680) shots.splice(i, 1);
     }
     for (let i = enemy.length - 1; i >= 0; i--) {
@@ -349,7 +628,6 @@
               tx: target.x,
               ty: h - 62,
               speed: (92 + wave * 7) * (1 + (wave - 1) * 0.1),
-              trail: [],
             });
           }
           m.nextDrop = now + Math.max(500, 900 / (1 + (wave - 1) * 0.15));
@@ -364,20 +642,22 @@
           len = Math.hypot(dx, dy) || 1;
         m.x += ((dx / len) * m.speed * dt) / 1000;
         m.y += ((dy / len) * m.speed * dt) / 1000;
-        m.trail.push([m.x, m.y]);
-        if (m.trail.length > 18) m.trail.shift();
       }
       let hit = false;
       for (const s of shots)
         if (s.bursting && Math.hypot(m.x - s.x, m.y - s.y) < s.r) {
           if (m.kind === "harasser") {
             m.hp--;
-            bursts.push({ x: m.x, y: m.y, life: 0 });
-            sound("enemy");
             if (m.hp <= 0) {
               explodeEnemy(m);
               enemy.splice(i, 1);
-            }
+            } else
+              bursts.push({
+                x: m.x,
+                y: m.y,
+                life: 0,
+                radius: HIT_MARKER_RADIUS,
+              });
           } else {
             explodeEnemy(m);
             enemy.splice(i, 1);
@@ -386,151 +666,50 @@
           break;
         }
       if (hit) continue;
+      // The dome takes the hit long before anything reaches a city. While it holds,
+      // the cities are untouchable; once it fails, they are exposed.
+      if (dome.hp > 0 && m.y >= domeYAt(m.x)) {
+        hitDome(m);
+        enemy.splice(i, 1);
+        continue;
+      }
       if (m.kind !== "harasser" && m.y >= m.ty) {
         loseCity(m.tx, m.kind);
         enemy.splice(i, 1);
       }
     }
-    if (assaultOver && enemy.length === 0) {
+    if (playing && assaultOver && enemy.length === 0) {
       finishRound();
       return;
     }
     scoreEl.textContent = String(score).padStart(6, "0");
     waveEl.textContent = `${wave} · ${cities.filter((c) => c.alive).length} · ${assaultOver ? "CLEAR!" : Math.ceil(left / 1000) + "s"}`;
   }
-  // Render the Mars battlefield, city defenses, and transient blast effects.
-  function draw() {
-    const palette = upgrades.payload
-      ? ["#ff5d73", "#ffcf58", "#66e6bd", "#53a8ff", "#bd7aff"]
-      : settings.palette === "redblue"
-        ? ["#ff4d5f", "#53a8ff", "#fff"]
-        : ["#ff5d73", "#ffcf58", "#66e6bd"];
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#06101e";
-    ctx.fillRect(0, h - 52, w, 52);
-    for (const c of cities) {
-      ctx.fillStyle = c.alive ? "#7fb5d9" : "#3a2732";
-      ctx.fillRect(c.x - 20, h - 58, 40, 6);
-      ctx.fillRect(c.x - 14, h - 70, 28, 12);
-      if (c.alive) {
-        ctx.fillStyle = "#ffd56c";
-        for (let j = 0; j < 3; j++)
-          ctx.fillRect(c.x - 10 + j * 8, h - 66, 3, 4);
-        if (c.hp > 1) {
-          ctx.fillStyle = "#7de8ff";
-          ctx.fillRect(
-            c.x - 15,
-            h - 77,
-            30 * (c.hp / (1 + upgrades.shield)),
-            3,
-          );
-        }
-      }
-    }
-    for (const m of enemy) {
-      if (m.kind === "harasser") {
-        ctx.fillStyle = "#ad5cff";
-        ctx.beginPath();
-        ctx.moveTo(m.x - 25, m.y + 7);
-        ctx.lineTo(m.x - 9, m.y - 7);
-        ctx.lineTo(m.x + 20, m.y);
-        ctx.lineTo(m.x - 9, m.y + 7);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#ffd66f";
-        ctx.fillRect(m.x - 17, m.y - 15, 34 * (m.hp / (5 + (wave - 1) * 2)), 3);
-        continue;
-      }
-      ctx.beginPath();
-      m.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      ctx.strokeStyle = m.kind === "bomb" ? palette[1] + "aa" : "#ff596e99";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = m.kind === "bomb" ? palette[0] : "#fff1d5";
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, m.kind === "bomb" ? 4 : 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    for (const s of shots) {
-      if (!s.bursting) {
-        ctx.fillStyle = "#d9f6ff";
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-        continue;
-      }
-      const a = 1 - s.r / s.max;
-      ctx.strokeStyle = `rgba(104,216,255,${a * 0.9})`;
-      ctx.lineWidth = settings.effect === "bold" ? 7 : 3;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    for (const b of bursts) {
-      if (b.life < 0) continue;
-      const p = b.life / 440,
-        r =
-          (settings.effect === "bold" ? 1.45 : 1) *
-          (8 + p * 34) *
-          (1 + upgrades.payload * 0.08);
-      ctx.fillStyle = palette[((b.life / 70) | 0) % palette.length];
-      ctx.globalAlpha = 1 - p;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, r * 0.25, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = palette[((b.life / 110) | (0 + 1)) % palette.length];
-      ctx.lineWidth = settings.effect === "bold" ? 5 : 2;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-    for (const b of bunkers) {
-      ctx.fillStyle = b.alive ? "#182a42" : "#37232d";
-      ctx.fillRect(b.x - 26, h - 50, 52, 13);
-      if (!b.alive) continue;
-      const tip = cannonTip(b, aim.x, aim.y);
-      ctx.strokeStyle = b.cooldown || !b.ammo ? "#58728b" : "#d6efff";
-      ctx.lineWidth = 7;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(b.x, h - 64);
-      ctx.lineTo(tip.x, tip.y);
-      ctx.stroke();
-      ctx.fillStyle = "#86bde0";
-      ctx.fillRect(b.x - 8, h - 64, 16, 18);
-      ctx.fillStyle = "#0b1422";
-      ctx.fillRect(b.x - 22, h - 34, 44, 4);
-      ctx.fillStyle = "#6ee7ff";
-      ctx.fillRect(b.x - 22, h - 34, 44 * (1 - b.cooldown / 780), 4);
-      ctx.fillStyle = b.ammo ? "#e7f7ff" : "#ff7884";
-      ctx.font = "700 11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText(b.ammo, b.x, h - 82);
-    }
-  }
+  // The only RAF drives gameplay, queued celebration effects, and rendering.
+  // Menus keep the scene alive; paused frames render without advancing effects.
   function loop(now) {
-    if (!playing) return;
-    if (paused) {
-      last = now;
-      draw();
-      requestAnimationFrame(loop);
-      return;
-    }
-    const dt = Math.min(40, now - last);
+    if (disposed) return;
+    const dt = paused ? 0 : Math.max(0, Math.min(40, now - (last || now)));
     last = now;
-    update(now, dt);
-    draw();
-    requestAnimationFrame(loop);
+    if (playing && !paused) update(now, dt);
+    if (!paused) updateBursts(dt);
+    engine.renderFrame(dt);
+    raf = requestAnimationFrame(loop);
   }
-  canvas.addEventListener("pointermove", (e) => {
-    const r = canvas.getBoundingClientRect();
+  surface.addEventListener("pointermove", (e) => {
+    const r = surface.getBoundingClientRect();
     aim = { x: e.clientX - r.left, y: e.clientY - r.top };
   });
-  canvas.addEventListener("pointerdown", (e) => {
-    const r = canvas.getBoundingClientRect();
+  surface.addEventListener("pointerdown", (e) => {
+    const r = surface.getBoundingClientRect();
     aim = { x: e.clientX - r.left, y: e.clientY - r.top };
     launch(aim.x, aim.y);
+  });
+  // Right-click is the World Ender. The browser menu has to be suppressed or it
+  // interrupts the game with a context menu every time.
+  surface.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    worldEnder();
   });
   // Menu controls intentionally stay separate from the render loop.
   const settingsPanel = document.querySelector("#settings"),
@@ -538,6 +717,12 @@
     soundButton = document.querySelector("#sound-toggle");
   function setSound(on) {
     settings.sound = on;
+    if (on) engine.enableSound();
+    else {
+      engine.disableSound();
+      if (audioCtx && audioCtx.state === "running") audioCtx.suspend().catch(() => {});
+    }
+    if (on && audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
     soundButton.textContent = on ? "On" : "Off";
     soundButton.setAttribute("aria-pressed", String(on));
     if (on && playing && !paused) music.play().catch(() => {});
@@ -551,9 +736,18 @@
         b.classList.toggle("selected", b.dataset.upgrade === name),
       );
     nextButton.disabled = false;
-    nextButton.textContent = "Next round";
+    nextButton.textContent = devChoosing ? "Apply and continue" : "Next round";
   }
   function begin(withMusic) {
+    // The dev picker borrows the round-end panel, so choosing there applies the
+    // package and resumes the same wave instead of starting the next round.
+    if (devChoosing) {
+      if (!selectedUpgrade) return;
+      upgrades[selectedUpgrade]++;
+      if (selectedUpgrade === "shield")
+        for (const c of cities) if (c.alive) c.hp++;
+      return devResume();
+    }
     setSound(withMusic);
     if (roundWon) {
       if (!selectedUpgrade) return;
@@ -569,6 +763,73 @@
     .forEach((b) =>
       b.addEventListener("click", () => chooseUpgrade(b.dataset.upgrade)),
     );
+  // ── Dev shortcuts ───────────────────────────────────────────────────────────
+  // Testing wave 4 should not mean playing to wave 4. 1-9 jump straight to a wave
+  // with a full defence, U pauses and opens the upgrade picker, and R goes back to a
+  // clean wave 1. Announced in the console rather than the on-screen hint, which is
+  // already crowded on a phone.
+  let devChoosing = false;
+  function devJumpTo(nextWave) {
+    wave = Math.max(1, Math.min(9, Math.round(nextWave) || 1));
+    roundWon = false;
+    selectedUpgrade = "";
+    devChoosing = false;
+    panel.classList.remove("round-next");
+    panel.classList.remove("round-lost");
+    status.hidden = true;
+    // A full defence, so the wave is judged on the upgrade rather than on the damage
+    // left over from the last one.
+    resetDefenses();
+    start(false);
+  }
+  // Opens the real upgrade panel over a frozen game. It borrows the round-end panel
+  // rather than granting anything itself, so the choice is the player's and every
+  // package the panel offers is on the table.
+  function devUpgradeMenu() {
+    if (devChoosing || !playing) return;
+    devChoosing = true;
+    if (!paused) {
+      paused = true;
+      pauseAt = performance.now();
+      engine.pause();
+      music.pause();
+    }
+    selectedUpgrade = "";
+    panel.hidden = false;
+    panel.classList.add("round-next");
+    status.hidden = false;
+    statusTitle.textContent = `Dev: pick an upgrade for wave ${wave}`;
+    statusMessage.textContent =
+      "The wave carries on from where it is once you choose.";
+    nextButton.disabled = true;
+    nextButton.textContent = "Choose an upgrade";
+  }
+  // Unpauses where the wave left off, shifting the timers by the pause so the round
+  // clock does not count the time spent deciding.
+  function devResume() {
+    devChoosing = false;
+    panel.hidden = true;
+    status.hidden = true;
+    panel.classList.remove("round-next");
+    selectedUpgrade = "";
+    if (!paused) return;
+    const pauseDuration = performance.now() - pauseAt;
+    roundStart += pauseDuration;
+    nextEnemy += pauseDuration;
+    nextHarasser += pauseDuration;
+    for (const m of enemy) if (m.kind === "harasser") m.nextDrop += pauseDuration;
+    last = performance.now();
+    paused = false;
+    engine.resume();
+    if (settings.sound) music.play().catch(() => {});
+  }
+  function devReset() {
+    devChoosing = false;
+    start(true);
+  }
+  console.info(
+    "Fireworks Command dev keys — 1-9: jump to wave · U: pick an upgrade · R: reset to wave 1",
+  );
   document
     .querySelector("#start-music")
     .addEventListener("click", () => begin(roundWon ? settings.sound : true));
@@ -584,9 +845,16 @@
       paused = !paused;
       if (paused) {
         pauseAt = performance.now();
+        engine.pause();
         music.pause();
       } else {
-        roundStart += performance.now() - pauseAt;
+        const pauseDuration = performance.now() - pauseAt;
+        roundStart += pauseDuration;
+        nextEnemy += pauseDuration;
+        nextHarasser += pauseDuration;
+        for (const m of enemy) if (m.kind === "harasser") m.nextDrop += pauseDuration;
+        last = performance.now();
+        engine.resume();
         if (settings.sound) music.play().catch(() => {});
       }
       return;
@@ -598,6 +866,19 @@
     if (key === "n") {
       e.preventDefault();
       supernova();
+      return;
+    }
+    // Dev shortcuts. Digits jump waves, U walks the upgrade packages, R starts over.
+    if (key >= "1" && key <= "9") {
+      devJumpTo(Number(key));
+      return;
+    }
+    if (key === "u") {
+      devUpgradeMenu();
+      return;
+    }
+    if (key === "r") {
+      devReset();
       return;
     }
     if (e.key === "Control" || e.code === "Space") {
@@ -616,4 +897,14 @@
   document
     .querySelector("#effect")
     .addEventListener("change", (e) => (settings.effect = e.target.value));
+  addEventListener("unload", () => {
+    disposed = true;
+    cancelAnimationFrame(raf);
+    removeEventListener("resize", onResize);
+    scene.destroy();
+    engine.destroy();
+    music.pause();
+    if (audioCtx) audioCtx.close().catch(() => {});
+  }, { once: true });
+  raf = requestAnimationFrame(loop);
 })();

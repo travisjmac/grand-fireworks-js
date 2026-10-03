@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.7.1**
+- Current release: **v1.8.0**
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -26,7 +26,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 - Build: `npm run build`
 - Test: `npm test`
 
-The v1.7.1 release makes text fireworks shrink their font to fit instead of being squeezed tall and thin on narrow screens, fixes the Workbench's Old School style choice (it silently fell back to Medium), and adds a homepage Show Fullscreen shortcut after scrolling plus links from the homepage controls to the Config Workbench and Feature Demo. The v1.7.0 release before it added first-party TypeScript declarations (`index.d.ts`), fixed the Canvas 2D sprite-cache memory growth, `durationMode: 'immediate'`, WebGL point-size limits, iOS audio unlock, redundant resizes, and webfont timing in text fireworks, made the guided builder's config import accept JavaScript object literals, fixed unreadable dropdowns, and added the phone-friendly fullscreen control bar on the homepage. The v1.6.5 release before it introduced the cinematic style and related effects, ballistic rockets, stable distribution filenames, homepage automation, richer sound options, text controls, mixed-style weights, and guided-builder fixes.
+The v1.8.0 release turns the engine into something a host can drive. `setRenderPass(callback)` lends the engine's canvas to the host's own drawing code — the callback runs after the canvas is cleared and before the fireworks are drawn, and receives `{ gl, ctx, canvas, width, height, dpr }` — and stops the engine's own animation loop so the host owns frame pacing through `renderFrame(dt)`. `placeburst(options)` detonates a shell at a point, or at an element's centre, with no flight time, fitted to an on-screen `radius`. `launchTo(options)` flies a real rocket from a host-supplied origin to a target over the host's own travel time, so gameplay and visuals stay in lockstep. Fireworks Command (`examples/fireworks-command/`) is rebuilt on that API, with its artwork drawn through the render pass by `scene-renderer.js` and wind switched off on that instance only. Also fixes rockets with `gravity: 0` falling, because the integrator read `r.gravity || 45`. Placed bursts also take a `reachTime`, which puts the rim of the break on a schedule rather than letting it drift out asymptotically — the difference between a game's hit circle and its visible fire agreeing or not. Fireworks Command builds on all of it: right-click fires the engine's World Ender with damage attributed positionally from each reported secondary explosion, interceptor and chain blasts are drawn larger than their hit circles and reach full size before those circles go lethal, and the palette picker gained a solid-colour mode (`show.palettes: 'single'`). The v1.7.1 release before it made text fireworks shrink their font to fit instead of being squeezed tall and thin on narrow screens, fixed the Workbench's Old School style choice (it silently fell back to Medium), and added a homepage Show Fullscreen shortcut after scrolling plus links from the homepage controls to the Config Workbench and Feature Demo. The v1.7.0 release before it added first-party TypeScript declarations (`index.d.ts`), fixed the Canvas 2D sprite-cache memory growth, `durationMode: 'immediate'`, WebGL point-size limits, iOS audio unlock, redundant resizes, and webfont timing in text fireworks, made the guided builder's config import accept JavaScript object literals, fixed unreadable dropdowns, and added the phone-friendly fullscreen control bar on the homepage. The v1.6.5 release before it introduced the cinematic style and related effects, ballistic rockets, stable distribution filenames, homepage automation, richer sound options, text controls, mixed-style weights, and guided-builder fixes.
 
 Development happens on `dev` and is merged into `main` for releases. The developer-platform plan (see `docs/developer-platform-plan.md`) is implemented one sprint at a time. Sprint 1 (TypeScript and public API contract) is complete: the package now ships first-party types in `index.d.ts`, resolved automatically through `package.json`. TypeScript is a dev-only dependency; the published runtime stays zero-dependency.
 
@@ -201,7 +201,7 @@ The games are examples of the engine, not replacements for the core product. Kee
    ```
 
 4. Confirm `npm pack --dry-run` contains only intended publish files.
-5. Commit the release, create an annotated tag such as `v1.7.1`, push `main` and the tag, then publish with npm.
+5. Commit the release, create an annotated tag such as `v1.8.0`, push `main` and the tag, then publish with npm.
 
 ### Distribution naming rule
 

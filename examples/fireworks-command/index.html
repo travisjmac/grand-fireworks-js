@@ -9,8 +9,7 @@
     <link rel="stylesheet" href="game.css" />
   </head>
   <body>
-    <div class="dust-wind" aria-hidden="true"></div>
-    <canvas id="game"></canvas>
+    <div id="game" aria-label="Fireworks Command battlefield"></div>
     <audio
       id="game-music"
       src="../../assets/GalacticRap.mp3"
@@ -24,7 +23,9 @@
         ><strong id="wave">1 · 6 · 1:00</strong>
       </div>
     </div>
-    <div class="hint">Click/tap, Ctrl, or Space to fire · P pause · M mute</div>
+    <div class="hint">
+      Click/Ctrl/Space to fire · Right-click: World Ender · P pause · M mute
+    </div>
     <button class="supernova" id="supernova" type="button">
       Use SuperNova
     </button>
@@ -34,14 +35,15 @@
     <aside class="settings" id="settings" hidden>
       <label
         >Sound &amp; music
-        <button id="sound-toggle" type="button" aria-pressed="true">
-          On
+        <button id="sound-toggle" type="button" aria-pressed="false">
+          Off
         </button></label
       ><label
-        >Bomb palette
+        >Firework palette
         <select id="palette">
           <option value="rainbow">Rainbow</option>
           <option value="redblue">Red &amp; blue</option>
+          <option value="single">One colour each</option>
         </select></label
       ><label
         >Explosion style
@@ -57,8 +59,12 @@
         src="../../assets/fireworks-command-logo.png"
         alt="Fireworks Command"
       />
-      <h1 hidden>Missile Command</h1>
-      <p>
+      <h1 hidden>Fireworks Command</h1>
+      <div id="round-status" class="round-status" role="status" aria-live="polite" hidden>
+        <h2 id="status-title"></h2>
+        <p id="status-message"></p>
+      </div>
+      <p class="intro">
         <strong>YEAR 2088.</strong> Humanity colonised Mars, found lovely red
         dirt, and immediately built six cities on it. Decades later we
         discovered the locals: an evil race of tiny red bomb-shaped Martians.
@@ -72,6 +78,8 @@
         ><button data-upgrade="blast">Blast power · wider explosion</button
         ><button data-upgrade="chain">
           Chain reaction · 12% chance of 4× blast
+        </button><button data-upgrade="payload">
+          Payload · richer firework bursts
         </button>
       </div>
       <div class="start-actions">
@@ -79,6 +87,8 @@
         ><button id="start-muted">Start muted</button>
       </div>
     </section>
+    <script src="../../GrandFireworks.js"></script>
+    <script src="scene-renderer.js"></script>
     <script src="game.js"></script>
   </body>
 </html>

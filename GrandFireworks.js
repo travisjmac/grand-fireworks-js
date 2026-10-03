@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.7.1
+ * Version: 1.8.0
  *
  * @author Travis MacDonald
- * @version 1.7.1
+ * @version 1.8.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -55,6 +55,19 @@
     ["#FF1493", "#FF69B4", "#FFC0CB", "#FFFFFF"],
     ["#00CED1", "#40E0D0", "#7FFFD4", "#FFFFFF"],
     ["#FFFFFF", "#E6E6FA", "#F5F5F5", "#FFD700"],
+  ];
+  // Distinct, fully saturated hues behind the "single" palette mode, where each
+  // shell breaks in one solid colour instead of a multi-colour ramp. Ordered so
+  // that walking the list reads as a spectrum rather than two similar blues.
+  const SOLID_COLORS = [
+    "#FF3B30",
+    "#FF9500",
+    "#FFD60A",
+    "#34C759",
+    "#00E5C0",
+    "#0A84FF",
+    "#5E5CE6",
+    "#FF2D92",
   ];
   const PRESETS = {
     low: {
@@ -234,7 +247,7 @@
         sparkleChance: 0.58,
         pyroBurn: true,
         sphereBurst: true,
-        windStrength: 0,
+        windStrength: 0.06,
         starChance: 0.085,
         groupedSalvos: false,
         secondaryCrackle: true,
@@ -691,6 +704,16 @@
     return colors.slice(0, 4);
   }
 
+  // One colour for the whole shell. normalizePalette deliberately ramps a single
+  // colour toward white, so a solid break has to repeat its colour across all
+  // four slots instead. Pass a colour to pin it, or omit it to draw one at
+  // random from the built-in solid hues.
+  function solidPalette(color) {
+    const c =
+      color || SOLID_COLORS[Math.floor(Math.random() * SOLID_COLORS.length)];
+    return [c, c, c, c];
+  }
+
   // Resolves a CSS selector string to a DOM element, or passes through an
   // existing element reference. Used for the container option.
   const cssTarget = (value) =>
@@ -791,7 +814,7 @@
     // them in a single draw call. Each particle = 8 floats:
     // [x, y, size, r, g, b, a, isStar]. The fade program draws a full-screen
     // quad to decay trails when trailFade < 1 (additive fade, no clear).
-    render(items, w, h, trailFade, zoom = 1) {
+    render(items, w, h, trailFade, zoom = 1, beforeDraw = null) {
       const g = this.gl;
       // Trail decay without clearing: draw a full-screen black quad with
       // alpha = trailFade using ZERO/ONE_MINUS_SRC_ALPHA blend. This
@@ -807,6 +830,17 @@
         g.drawArrays(g.TRIANGLES, 0, 3);
         g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
       }
+      // Host render pass (setRenderPass) composites its own scene here: after
+      // the clear/trail-fade and before the engine's additive particles, so
+      // host artwork sits behind the fireworks. The engine re-establishes its
+      // state immediately below, so the callback may bind programs, VAOs and
+      // textures freely without leaving anything behind for the points pass.
+      if (beforeDraw) beforeDraw();
+      g.useProgram(this.program);
+      if (typeof g.bindVertexArray === "function") g.bindVertexArray(null);
+      g.enable(g.BLEND);
+      g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
+      g.disable(g.DEPTH_TEST);
       const need = items.length * this.stride;
       if (this.data.length < need)
         this.data = new Float32Array(Math.max(need, this.data.length * 2, 256));
@@ -948,7 +982,7 @@
     // is drawn over the previous frame to fade trails. Trail fade always
     // covers the full canvas regardless of zoom. Particles are drawn with
     // the zoom transform applied (scaled from screen center).
-    render(items, w, h, fade, zoom = 1) {
+    render(items, w, h, fade, zoom = 1, beforeDraw = null) {
       const x = this.ctx;
       // Trail fade at full scale — always covers the entire canvas
       x.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -960,6 +994,11 @@
         x.fillRect(0, 0, w, h);
         x.restore();
       }
+      // Host render pass (setRenderPass) composites its own scene here, in
+      // CSS-pixel space before the zoomed particle transform is applied, so
+      // host artwork is never scaled by engine zoom and particles still draw
+      // on top of it.
+      if (beforeDraw) beforeDraw();
       // All engine positions live in a virtual world whose width grows as
       // zoom decreases. Scale that world from its origin; its calculated
       // centre remains at the physical canvas centre without an extra offset.
@@ -1032,12 +1071,18 @@
       this.contextLossCount = 0;
       this.finalePlayed = false;
       this.worldEnderTimers = new Set();
+      // One record per running World Ender, so overlapping effects coexist rather
+      // than cancelling each other.
+      this.worldEnders = new Set();
+      this.worldEnderSeq = 0;
+      this.worldEnderPrevious = null;
       this.worldEnderListener = null;
       this.worldEnderResumeRequested = false;
       this.lastLaunch = 0;
       this.elapsed = 0;
       this.effectTime = performance.now();
       this.raf = 0;
+      this.renderPass = null;
       this.stopPromise = null;
       this.resizePending = true;
       this.fps = 0;
@@ -1063,6 +1108,12 @@
     _resolve(input = {}) {
       const styleName = input.baseStyle || "cinematic",
         style = styleName === "mixed" ? STYLES.medium : STYLES[styleName] || STYLES.medium;
+      // Whether the host asked for a specific particle budget, which decides later whether
+      // the renderer's own accommodation is allowed to cut it.
+      const explicitParticles =
+        Boolean(input && input.show) &&
+        input.show.maxParticles !== undefined &&
+        input.show.maxParticles !== null;
       let o = merge(merge(DEFAULTS, style), input);
       const themeName = o.colorTheme || "default",
         theme = COLOR_THEMES[themeName];
@@ -1129,14 +1180,17 @@
         o.renderer.preserveDrawingBuffer === "auto"
           ? o.mode === "contained" || Boolean(o.visuals.trails)
           : Boolean(o.renderer.preserveDrawingBuffer);
-      o.show.maxParticles =
-        o.show.maxParticles === Infinity
-          ? Infinity
-          : clamp(Number(o.show.maxParticles || p.maxParticles), 100, 10000);
-      o.show.maxRockets =
-        o.show.maxRockets === Infinity
-          ? Infinity
-          : clamp(Number(o.show.maxRockets || p.maxRockets), 1, 25);
+      // No ceiling at all: a host that asks for a number gets that number, and may ask for
+      // Infinity. The floor remains only so a zero or negative cannot switch the show off
+      // by accident. Adaptive quality is the brake when a machine cannot keep up.
+      o.show.maxParticles = Math.max(
+        100,
+        Number(o.show.maxParticles || p.maxParticles),
+      );
+      o.show.maxRockets = Math.max(
+        1,
+        Number(o.show.maxRockets || p.maxRockets),
+      );
       o.show.launchInterval = Number(o.show.launchInterval || p.launchInterval);
       o.show.launchSpread = clamp(Number(o.show.launchSpread), 0, 1);
       o.show.closeShellChance = clamp(Number(o.show.closeShellChance ?? 0.25), 0, 0.8);
@@ -1172,9 +1226,13 @@
       o.performance.particleScale =
         particleScale > 0 ? particleScale : p.particleScale;
       o.performance.secondary = secondary >= 0 ? secondary : p.secondary;
+      // The Canvas2D path gets half the particle budget, but only when the host did not
+      // ask for a number itself. Silently halving an explicit 24000 to 12000 is exactly
+      // the kind of invisible limit that costs an afternoon.
       if (
-        o.renderer.preferred === "canvas2d" ||
-        (o.renderer.preferred === "auto" && o.mode === "contained")
+        !explicitParticles &&
+        (o.renderer.preferred === "canvas2d" ||
+          (o.renderer.preferred === "auto" && o.mode === "contained"))
       )
         o.show.maxParticles = Math.round(o.show.maxParticles / 2);
       o.finale.type =
@@ -1517,7 +1575,7 @@
         return false;
       this.state = this.pausedState || "running";
       this.lastTime = performance.now();
-      this._loop();
+      if (!this.renderPass) this._loop();
       return true;
     }
     _pauseFor(reason) {
@@ -1699,7 +1757,10 @@
       if (this.autoPauseReasons.size) {
         this.pausedState = state;
         this.state = "paused";
-      } else this._loop();
+      } else if (!this.renderPass) this._loop();
+      // With a host render pass attached (setRenderPass) the host owns frame
+      // pacing and drives the engine through renderFrame(dt), so the engine
+      // must not start a competing requestAnimationFrame loop.
       return true;
     }
     /* ── Launch API ────────────────────────────────────────────────── */
@@ -1714,6 +1775,278 @@
       if (!["running", "finishing", "manual"].includes(this.state)) return this;
       this._createRocket(options);
       return this;
+    }
+    /**
+     * Registers a host render pass — the engine lends its canvas, the host
+     * draws the scene.
+     *
+     * The callback runs once per frame, after the canvas has been cleared (or
+     * trail-faded) and before the engine's particles are drawn, so host artwork
+     * sits behind the fireworks. It receives:
+     *   { gl, ctx, canvas, width, height, dpr }
+     * where `gl` is the WebGL2 context, or null when the Canvas2D fallback is
+     * active, in which case `ctx` is the 2D context instead. `width`/`height`
+     * are CSS pixels; `dpr` is the device pixel ratio. Hosts must use the
+     * context they are given rather than creating their own canvas, and must
+     * not clear the frame — the engine has already done that.
+     *
+     * Attaching a render pass makes the host responsible for frame pacing:
+     * the engine stops starting its own requestAnimationFrame loop and expects
+     * renderFrame(dt) to be called each frame. This is what lets a host drive
+     * gameplay from a single loop while the engine supplies rendering,
+     * explosions and audio.
+     *
+     * Pass null to detach the pass.
+     *
+     * @param {Function|null} [callback=null]
+     * @returns {GrandFireworks}
+     */
+    setRenderPass(callback = null) {
+      if (callback !== null && typeof callback !== "function")
+        throw new TypeError("setRenderPass expects a function or null");
+      this.renderPass = callback || null;
+      // Built once rather than per frame: renderFrame hands the renderer a bare
+      // callback, and this is what turns it into the documented frame
+      // descriptor. Allocating a closure every frame would be pure garbage.
+      this.hostPass = this.renderPass
+        ? () => this.renderPass(this._renderPassFrame())
+        : null;
+      if (this.renderPass) {
+        // The host now owns frame pacing; a running engine loop would step
+        // the simulation twice per frame.
+        cancelAnimationFrame(this.raf);
+        this.raf = 0;
+        clearTimeout(this.fadeTimer);
+        // A pass can be attached before the first show starts, and an earlier
+        // fade may have hidden the root, so make the shared canvas visible.
+        this.root.style.display = "block";
+        this.root.style.opacity = String(
+          clamp(Number(this.options.visuals.opacity ?? 1), 0, 1),
+        );
+      }
+      return this;
+    }
+    /**
+     * Advances the simulation by dt milliseconds and draws one frame.
+     *
+     * Intended for hosts that own the animation loop alongside a render pass.
+     * dt is capped at 50ms internally, the same guard the engine's own loop
+     * applies, so a backgrounded tab cannot teleport effects. Pass 0 to render
+     * the current frame without advancing anything, which is how a host pauses
+     * effects while keeping its scene on screen.
+     *
+     * @param {number} [dt=0] - Elapsed milliseconds since the previous frame.
+     * @returns {GrandFireworks}
+     */
+    renderFrame(dt = 0) {
+      if (this.state === "destroyed") return this;
+      if (this.resizePending) this._resize();
+      const realDt = Math.min(0.05, Math.max(0, Number(dt) || 0) / 1000),
+        step = realDt * this.options.speedMultiplier,
+        active = ![
+          "paused",
+          "idle",
+          "stopped",
+          "fading",
+          "destroyed",
+        ].includes(this.state);
+      this.effectTime += step * 1000;
+      const now = this.effectTime;
+      if (active) {
+        this.elapsed += realDt * 1000;
+        this.fps += (1 / (realDt || 0.016) - this.fps) * 0.05;
+        this._update(now, step);
+      }
+      const trailFade = this.options.visuals.trails
+        ? 1 - Math.pow(1 - this.options.visuals.trailFade, realDt * 60)
+        : 1;
+      this.renderer.render(
+        this._drawItems(now),
+        this.width,
+        this.height,
+        trailFade,
+        this.zoom,
+        this.hostPass,
+      );
+      this._drawText(now);
+      return this;
+    }
+    // The descriptor handed to a host render pass: which context to draw with,
+    // how big the frame is, and the canvas that owns it. Exactly one of gl/ctx
+    // is non-null, depending on which renderer the engine fell back to.
+    _renderPassFrame() {
+      const webgl = this.rendererType === "webgl2";
+      return {
+        gl: webgl ? this.renderer.gl || null : null,
+        ctx: webgl ? null : this.renderer.ctx || null,
+        canvas: this.renderer.canvas || this.canvas,
+        width: this.width,
+        height: this.height,
+        dpr: this.dpr,
+      };
+    }
+    /**
+     * Detonates a shell immediately at a point — no rocket, no flight time.
+     *
+     * Positions are CSS pixels relative to the engine's container, which is
+     * what pointer events and getBoundingClientRect() already give you. Pass
+     * `element` (an element or a selector) to burst at that element's centre
+     * instead, which is the common case for tying effects to page furniture or
+     * clicks. Values are converted to world space through the current zoom, so
+     * the burst lands where you aimed at any zoom level.
+     *
+     * `radius` is the on-screen radius in CSS pixels that the sparks are fitted
+     * to. The burst is shaped by scaling particle velocity and gravity
+     * together, so the firework keeps its form at any size; the fit targets the
+     * rim of the break (the 90th percentile of star reach), so a few of the
+     * fastest strays travel past the radius, exactly as a real break does. Omit
+     * `radius` to keep the shell's natural size.
+     *
+     * @param {Object} [options={}]
+     * @param {number} [options.x] - CSS pixels from the container's left edge.
+     * @param {number} [options.y] - CSS pixels from the container's top edge.
+     * @param {Element|string} [options.element] - Burst at this element's centre.
+     * @param {number} [options.radius] - Target on-screen burst radius, CSS px.
+     * @param {string} [options.type] - Shell type; defaults to grand_peony.
+     * @param {string[]} [options.colors] - Palette for the burst.
+     * @param {number} [options.density] - Spark multiplier (1 = normal).
+     * @param {boolean} [options.sound] - false silences this burst only.
+     * @returns {GrandFireworks}
+     */
+    placeburst(options = {}) {
+      this._activateManual("manual");
+      if (!["running", "finishing", "manual", "finale"].includes(this.state))
+        return this;
+      const point = this._burstPoint(options);
+      if (!point) return this;
+      this._explode(
+        this._burstShell(point, options, this._burstRadius(options.radius)),
+        this.effectTime,
+      );
+      return this;
+    }
+    /**
+     * Flies a rocket from one point to another and bursts on arrival.
+     *
+     * This is the engine's normal rocket — trail, exhaust sparks, detonation
+     * flash, burst and audio — but with the launch origin and the arrival time
+     * supplied by the host instead of the engine's own horizon maths. A host
+     * that already simulates a projectile (a launcher, a cannon, a cursor)
+     * passes the same origin and travel time it is using for its own logic, so
+     * the firework and the gameplay arrive together by construction.
+     *
+     * Coordinates are CSS pixels relative to the container, as with
+     * placeburst(). The burst options (radius, type, colors, density, sound)
+     * apply to the detonation on arrival.
+     *
+     * @param {Object} [options={}]
+     * @param {number} options.x - Launch point, CSS px.
+     * @param {number} options.y - Launch point, CSS px.
+     * @param {number} options.targetX - Detonation point, CSS px.
+     * @param {number} options.targetY - Detonation point, CSS px.
+     * @param {number} [options.duration=600] - Flight time in milliseconds.
+     * @param {number} [options.radius] - Target on-screen burst radius, CSS px.
+     * @param {string} [options.type] - Shell type; defaults to grand_peony.
+     * @param {string[]} [options.colors] - Palette for the rocket and burst.
+     * @param {number} [options.density] - Spark multiplier (1 = normal).
+     * @param {boolean} [options.sound] - false silences this rocket only.
+     * @returns {GrandFireworks}
+     */
+    launchTo(options = {}) {
+      this._activateManual("manual");
+      if (!["running", "finishing", "manual", "finale"].includes(this.state))
+        return this;
+      const from = this._burstPoint(options),
+        to = this._burstPoint({ x: options.targetX, y: options.targetY });
+      if (!from || !to) return this;
+      const duration = clamp(Number(options.duration) || 600, 16, 20000),
+        seconds = duration / 1000,
+        shell = this._burstShell(from, options, this._burstRadius(options.radius));
+      // The public launch() always fires from the launch horizon, so a
+      // host-supplied origin gets a purpose-built rocket: straight-line
+      // velocity over the requested flight time, no gravity or depth drift to
+      // pull it off target, and an explicit detonation time so it bursts
+      // exactly where and when the host expects.
+      this.rockets.push({
+        ...shell,
+        vx: (to.x - from.x) / seconds,
+        vy: (to.y - from.y) / seconds,
+        gravity: 0,
+        vz: 0,
+        burstFallSpeed: -Infinity,
+        detonateAt: this.effectTime + duration,
+        sparkClock: 0,
+        hostLaunched: true,
+      });
+      return this;
+    }
+    // Resolves a burst position from either explicit CSS-pixel coordinates or
+    // an element's centre, then converts screen space to the engine's world
+    // space (the renderer scales the world by zoom, so world = screen / zoom).
+    // Returns null when the caller supplied nothing usable.
+    _burstPoint(options = {}) {
+      const zoom = this.zoom || 1;
+      let x, y;
+      if (options.element) {
+        const el = cssTarget(options.element);
+        if (!el || typeof el.getBoundingClientRect !== "function") return null;
+        const rect = el.getBoundingClientRect(),
+          base =
+            this.container && typeof this.container.getBoundingClientRect === "function"
+              ? this.container.getBoundingClientRect()
+              : null;
+        x = (Number(rect.left) || 0) - (base ? Number(base.left) || 0 : 0) + (Number(rect.width) || 0) / 2;
+        y = (Number(rect.top) || 0) - (base ? Number(base.top) || 0 : 0) + (Number(rect.height) || 0) / 2;
+      } else {
+        x = Number(options.x);
+        y = Number(options.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      }
+      return { x: x / zoom, y: y / zoom };
+    }
+    // Converts a requested on-screen radius into world units. Radius is the
+    // only measurement a host knows in screen terms, so it is divided by zoom
+    // like any other screen measurement.
+    _burstRadius(radius) {
+      if (radius === undefined || radius === null) return 0;
+      const value = Number(radius);
+      if (!Number.isFinite(value) || value <= 0) return 0;
+      return value / (this.zoom || 1);
+    }
+    // Builds the pseudo-rocket that _explode() consumes for a host-placed
+    // burst. It carries depth, scale and audio settings explicitly so a
+    // point burst behaves like a normal shell break at the requested size.
+    _burstShell(point, options, radiusWorld) {
+      const silent = options.sound === false;
+      return {
+        x: point.x,
+        y: point.y,
+        z: 0,
+        dof: 1,
+        apparentScale: 1,
+        styleScale: 1,
+        angle: 0,
+        type: this._burstType(options.type),
+        // No colours asked for means the shell follows the style and theme the show is
+        // already using, exactly as a scattered rocket would, rather than always coming
+        // out in the first built-in palette.
+        colors: options.colors ? normalizePalette(options.colors) : this._palette(),
+        audioGain: silent ? 0 : 0.75,
+        silent,
+        density: clamp(Number(options.density) || 1, 0.05, 8),
+        burstRadius: radiusWorld || 0,
+        burstReachTime: Math.max(0, Number(options.reachTime) || 0),
+        burstLifeScale: clamp(Number(options.lifeScale) || 1, 0.1, 4),
+        burstGravityScale: clamp(Number(options.gravityScale) || 1, 0.01, 4),
+      };
+    }
+    // Host-placed bursts only accept real pyrotechnic shell types. Structural
+    // types (text, grand-finale-carrier, satellites) need plans and child
+    // rockets that a bare point burst cannot supply, so they fall back to a
+    // normal peony rather than exploding into nothing.
+    _burstType(name) {
+      const key = typeof name === "string" ? name.toLowerCase() : "";
+      return TYPES.includes(key) ? key : "grand_peony";
     }
     /**
      * Launches the Super Grand Finale — a carrier shell that bursts into
@@ -1768,6 +2101,10 @@
         this.removeEventListener("finalestage", this.worldEnderListener);
         this.worldEnderListener = null;
       }
+      for (const effect of this.worldEnders)
+        this.removeEventListener("finalestage", effect.listener);
+      this.worldEnders.clear();
+      this.worldEnderPrevious = null;
     }
     _worldEnderColors() {
       const palettes = this.options.show.palettes;
@@ -1797,6 +2134,7 @@
           audioGain: options.audioGain || 1.1, soundType: "launch",
           worldEnderBranch: true,
           worldEnderDepth: options.worldEnderDepth || 0,
+          worldEnderId: options.worldEnderId || 0,
         });
       }
     }
@@ -1809,31 +2147,71 @@
      */
     launchWorldEnder(overrides = {}) {
       const cfg = merge(this.options.worldEnder, overrides);
-      this._clearWorldEnder();
+      // Deliberately does NOT clear a running effect: overlapping enders are allowed,
+      // and each keeps its own chain listener and completion timer.
+      const id = ++this.worldEnderSeq;
       this.worldEnderResumeRequested = false;
-      const previous = {
+      // Capture the host's real options once. A second World Ender started before
+      // the first has finished must not treat the first effect's own inflated
+      // limits as the values to restore, or the caps ratchet down permanently with
+      // every repeat.
+      const previous = this.worldEnderPrevious || {
         accepting: this.accepting,
         finale: { ...this.options.finale },
-        show: { maxParticles: this.options.show.maxParticles, maxRockets: this.options.show.maxRockets, enabledTypes: this.options.show.enabledTypes },
-        sound: { volume: this.options.sound.volume, tuning: { launchGain: this.options.sound.tuning.launchGain } },
+        show: { ...this.options.show },
+        sound: {
+          volume: this.options.sound.volume,
+          tuning: { ...this.options.sound.tuning },
+        },
       };
-      this.setOptions({
-        show: { maxParticles: cfg.maxParticles, maxRockets: cfg.maxRockets, enabledTypes: "all" },
-        finale: { trails: cfg.firstSplitCount, trailFlight: cfg.secondSplitDelayMs, trailSpread: cfg.firstSplitSpreadDegrees, burstScale: 1.25, particleScale: 1.2 },
-        sound: { volume: 1, tuning: { launchGain: previous.sound.tuning.launchGain * cfg.soundBoost } },
+      this.worldEnderPrevious = previous;
+      // Applied to the live options rather than through setOptions(). Resolving
+      // again would re-run the renderer's own adjustments — the Canvas2D path
+      // halves the particle budget on every pass — so a restore could never put the
+      // host back where it started. The engine's own ceilings are still enforced
+      // here, exactly as the resolver would; only the renderer accommodation and
+      // the write into the host's saved options are skipped.
+      // Only a floor, no ceiling: whatever the host configured for the effect is what it
+      // gets, and Infinity stays Infinity.
+      const cap = (value, min) => Math.max(min, Number(value) || min);
+      Object.assign(this.options.show, {
+        maxParticles: cap(cfg.maxParticles, 100),
+        maxRockets: cap(cfg.maxRockets, 1),
+        enabledTypes: "all",
       });
+      Object.assign(this.options.finale, {
+        trails: cfg.firstSplitCount,
+        trailFlight: cfg.secondSplitDelayMs,
+        trailSpread: cfg.firstSplitSpreadDegrees,
+        burstScale: 1.25,
+        particleScale: 1.2,
+      });
+      this.options.sound.volume = 1;
+      this.options.sound.tuning.launchGain =
+        previous.sound.tuning.launchGain * cfg.soundBoost;
       // Keep the engine in its manually-launchable state for the carrier;
       // unlike launchFinale(), this effect manages its own completion timer.
       this._activateManual("manual");
       if (cfg.stopAfter !== false) this.accepting = false;
+      // Queued automatic launches are dropped, but the rockets already in flight are
+      // left alone: wiping them was what made one World Ender vanish the moment
+      // another was fired.
       this.pendingRockets.length = 0;
-      this.rockets.length = 0;
       let primaryBursts = 0;
       const randomWarhead = () => Math.random() < 0.5 ? "thunder_clap" : TYPES[Math.floor(Math.random() * TYPES.length)];
       const onFinaleStage = (event) => {
         const detail = event.detail || {};
         if (detail.stage !== "secondary-burst") return;
         const source = detail.source || {};
+        if (source.worldEnderBranch) {
+          if (source.worldEnderId !== id) return;
+          // Chaining stays exactly as it was: only promoted shells branch onward, even
+          // though every branch now reports to the host.
+          if (source.type !== "grand-finale-burst") return;
+        } else if (this.worldEnders.size && [...this.worldEnders][0].id !== id) {
+          // The carrier's own trails belong to the oldest live effect.
+          return;
+        }
         if (!source.worldEnderBranch && ++primaryBursts > cfg.firstSplitCount) return;
         const depth = source.worldEnderDepth || 0;
         this._spawnWorldEnderShells({ x: detail.x, y: detail.y }, cfg.secondSplitCount, {
@@ -1842,17 +2220,25 @@
           speed: cfg.secondSplitSpeed,
           flight: [cfg.secondSplitDelayMs, cfg.secondSplitDelayMs + 700],
           worldEnderDepth: depth + 1,
+          worldEnderId: id,
         });
       };
+      const effect = { id, listener: onFinaleStage };
+      this.worldEnders.add(effect);
       this.worldEnderListener = onFinaleStage;
       this.addEventListener("finalestage", onFinaleStage);
       this._scheduleWorldEnder(cfg.recursionDurationMs, () => {
-        if (this.worldEnderListener === onFinaleStage) {
-          this.removeEventListener("finalestage", onFinaleStage);
-          this.worldEnderListener = null;
-        }
-        // Let in-flight shells finish; only restore the normal launch limits.
-        this.setOptions({ finale: previous.finale, show: previous.show, sound: previous.sound });
+        this.removeEventListener("finalestage", onFinaleStage);
+        this.worldEnders.delete(effect);
+        if (this.worldEnderListener === onFinaleStage) this.worldEnderListener = null;
+        // Only the last one out restores the host's configuration, so a second ender
+        // cannot drop the limits back down while the first is still running.
+        if (this.worldEnders.size) return;
+        this.worldEnderPrevious = null;
+        Object.assign(this.options.show, previous.show);
+        Object.assign(this.options.finale, previous.finale);
+        this.options.sound.volume = previous.sound.volume;
+        Object.assign(this.options.sound.tuning, previous.sound.tuning);
         this.accepting = this.worldEnderResumeRequested || previous.accepting;
       });
       this.launch({ type: "grand-finale-carrier", x: clamp(Number(cfg.carrierX), 0, 1), burstHeight: cfg.carrierBurstHeight, syncAt: this.effectTime + cfg.carrierFlightMs, audioGain: 1, finale: true, angle: 0 });
@@ -2772,6 +3158,12 @@
         return PALETTES[Math.floor(Math.random() * PALETTES.length)];
       }
 
+      // "single" makes every shell one solid colour, so a volley reads as a set
+      // of distinct monochrome breaks instead of a wash of gradients.
+      if (p === "single") {
+        return solidPalette();
+      }
+
       if (typeof p === "function") {
         return normalizePalette(p());
       }
@@ -2781,6 +3173,13 @@
 
         if (Array.isArray(chosen)) {
           return normalizePalette(chosen);
+        }
+
+        // A flat array of colour strings is a pool of solid shells: one colour
+        // per break, never a ramp. Passing colours this way used to fall through
+        // to PALETTES[0], which silently ignored them.
+        if (typeof chosen === "string") {
+          return solidPalette(chosen);
         }
       }
 
@@ -2985,7 +3384,11 @@
         const r = this.rockets[i];
         r.x += r.vx * dt + windDrift;
         r.y += r.vy * dt;
-        r.vy += (r.satellite ? 28 : r.gravity || 45) * dt;
+        // Explicit undefined check, not `|| 45`: a host-launched rocket sets
+        // gravity to 0 on purpose so it flies straight to its target, and a
+        // falsy fallback would silently bend it off course.
+        r.vy +=
+          (r.satellite ? 28 : r.gravity === undefined ? 45 : r.gravity) * dt;
         // Z-drift: rocket moves toward or away from viewer. Update Z
         // position and recalculate dof — closer = bigger, further = smaller.
         if (r.vz) r.z += r.vz * dt;
@@ -3180,6 +3583,18 @@
     // onto the active particles array. Returns false if the particle
     // limit is reached (unless it's a text particle, which gets priority).
     _spawn(o) {
+      // Record how far this star was launched, against the explosion that owns it. A burst
+      // the particle cap throttles to a handful of stars still knows what size it was
+      // built for, and because this happens here it covers every shell type — including
+      // the ones that spawn particles directly rather than through _burst().
+      const owner = this._burstOwner;
+      if (owner) {
+        const speed = Math.hypot(Number(o.vx) || 0, Number(o.vy) || 0);
+        if (speed > 0) {
+          const reach = speed / (1 - this._dragFor(o.type, o.friction));
+          if (!(owner.plannedReach >= reach)) owner.plannedReach = reach;
+        }
+      }
       const textPriority = Boolean(o.text),
         motionScale = this._motionReduced() ? 0.4 : 1,
         limit = textPriority
@@ -3251,9 +3666,13 @@
     _burst(r, count, min, max, opts = {}) {
       count = Math.max(
         1,
-        Math.floor(count * this.options.performance.secondary),
+        Math.floor(
+          count *
+            this.options.performance.secondary *
+            (Number(r.density) || 1),
+        ),
       );
-      if (opts.crackle) {
+      if (opts.crackle && !r.silent) {
         const origin = this._worldPosition(r.x),
           crackles = Math.max(
             1,
@@ -3405,7 +3824,9 @@
     _crossette(r) {
       const arms = Math.max(
         8,
-        Math.floor(28 * this.options.performance.secondary),
+        Math.floor(
+          28 * this.options.performance.secondary * (Number(r.density) || 1),
+        ),
       );
       for (let arm = 0; arm < arms; arm++) {
         const base = (arm * TAU) / arms,
@@ -3437,7 +3858,12 @@
     // of speeds (inner slow → outer fast) creating the classic star pattern.
     _starburst(r) {
       const arms = 8 + Math.floor(Math.random() * 4),
-        per = Math.max(10, Math.floor(38 * this.options.performance.secondary));
+        per = Math.max(
+          10,
+          Math.floor(
+            38 * this.options.performance.secondary * (Number(r.density) || 1),
+          ),
+        );
       for (let arm = 0; arm < arms; arm++) {
         const base = (arm * TAU) / arms;
         for (let i = 0; i < per; i++) {
@@ -3466,7 +3892,9 @@
     _crown(r) {
       const per = Math.max(
         10,
-        Math.floor(32 * this.options.performance.secondary),
+        Math.floor(
+          32 * this.options.performance.secondary * (Number(r.density) || 1),
+        ),
       );
       for (let point = 0; point < 5; point++) {
         const base = (point * TAU) / 5 - Math.PI / 2;
@@ -3505,7 +3933,9 @@
     _spiral(r) {
       const per = Math.max(
         20,
-        Math.floor(74 * this.options.performance.secondary),
+        Math.floor(
+          74 * this.options.performance.secondary * (Number(r.density) || 1),
+        ),
       );
       for (let spiral = 0; spiral < 4; spiral++) {
         const offset = (spiral * TAU) / 4;
@@ -3571,6 +4001,9 @@
     _grandFinaleBurst(r, now, dispatchStage = true) {
       const scale =
         this.options.finale.burstScale * this.options.finale.particleScale;
+      // Measured before the bursts so the report below can state how big this break
+      // actually was.
+      const particlesFrom = this.particles.length;
       this._flash(r, now, 175);
       this._burst(r, Math.round(92 * scale), 3.5, 11, {
         life: 3300,
@@ -3599,9 +4032,192 @@
       if (dispatchStage)
         this.dispatchEvent(
           new CustomEvent("finalestage", {
-            detail: { stage: "secondary-burst", x: r.x, y: r.y, source: r },
+            detail: {
+              stage: "secondary-burst",
+              x: r.x,
+              y: r.y,
+              // The blast's own reach in world units, so a host can size its damage to
+              // what the player can actually see rather than to a guess.
+              radius: this._reportRadius(r, particlesFrom),
+              source: r,
+            },
           }),
         );
+    }
+    // Wraps the type dispatcher so a host-placed burst can be size-matched to
+    // the radius it asked for. Recording the array lengths first is what makes
+    // the fit universal — it catches every star the shell spawns, including the
+    // shell types that create particles directly instead of via _burst().
+    _explode(r, now) {
+      const particlesFrom = this.particles.length,
+        flashesFrom = this.flashes.length;
+      // Every star spawned during this explosion belongs to r, and _spawn records how far
+      // each one was launched. That gives the burst a size in its own terms even when the
+      // particle cap throttles it, whatever shell type it is.
+      const previousOwner = this._burstOwner;
+      r.plannedReach = 0;
+      this._burstOwner = r;
+      this._explodeType(r, now);
+      this._burstOwner = previousOwner;
+      // Every World Ender branch reports where it broke and how big it was, whatever
+      // type it is. Only the finale-burst type used to report, and that is a minority
+      // of the chained generations — the rest are warheads, which burst with no report
+      // at all, so a host listening for them saw nothing to attribute damage to.
+      if (r.worldEnderBranch)
+        this.dispatchEvent(
+          new CustomEvent("finalestage", {
+            detail: {
+              stage: "secondary-burst",
+              x: r.x,
+              y: r.y,
+              radius: this._reportRadius(r, particlesFrom),
+              source: r,
+            },
+          }),
+        );
+      this._fitBurst(r, particlesFrom, flashesFrom);
+    }
+    // Fits a just-created burst to r.burstRadius (world units). Called after the
+    // shell has spawned, so it works by measuring what was actually created
+    // rather than guessing from the shell's name.
+    //
+    // Each star's reach is its launch speed divided by its per-frame drag, which
+    // is the distance it would coast to. How far a star actually coasts depends
+    // only on the drag it is given, so scaling every velocity by k scales every
+    // reach by exactly k — the fit is linear, not an approximation. Gravity is
+    // scaled by the same k so the break keeps its shape instead of flattening
+    // into a puff at small sizes and ballooning at large ones.
+    // The drag a star of this type actually sheds per frame. _update() overrides it for
+    // three drifting types, so anything estimating reach has to use the same values the
+    // integrator will.
+    _dragFor(type, friction) {
+      return type === "willow"
+        ? 0.997
+        : type === "palm"
+          ? 0.995
+          : type === "horsetail"
+            ? 0.98
+            : friction || 0.985;
+    }
+    _particleDrag(p) {
+      return this._dragFor(p.type, p.friction);
+    }
+    // The visible rim of the stars created since index `from`: the 90th percentile of
+    // how far each one would coast. Shared by the radius fit and the finalestage
+    // reports so a host's damage and the engine's fire can never disagree about how
+    // big a break was.
+    _burstReach(from) {
+      const reaches = [];
+      for (let i = from; i < this.particles.length; i++) {
+        const p = this.particles[i],
+          speed = Math.hypot(p.vx || 0, p.vy || 0);
+        if (speed > 0) reaches.push(speed / (1 - this._particleDrag(p)));
+      }
+      if (!reaches.length) return 0;
+      reaches.sort((a, b) => a - b);
+      return reaches[Math.min(reaches.length - 1, Math.floor(reaches.length * 0.9))];
+    }
+    // The radius to report for a burst that has just gone off. Measured from the stars it
+    // actually made — but only when there are enough of them to mean anything. A burst
+    // throttled by the particle cap spawns a handful, and the 90th percentile of three
+    // samples says nothing about how big the break was, so below a real sample the reach
+    // it was built for is reported instead. That also keeps the reported size stable from
+    // burst to burst under load, which is what a host needs to size its damage.
+    _reportRadius(r, particlesFrom) {
+      const sampled = this.particles.length - particlesFrom;
+      const reach =
+        sampled < 20
+          ? r.plannedReach || this._burstReach(particlesFrom)
+          : this._burstReach(particlesFrom) || r.plannedReach || 0;
+      // A willow's stars barely shed speed, so its reach works out several times the size
+      // of the screen. A blast larger than the viewport is indistinguishable from a screen
+      // clear, which reads to a player as enemies vanishing for no reason, so the report is
+      // bounded by the world's own diagonal.
+      const limit = Math.hypot(this.width, this.height) / (this.zoom || 1);
+      return Math.min(reach, limit);
+    }
+    _fitBurst(r, particlesFrom, flashesFrom) {
+      // A host can shorten how long its sparks linger, so a game's fire fades as it
+      // falls instead of hanging around for the shell's whole lifetime.
+      const lifeScale = clamp(Number(r.burstLifeScale) || 1, 0.1, 4);
+      if (lifeScale !== 1)
+        for (let i = particlesFrom; i < this.particles.length; i++)
+          this.particles[i].life *= lifeScale;
+      // A host can also slow the descent, so a break drifts down instead of
+      // dropping. Applied after the radius fit, which already compensates gravity
+      // for the drag it introduces, so this is purely the host's preference.
+      const gravityScale = clamp(Number(r.burstGravityScale) || 1, 0.01, 4);
+      if (gravityScale !== 1)
+        for (let i = particlesFrom; i < this.particles.length; i++) {
+          const p = this.particles[i];
+          if (p.gravity) p.gravity *= gravityScale;
+        }
+      const target = Number(r.burstRadius) || 0;
+      if (target <= 0) return;
+      const fitted = [];
+      for (let i = particlesFrom; i < this.particles.length; i++) {
+        const p = this.particles[i],
+          speed = Math.hypot(p.vx || 0, p.vy || 0);
+        if (speed > 0) fitted.push({ p, reach: speed / (1 - this._particleDrag(p)) });
+      }
+      if (!fitted.length) return;
+      fitted.sort((a, b) => a.reach - b.reach);
+      // The 90th percentile is the visible rim of the break. Targeting the
+      // single fastest star would shrink the whole shell to stop a handful of
+      // strays from passing the radius, which reads as a stingy explosion.
+      const natural =
+        fitted[Math.min(fitted.length - 1, Math.floor(fitted.length * 0.9))]
+          .reach;
+      if (!(natural > 0)) return;
+      const k = clamp(target / natural, 0.05, 4);
+      for (const entry of fitted) {
+        entry.p.vx *= k;
+        entry.p.vy *= k;
+        if (entry.p.gravity) entry.p.gravity *= k;
+      }
+      // A host that has to justify its own hit detection can ask for the rim to
+      // arrive on a schedule. Without this the fitted reach is the *asymptotic*
+      // distance: stars coast outward for well over a second, so a game whose
+      // blast is lethal straight away kills things the visible explosion has not
+      // reached yet. Retuning drag and speed per star puts the rim where it was
+      // asked for, when it was asked for, while preserving each star's relative
+      // distance so the break keeps its density profile rather than collapsing
+      // into a thin ring.
+      const reachTime = Number(r.burstReachTime) || 0;
+      if (reachTime > 0) {
+        const settled = 0.95,
+          frames = clamp(reachTime / (1000 / 60), 2, 900),
+          friction = Math.pow(1 - settled, 1 / frames);
+        for (const entry of fitted) {
+          const p = entry.p;
+          // These three star types hard-override their own drag in _update(), so a
+          // requested schedule cannot be honoured for them. They keep the
+          // asymptotic fit rather than arriving late and looking broken.
+          if (p.type === "willow" || p.type === "palm" || p.type === "horsetail")
+            continue;
+          // Targetting target/settled as the asymptotic reach means the star is
+          // exactly at the requested radius once reachTime has elapsed.
+          const share = entry.reach / natural,
+            speed = ((target * share) / settled) * (1 - friction),
+            current = Math.hypot(p.vx, p.vy) || 1,
+            // Stronger drag would damp gravity too, leaving the stars hanging
+            // motionless instead of raining down. Scaling gravity by the change in
+            // drag keeps the terminal fall speed identical, so only the expansion
+            // gets faster.
+            priorDrag = 1 - (p.friction || 0.985),
+            dragRatio = priorDrag > 0 ? (1 - friction) / priorDrag : 1;
+          p.vx = (p.vx / current) * speed;
+          p.vy = (p.vy / current) * speed;
+          if (p.gravity) p.gravity *= dragRatio;
+          p.friction = friction;
+        }
+      }
+      // The detonation flash is sized in absolute pixels, so the default 130px
+      // flash would swamp a small break. Scale it with the burst, but keep a
+      // floor so an accurately small burst still flashes.
+      const flashScale = clamp(k, 0.25, 1.6);
+      for (let i = flashesFrom; i < this.flashes.length; i++)
+        this.flashes[i].size *= flashScale;
     }
     // The main explosion dispatcher. Routes to the correct burst algorithm
     // based on the rocket's type. Handles special cases:
@@ -3610,15 +4226,16 @@
     //   - grand-finale-burst → satellite multi-burst
     //   - sovereign-crown → finale crown burst
     //   - all 15 named types → their specific burst pattern
-    _explode(r, now) {
-      this._playSound(
-        r.finale ? "finale" : "explode",
-        this._worldPosition(r.x),
-        (r.audioGain || 0.75) *
-          (r.soundType === "whistle" ? 1.35 : 1) *
-          (r.z < 0 ? this.options.sound.nearBoomMultiplier : 1),
-        this._depthSoundDelay(r.z || 0),
-      );
+    _explodeType(r, now) {
+      if (!r.silent)
+        this._playSound(
+          r.finale ? "finale" : "explode",
+          this._worldPosition(r.x),
+          (r.audioGain || 0.75) *
+            (r.soundType === "whistle" ? 1.35 : 1) *
+            (r.z < 0 ? this.options.sound.nearBoomMultiplier : 1),
+          this._depthSoundDelay(r.z || 0),
+        );
       if (r.type === "text") {
         const cfg = r.cfg,
           hybrid = cfg.renderMode !== "particles";
@@ -3704,7 +4321,9 @@
         return;
       }
       if (r.type === "grand-finale-burst") {
-        this._grandFinaleBurst(r, now);
+        // A World Ender branch is reported once by the _explode wrapper, so suppressing
+        // the inner dispatch here avoids double-reporting the same break.
+        this._grandFinaleBurst(r, now, !r.worldEnderBranch);
         return;
       }
       if (r.type === "grand-finale-bomb") {
@@ -4383,7 +5002,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.7.1";
+  GrandFireworks.VERSION = "1.8.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;
