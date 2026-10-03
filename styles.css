@@ -179,13 +179,17 @@ h3 {
 .game-example-card {
   grid-column: span 1 !important;
   display: grid;
-  grid-template-columns: minmax(170px, 42%) 1fr;
+  /* Stacked rather than two columns: the logo sits above the title, so the title reads
+     under the logo instead of alongside it. This is what the mobile rule already did. */
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   background: radial-gradient(circle at 24% 50%, rgba(51, 132, 255, .16), transparent 48%), #0a1022;
 }
 .game-example-card img {
   width: 100%;
+  /* Capped so a wide card cannot blow the logo up to fill it. */
+  max-width: 340px;
   border-radius: 10px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, .38);
 }
