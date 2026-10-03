@@ -228,7 +228,12 @@ export interface ShowOptions {
    * per shell, and a flat array of colour strings is a pool of solid shells.
    */
   palettes?: ColorString[][] | ColorString[] | 'default' | 'single';
-  /** Total launch area in screen-width units. */
+  /**
+   * Total launch area in screen-width units. Measured in screen widths, so `1` covers one
+   * screen-width however far the view is pulled back; set it to `1 / visuals.zoom` to keep
+   * launches across the full viewport at any zoom. The per-launch rocket count is
+   * `Math.min(launchHorizon, 1 / zoom)`.
+   */
   launchHorizon?: number;
   zAngleRange?: number;
   zAngleStrength?: number;
@@ -274,7 +279,10 @@ export interface TextFireworkOptions {
   maxCharactersPerLine?: number;
   maxLines?: number;
   overflow?: 'ellipsis' | 'clip';
+  /** Widest the block may be, as a fraction of the width. Defaults to 0.82. Narrow it to let
+   * `horizontalPosition` move the text further off centre. */
   maxWidth?: number;
+  /** Where the block is centred vertically, as a fraction of the viewport height. Defaults to 0.42. */
   verticalPosition?: number;
   /**
    * Where the text block is centred across the width, as a fraction. Defaults to 0.5.
@@ -285,6 +293,8 @@ export interface TextFireworkOptions {
   lineHeight?: number;
   fontFamily?: string;
   fontWeight?: number;
+  /** Base font size. The block is sized against `visuals.zoom`, so it shrinks and grows with
+   * the camera instead of holding its screen size at any zoom. */
   fontSize?: number;
   particleSpacing?: number;
   particleSize?: number;
@@ -298,6 +308,11 @@ export interface TextFireworkOptions {
   textGlow?: number;
   shimmer?: boolean;
   synchronizeExplosions?: boolean;
+  /**
+   * Halts new launches for the whole text lifecycle and reserves the particle budget so
+   * nothing competes with the words. Defaults to `true`, which is right for a message
+   * someone is meant to read. Set `false` to layer text over a show that must keep running.
+   */
   exclusive?: boolean;
 }
 

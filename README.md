@@ -186,6 +186,30 @@ fireworks.cancelTextSequence();
 
 Sequence events are `textsequencestart`, `textsequenceitem`, `textsequenceend`, and `textsequencecancel`. Set `textFirework.synchronizeExplosions: false` to stagger multi-line arrivals instead of synchronizing them.
 
+#### Placing a message
+
+`textFirework.verticalPosition` and `textFirework.horizontalPosition` are fractions of the viewport, and the block is centred on them. Both are clamped so a wide block can never be pushed half off the canvas — narrow `maxWidth` to let the text travel further off centre:
+
+```js
+fireworks.launchText('BOOM', {
+  maxWidth: 0.45,          // the block may be up to 45% of the width
+  horizontalPosition: 0.3, // centred 30% across, after the clamp
+  verticalPosition: 0.35   // centred 35% down
+});
+```
+
+Text scales with the camera. The block is sized against `visuals.zoom`, so pulling the view back shrinks the words with everything else instead of leaving them full size; at `zoom: 1` nothing changes.
+
+#### Text inside a running show
+
+`textFirework.exclusive` defaults to `true`, which halts new launches for the whole text lifecycle and reserves the particle budget so nothing competes with the words. That is the right default for a message someone is meant to read. Turn it off when the text is decoration on a show that must never stop:
+
+```js
+const fireworks = new GrandFireworks({ textFirework: { exclusive: false } });
+```
+
+The ambient show then keeps launching while the words assemble, and shells may drift through them — that is the trade. It can also be set per call, so one deliberate message can take the show over while the rest stay unobtrusive.
+
 ### Sound
 
 Sound is off by default. Call `enableSound()` from a click or tap handler to unlock browser audio, then use `setMuted(true)` or `setOptions({ sound: { volume: 0.2 } })` for live control.
@@ -241,6 +265,16 @@ const fireworks = new GrandFireworks({
 `visuals.zoom` controls the visible field of view: values below `1` pull back to reveal more of the horizon, while values above `1` move closer. `show.launchHorizon` sets the total launch area in screen widths. `show.minShellScale` and `show.maxShellScale` give every firework its own apparent scale while keeping its rocket, exhaust, burst, and particles together.
 
 Shells are staged as near, middle, or far. Distance affects apparent size, flight speed, burst height, stereo position, loudness, and a slight delay on distant launch and boom sounds. Tune depth drift with `zAngleRange` and `zAngleStrength`, or call `fireworks.setZoom(0.5)` to update the view live. See the [Feature Demo panel](https://travisjmac.github.io/grand-fireworks-js/examples/guided-builder.html?mode=features) for a live reference.
+
+`launchHorizon` is measured in screen widths, so a horizon of `1` covers one screen-width however far the view is pulled back. Zooming out therefore reveals more world than there are launchers in: the shells stay in a central band and never reach the edges. To keep them launching across the full viewport at any zoom, tie the horizon to the zoom:
+
+```js
+function applyZoom(zoom) {
+  fireworks.setOptions({ visuals: { zoom }, show: { launchHorizon: 1 / zoom } });
+}
+```
+
+At `1 / zoom` the launch zone matches the visible width exactly, and the per-launch rocket count — `Math.min(show.launchHorizon, 1 / zoom)`, which exists to hold density steady as the field widens — is no longer capped below the area it has to fill. Call it from every control that moves the camera, including style presets, since a preset can carry its own `visuals.zoom`.
 
 Run the dependency-free regression suite with `npm test`, the declaration
 contract check with `npm run typecheck`, and regenerate distribution builds

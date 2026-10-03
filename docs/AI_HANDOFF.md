@@ -30,6 +30,13 @@ The v1.8.0 release turns the engine into something a host can drive. `setRenderP
 
 Development happens on `dev` and is merged into `main` for releases. The developer-platform plan (see `docs/developer-platform-plan.md`) is implemented one sprint at a time. Sprint 1 (TypeScript and public API contract) is complete: the package now ships first-party types in `index.d.ts`, resolved automatically through `package.json`. TypeScript is a dev-only dependency; the published runtime stays zero-dependency.
 
+Since v1.8.0 (unreleased at the time of writing), all of it documented in `docs/host-recipes.md`:
+
+- Text fireworks gained `textFirework.horizontalPosition`, and the block now **scales with `visuals.zoom`**. Text plans are sampled in screen pixels and `_explodeType` divides each point by the zoom to undo the camera, so the block's base font is now scaled by the zoom while its centre is deliberately left alone — the requested position still holds exactly, and at `zoom: 1` nothing changed.
+- `textFirework.exclusive` is the opt-in that halts other launches for the whole text lifecycle and reserves the particle budget. It is right for a message someone should read, and wrong for text layered over a show that must never stop — the homepage sets it to `false`.
+- `show.launchHorizon` is measured in screen widths, so the homepage ties it to `1 / zoom` to keep launches across the full viewport at any zoom. That also un-caps the per-launch rocket count, `Math.min(launchHorizon, 1 / zoom)`, which exists to hold density steady as the field widens.
+- The homepage fires text from two independent self-scheduling loops, each waiting one to ten seconds and picking a random phrase from ten, walking a declared series of four areas. A fixed `setInterval` would have made every gap identical, which is why the loop re-arms through `setTimeout`.
+
 Important: **never hand-edit `dist/`**. Make source changes in `GrandFireworks.js`, then run `npm run build`.
 
 ## 3. Architecture
@@ -141,6 +148,7 @@ The homepage is both documentation and a live showcase. It starts Cinematic by d
 - an optional style-and-colour automation with a 20-second countdown;
 - optional automatic smooth intensity movement;
 - periodic Grand Finale launches;
+- two independent text-firework firers over a declared series of areas, with the ambient show deliberately left running behind them;
 - sound, random configuration, copy configuration, and fullscreen controls.
 
 Homepage-specific show logic belongs in its inline script, not in the core engine. The homepage may use high-intensity moments, but it must retain sensible safety caps. It currently permits up to 20 active rockets to make 700% intensity visually meaningful.
@@ -275,6 +283,7 @@ The renderer and physics stay in the core library. A basic wrapper is small; do 
 7. `index.d.ts` and `types/fixtures/` when changing the public API or configuration.
 8. `index.html` and `examples/guided-builder.html` when changing UI or demo behaviour.
 9. `docs/product-roadmap.md` and `docs/interactive-flight-spec.md` only when planning future work.
+10. `docs/host-recipes.md` when wiring the engine into a page, a demo, or a game — it is the code-level companion to this handoff, covering the host render pass, point bursts and `reachTime`, text placement and exclusivity, and the horizon-follows-zoom pattern.
 
 ## 12. Known documentation cleanup opportunity
 
