@@ -239,7 +239,7 @@
 .option-row.shell-picker-row .opt-control{width:100%}
 @media(max-width:600px){.studio-feature-row{grid-template-columns:1fr}.studio-feature-value{text-align:left}}
 @media(max-width:600px){.shell-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style></head><body>
+</style><link rel="stylesheet" href="../config-editor.css"><script src="../config-editor-data.js"></script><script src="../config-editor-help.js"></script><script src="../config-editor.js"></script><link rel="stylesheet" href="../site-navigation.css"><script src="../site-navigation.js" defer></script></head><body data-site-page="workbench"><nav class="section-nav" aria-label="Documentation sections"><a href="../index.html#quick-start">Start</a><a href="../index.html#examples">Experiences</a><a href="../detailed-config-guide.html">Guide</a><a href="../examples/guided-builder.html?mode=workbench" class="active" aria-current="page">Workbench</a></nav>
 
 <section id="preview" role="img" aria-label="Live fireworks preview">
   <div id="preview-inner"></div>
@@ -2476,4 +2476,4 @@ function applyLoadedConfig() {
 init();
 let soundOn=false;document.querySelector('#sound-btn').addEventListener('click',event=>{soundOn=!soundOn;if(soundOn&&fw)fw.enableSound();else if(fw)fw.disableSound();event.currentTarget.textContent=soundOn?'🔊 Sound':'🔇 Sound';});
 </script>
-</body></html>
+<script src="workbench-config-editor.js"></script></body></html>
