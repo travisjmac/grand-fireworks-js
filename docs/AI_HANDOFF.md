@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.9.2**
+- Current release: **v1.10.0**
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -229,7 +229,7 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.9.2/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.10.0/dist/GrandFireworks.min.js"></script>
 ```
 
 For the moving development branch, use:

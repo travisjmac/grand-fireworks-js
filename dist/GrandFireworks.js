@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.9.2
+ * Version: 1.10.0
  *
  * @author Travis MacDonald
- * @version 1.9.2
+ * @version 1.10.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -1781,7 +1781,7 @@
      */
     launch(options = {}) {
       this._activateManual("manual");
-      if (!["running", "finishing", "manual"].includes(this.state)) return this;
+      if (!["running", "finishing", "manual", "finale"].includes(this.state)) return this;
       this._createRocket(options);
       return this;
     }
@@ -2086,9 +2086,6 @@
       this.finalePlayed = true;
       this.finaleStarted = performance.now();
       this.finaleFinishedAt = 0;
-      this.pendingRockets.length = 0;
-      if (this.rockets.length >= this.options.show.maxRockets)
-        this.rockets.length = 0;
       this._createRocket({
         type: "grand-finale-carrier",
         x: 0.5,
@@ -2363,7 +2360,7 @@
           launchAt: syncAt - travel,
           textPlan: plan,
           type: "text",
-          x: this.width / 2,
+          x: plan.burstX,
           y: this.height + 25,
           burstY: plan.burstY,
           syncAt,
@@ -2695,6 +2692,7 @@
           pivotY: centreY,
           // Where this line's centre actually sits once tilted: the height its
           // rocket has to reach.
+          burstX: rotate(centreX, lineY).x,
           burstY: rotate(centreX, lineY).y,
         });
       });
@@ -3121,7 +3119,8 @@
     // both spontaneous launches and text-synced launches (where velocity
     // is calculated backward from the desired detonation time).
     _createRocket(o = {}) {
-      if (this.rockets.length >= this.options.show.maxRockets) return;
+      // Explicit launches and scheduled text must not be silently discarded.
+      // Automatic launch pacing applies its budget in _update().
       const mixedStyleName = this.options.baseStyle === "mixed" && !o.text && !o.finale ? this._mixedStyle() : null,
         mixedStyle = mixedStyleName ? STYLES[mixedStyleName] : null,
         show = mixedStyle ? merge(this.options.show, mixedStyle.show) : this.options.show,
@@ -3460,7 +3459,10 @@
             q.textPlan
               ? {
                   type: "text",
-                  x: 0.5,
+                  x: q.textPlan.burstX / this.width,
+                  z: 0,
+                  dof: 1,
+                  angle: 0,
                   burstHeight: q.textPlan.burstY / this.height,
                   colors: q.colors,
                   textPlan: q.textPlan,
@@ -3507,7 +3509,7 @@
       }
       for (let i = this.rockets.length - 1; i >= 0; i--) {
         const r = this.rockets[i];
-        r.x += r.vx * dt + windDrift;
+        r.x += r.vx * dt + (r.textPlan ? 0 : windDrift);
         r.y += r.vy * dt;
         // Explicit undefined check, not `|| 45`: a host-launched rocket sets
         // gravity to 0 on purpose so it flies straight to its target, and a
@@ -5148,7 +5150,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.9.2";
+  GrandFireworks.VERSION = "1.10.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

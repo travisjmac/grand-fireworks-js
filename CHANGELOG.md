@@ -2,6 +2,26 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.10.0] — October 5, 2026
+
+### Added
+
+- Dedicated Configuration & API Guide with the full editable initialisation object, methods/properties reference, contextual help, and one-click Workbench handoff.
+- Shared Workbench configuration editor with fixed title/footer, Apply, Apply and Close, and Close actions; background builder for colours, gradients, images and overlays.
+- Shared navigation and reversible embedded scroll transitions from Home to Guide to Workbench.
+- Default Show and Happy Birthday Timed Show pages. The timed demo uses WebGL2, an automatically following cue timeline, expanded running source, rainbow text, a word-by-word birthday haiku and closing celebration.
+
+### Fixed
+
+- Text rocket destinations now match fitted/tilted message positions without random depth or wind drift.
+- Finales preserve queued/active effects. Explicit and scheduled launches no longer silently fail at maxRockets; automatic-show pacing and particle limits remain.
+- Homepage type selection works in fullscreen; section navigation highlights the clicked section correctly.
+- Workbench navigation remains clickable above the welcome overlay without creating a background band.
+
+### Changed
+
+- Calmer homepage fireworks and less frequent random text; configuration reference consolidated into the dedicated guide.
+
 ## [1.9.2] — October 3, 2026
 
 The homepage control panel is rebuilt: it keeps its controls when slimmed, can switch the random text off, and gains a firework type picker.
