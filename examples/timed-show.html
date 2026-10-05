@@ -1,0 +1,173 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Timed Show — Happy Birthday Demo</title><link rel="stylesheet" href="../site-navigation.css"><link rel="stylesheet" href="timed-show.css"></head><body><nav class="section-nav" aria-label="Documentation sections"><a href="../index.html#quick-start">Start</a><a class="active" href="../index.html#examples">Experiences</a><a href="../detailed-config-guide.html">Guide</a><a href="guided-builder.html?mode=workbench">Workbench</a></nav><main><header><h1>Timed Show — Happy Birthday Demo</h1><p>A birthday celebration in fireworks: a finale, a rainbow phrase, and a haiku assembled one word at a time.</p></header><section id="timed-demo-stage" aria-label="Timed fireworks preview"><div class="clock"><output id="timed-demo-clock">0:00.0</output><span id="timed-demo-cue">waiting</span></div><button id="timed-demo-replay" type="button">Replay show</button></section><section class="timeline-section"><h2>Release timeline</h2><p>Each point marks a launch time. Text forms after its rockets arrive.</p><div class="timeline-scroll"><div class="timeline-track"><ol id="timeline" aria-label="Scheduled releases"></ol><div id="playhead" aria-hidden="true"></div><span class="end">44s · Repeat</span></div></div></section><section class="source"><h2>Show source</h2><p>This is the code running the show above.</p><pre><code id="timed-demo-code"></code></pre></section></main><script src="../GrandFireworks.js"></script><script type="module" id="timed-demo-script">
+// A timed show: each cue fires a set number of milliseconds after the show starts.
+const stage = document.querySelector('#timed-demo-stage');
+const clock = document.querySelector('#timed-demo-clock');
+const cueLabel = document.querySelector('#timed-demo-cue');
+
+const show = new GrandFireworks({
+  mode: 'contained',       // draw inside the stage box, not the whole page
+  container: stage,
+  placement: 'background', // behind the clock and the Replay button
+  autoStart: false,        // nothing launches on its own; only the cues fire
+  renderer: { preferred: 'webgl2' }, // use WebGL even inside a contained stage
+  textFirework: {
+    exclusive: false,      // let shells keep flying while words are up
+    maxWidth: 0.4,         // narrow, so a message can sit left or right of centre
+    fontSize: 56,
+    holdDuration: 1200
+  }
+});
+
+// launchText sends its rockets up at the cue; the words form about 1.8s later.
+const cues = [
+  { at: 0,     fire: () => show.launch({ x: 0.25 }) },
+  { at: 600,   fire: () => show.launch({ x: 0.75 }) },
+  { at: 1500,  fire: () => show.launchText('READY?', { verticalPosition: 0.3 }) },
+  { at: 4500,  fire: () => show.launchText('HAPPY', { horizontalPosition: 0.3, verticalPosition: 0.3, tilt: -15 }) },
+  { at: 5100,  fire: () => show.launchText('BIRTHDAY!', { horizontalPosition: 0.7, verticalPosition: 0.6, tilt: 12 }) },
+  { at: 8500,  fire: () => show.launch({ x: 0.2, type: 'weeping_willow' }) },
+  { at: 8700,  fire: () => show.launch({ x: 0.5, type: 'weeping_willow' }) },
+  { at: 8900,  fire: () => show.launch({ x: 0.8, type: 'weeping_willow' }) },
+  { at: 11000, fire: () => show.launchFinale() },
+  { at: 12000, fire: () => rainbowWord('You', 0) },
+  { at: 12800, fire: () => rainbowWord('are', 1) },
+  { at: 13600, fire: () => rainbowWord('so', 2) },
+  { at: 14400, fire: () => rainbowWord('beautiful', 3) },
+  { at: 15200, fire: () => rainbowWord('to', 4) },
+  { at: 16000, fire: () => rainbowWord('me.', 5) }
+];
+// These are text destinations; the engine handles rocket flight to each one.
+function rainbowWord(word, index) {
+  const positions = wordLayout(['You', 'are', 'so', 'beautiful', 'to', 'me.'], 38, true);
+  return show.launchText(word, {
+    ...positions[index],
+    exclusive: false, holdDuration: 6500 - index * 800,
+    dissolveDuration: 500, fallDuration: 1200
+  });
+}
+// Measure words with the engine's font, then leave equal gaps between their
+// rotated bounds. Longer words get more room, rather than equal-width slots.
+function wordLayout(words, requestedSize, arc = false) {
+  const width = stage.clientWidth;
+  const ctx = document.createElement('canvas').getContext('2d');
+  const cfg = show.options.textFirework;
+  ctx.font = `${cfg.fontWeight} ${requestedSize}px ${cfg.fontFamily}`;
+  const angles = words.map((_, i) => arc ? -30 + i * 60 / (words.length - 1) : 0);
+  const raw = words.map(word => ctx.measureText(word).width + 24);
+  const projected = raw.map((w,i) => w * Math.cos(angles[i]*Math.PI/180) + requestedSize * 1.8 * Math.abs(Math.sin(angles[i]*Math.PI/180)));
+  const available = width * .84;
+  const gap = 24;
+  const scale = Math.min(1, available / (projected.reduce((a,b)=>a+b,0) + gap*(words.length-1)));
+  const total = (projected.reduce((a,b)=>a+b,0) + gap*(words.length-1))*scale;
+  let cursor = (width-total)/2;
+  return words.map((_,i) => {
+    const centre = cursor + projected[i]*scale/2;
+    cursor += (projected[i]+gap)*scale;
+    const t = angles[i]/30;
+    return { horizontalPosition: centre/width,
+      verticalPosition: arc ? .24 + .26*t*t : .5,
+      tilt: angles[i], fontSize: Math.max(10, Math.floor(requestedSize*scale)),
+      maxWidth: (raw[i]*scale)/width };
+  });
+}
+const SHOW_LENGTH = 44000; // time for the phrase, haiku and final dissolve
+
+const names = ['Left shell','Right shell','READY?','HAPPY','BIRTHDAY!','Willow · left','Willow · centre','Willow · right','Finale','You','are','so','beautiful','to','me.'];
+// Four small pink accents bridge the rainbow phrase and birthday poem.
+[
+  { at: 18000, x: .18, y: .66 },
+  { at: 18500, x: .78, y: .38 },
+  { at: 19000, x: .35, y: .48 },
+  { at: 19500, x: .88, y: .70 }
+].forEach((cue, i) => {
+  cues.push({ at: cue.at, fire: () => show.placeburst({
+    x: stage.clientWidth * cue.x, y: stage.clientHeight * cue.y,
+    radius: 38, type: 'peony', colors: ['#FF69B4', '#FFB6D9']
+  }) });
+  names.push('Pink burst ' + (i + 1));
+});
+// A birthday haiku, 5 / 7 / 5 syllables. Each word gets its own volley.
+const poem = [
+  ['Birthday', 'candles', 'glow'],
+  ['Wishes', 'rise', 'into', 'the', 'night'],
+  ['Love', 'lights', 'up', 'the', 'sky']
+];
+let wordIndex = 0;
+poem.forEach((words, row) => {
+  words.forEach((word, column) => {
+    const at = 20000 + wordIndex++ * 500;
+    cues.push({ at, fire: () => show.launchText(word, {
+      ...wordLayout(words, 32)[column],
+      verticalPosition: .28 + row * .22,
+      exclusive: false,
+      holdDuration: 3000, dissolveDuration: 650, fallDuration: 1400
+    }) });
+    names.push('Haiku · ' + word);
+  });
+});
+// The last word launches at 26s and forms about 1.8s later. Celebrate just
+// after that with a rolling volley, while the poem continues dissolving.
+for (let i = 0; i < 18; i++) {
+  cues.push({ at: 28000 + i * 140, fire: () => show.launch({
+    x: .08 + (i % 6) * .168,
+    type: i % 2 ? 'chrysanthemum' : 'peony',
+    burstHeight: .18 + (i % 3) * .12,
+    colors: i % 3 === 0 ? ['#FF69B4', '#FFB6D9']
+      : i % 3 === 1 ? ['#FFD700', '#FFFFFF'] : ['#A78BFA', '#67E8F9']
+  }) });
+  names.push('Celebration ' + (i + 1));
+}
+const timeline = document.querySelector('#timeline');
+const markers = cues.map((cue,i) => {
+  const marker=document.createElement('li');
+  marker.style.left=(cue.at/SHOW_LENGTH*100)+'%';
+  marker.style.setProperty('--lane',i%3);
+  marker.textContent=(cue.at/1000).toFixed(1)+'s · '+names[i];
+  timeline.append(marker);return marker;
+});
+let frameId=0;
+let timers = [];
+let startedAt = 0;
+
+function play() {
+  stop();
+  show.clear();
+  startedAt = performance.now();
+  cueLabel.textContent = 'starting';
+  markers.forEach(marker=>marker.classList.remove('fired'));
+  timers = cues.map((cue, i) => setTimeout(() => {
+    cue.fire();
+    markers[i].classList.add('fired');
+    cueLabel.textContent = `cue ${i + 1} of ${cues.length}`;
+  }, cue.at));
+  timers.push(setTimeout(play, SHOW_LENGTH));
+  frameId=requestAnimationFrame(tick);
+}
+
+function stop() {
+  cancelAnimationFrame(frameId);
+  timers.forEach(clearTimeout); // cancel every cue that has not fired yet
+  timers = [];
+  startedAt = 0;
+}
+
+// The clock: time since play(), as minutes:seconds.tenths.
+function tick() {
+  if (!startedAt) return;
+  const seconds = (performance.now() - startedAt) / 1000;
+  const progress = Math.min(1, seconds * 1000 / SHOW_LENGTH);
+  document.querySelector('#playhead').style.left = (progress * 100) + '%';
+  const viewport = document.querySelector('.timeline-scroll');
+  const track = document.querySelector('.timeline-track');
+  viewport.scrollLeft = Math.max(0, track.offsetLeft - viewport.offsetLeft + progress * track.clientWidth - viewport.clientWidth * .4);
+  clock.textContent = `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, '0')}`;
+  requestAnimationFrame(tick);
+}
+
+// Play while the box is on screen, and stop when it scrolls away so no cues pile up.
+new IntersectionObserver(([entry]) => (entry.isIntersecting ? play() : stop()), { threshold: 0.4 })
+  .observe(stage);
+document.querySelector('#timed-demo-replay').addEventListener('click', play);
+
+addEventListener('pagehide',()=>{stop();show.destroy();});
+</script><script>document.getElementById('timed-demo-code').textContent=document.getElementById('timed-demo-script').textContent.trim();</script></body></html>

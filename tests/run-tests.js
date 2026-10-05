@@ -2032,6 +2032,47 @@ test('text fireworks can be placed off-centre, and default to centred', () => {
   fireworks.destroy();
 });
 
+test('text rockets reach the fitted tilted message position without depth or wind drift', async () => {
+  const { GrandFireworks } = createRuntime();
+  for (const position of [.3, .7]) {
+    const fireworks = new GrandFireworks({ visuals: { windStrength: .25 }, show: { textRocketAngle: 15 } });
+    await fireworks.launchText('HAPPY', { horizontalPosition: position, maxWidth: .4, tilt: -15 });
+    const pending = fireworks.pendingRockets[0];
+    const target = pending.textPlan;
+    assert.equal(pending.x, target.burstX);
+    fireworks._update(pending.launchAt + 1, 0);
+    const rocket = fireworks.rockets.find(r => r.textPlan);
+    assert.ok(rocket);
+    assert.ok(Math.abs(rocket.x * fireworks.zoom - target.burstX) < .001);
+    assert.ok(Math.abs(rocket.burstY * fireworks.zoom - target.burstY) < .001);
+    assert.equal(rocket.z, 0);
+    assert.equal(rocket.vx, 0);
+    const before = rocket.x;
+    fireworks._update(pending.launchAt + 17, 16);
+    assert.equal(rocket.x, before);
+    fireworks.destroy();
+  }
+});
+
+test('finale preserves queued text and leaves room for other launches', async () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({ show: { maxRockets: 3 } });
+  await fireworks.launchText('You', { exclusive: false });
+  const pending = fireworks.pendingRockets[0];
+  fireworks.launchFinale();
+  assert.ok(fireworks.pendingRockets.includes(pending));
+  for (let i = 0; i < 8; i++) fireworks._createRocket({ finale: true });
+  fireworks._update(pending.launchAt + 1, 0);
+  assert.ok(fireworks.rockets.some(r => r.textPlan), 'text launches despite finale rocket load');
+  fireworks.state = 'finale';
+  const before = fireworks.rockets.length;
+  fireworks.launch({ type: 'peony' });
+  assert.equal(fireworks.rockets.length, before + 1, 'manual shells launch during finale');
+  for (let i = 0; i < 6; i++) fireworks.launch({ type: 'peony' });
+  assert.equal(fireworks.rockets.length, before + 7, 'explicit launches are not dropped at maxRockets');
+  fireworks.destroy();
+});
+
 test('text can be shown without halting the rest of the show', () => {
   const { GrandFireworks } = createRuntime();
   const fireworks = new GrandFireworks({ show: { maxParticles: 4000 } });
@@ -2452,7 +2493,7 @@ test('the homepage holds the launch band at a fixed share of the viewport', () =
   );
 });
 
-test('the homepage fires text from two independent random intervals', () => {
+test('the homepage spaces text using one slower random interval', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
   // Around ten phrases, and a different one chosen each time.
@@ -2465,16 +2506,16 @@ test('the homepage fires text from two independent random intervals', () => {
   );
   assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'each launch picks one at random');
 
-  // Two firers, each re-arming itself somewhere in the next one to ten seconds. A fixed
+  // One firer re-arms between 25 and 45 seconds. A fixed
   // period would make every gap identical, which is the opposite of what was asked for.
-  assert.ok(/const TEXT_FIRERS = 2/.test(html), 'there must be two firers');
+  assert.ok(/const TEXT_FIRERS = 1/.test(html), 'there must be one firer');
   assert.ok(
-    /setTimeout\(textFireworkLoop, 1000 \+ Math\.random\(\) \* 9000\)/.test(html),
-    'each firer must re-arm itself between one and ten seconds later',
+    /setTimeout\(textFireworkLoop, 25000 \+ Math\.random\(\) \* 20000\)/.test(html),
+    'text must wait between 25 and 45 seconds',
   );
   assert.ok(
     /for \(let i = 0; i < TEXT_FIRERS; i\+\+\)/.test(html),
-    'both firers must be started',
+    'the text firer must be started',
   );
   const firing = html.slice(
     html.indexOf('function textFireworkLoop'),
@@ -2489,7 +2530,7 @@ test('the homepage walks a set series of areas for text, without stopping the sh
 
   assert.ok(/fireworks\.launchText\(randomFrom\(TEXT_PHRASES\)/.test(html), 'the page must launch text');
   assert.ok(
-    /setTimeout\(textFireworkLoop, 1000 \+ Math\.random\(\) \* 9000\)/.test(html),
+    /setTimeout\(textFireworkLoop, 25000 \+ Math\.random\(\) \* 20000\)/.test(html),
     'and keep doing it',
   );
   assert.ok(/BOOM/.test(html) && /Grand Fireworks/.test(html), 'the phrases must include the ones asked for');
@@ -2524,8 +2565,8 @@ test('the homepage walks a set series of areas for text, without stopping the sh
   assert.ok(!/exclusive\s*:/.test(launcher), 'the launcher must not re-impose the exclusive lock');
 });
 
-test('the homepage timed-show demo fires its cues in order, and can be cancelled', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+test('the dedicated timed-show demo fires its cues in order, and can be cancelled', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'examples', 'timed-show.html'), 'utf8');
 
   const script = html.match(/<script type="module" id="timed-demo-script">([\s\S]*?)<\/script>/);
   assert.ok(script, 'the demo script must be declared with an id so its source can be shown');
@@ -2558,11 +2599,7 @@ test('the homepage timed-show demo fires its cues in order, and can be cancelled
   // first, so every cue would fire twice.
   assert.ok(/timers\.forEach\(clearTimeout\)/.test(body), 'pending cues must be cancellable');
 
-  // The demo owns its own clicks: the page's click-to-burst must not fire inside it.
-  assert.ok(
-    /PAGE_CONTROLS = '[^']*#timed-demo/.test(html),
-    'the demo box must be excluded from click-to-burst',
-  );
+
 });
 
 test('the slim control bar fires a budgeted World Ender beside Random', () => {
