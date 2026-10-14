@@ -103,7 +103,11 @@
   const pageContent = document.querySelector('#page-content');
   const heroPlayground = document.querySelector('#hero-playground');
   const heroPlaygroundHome = heroPlayground.parentNode;
-  const heroPlaygroundNext = heroPlayground.nextSibling;
+  // An empty marker holds the panel's place in the page. Its load-time next sibling is the
+  // types dialog, which is later moved to <body> so it stays interactive in fullscreen; a
+  // saved reference to that node would no longer be a child here and insertBefore would throw.
+  const heroPlaygroundAnchor = document.createComment('hero-playground-home');
+  heroPlaygroundHome.insertBefore(heroPlaygroundAnchor, heroPlayground);
   const heroDragHandle = document.querySelector('#hero-drag-handle');
   const toggleBtn = document.querySelector('#toggle-btn');
   const panelCollapseBtn = document.querySelector('#panel-collapse');
@@ -321,7 +325,7 @@
   }
 
   function restorePanelToPage() {
-    heroPlaygroundHome.insertBefore(heroPlayground, heroPlaygroundNext);
+    heroPlaygroundAnchor.parentNode.insertBefore(heroPlayground, heroPlaygroundAnchor);
     heroPlayground.classList.remove('fullscreen-controls');
     setPanelCollapsed(false);
     resetPanelPosition();
