@@ -8,8 +8,6 @@
 (()=>{
   'use strict';
 
-  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-
   // History management
   const history=[];
   let cursor=-1;
@@ -38,7 +36,6 @@
       updated.mode='fullscreen';
       updated.autoStart=true;
       fireworks.setOptions(updated);
-      if(fireworks.root) fireworks.root.style.opacity=String(clamp(Number(cfg.visuals?.opacity??1),0,1));
       // Recolor existing particles
       const palette=fireworks._palette();
       if(palette&&palette.length){
@@ -102,7 +99,7 @@
 
   // Style dropdown
   document.querySelector('#lucky-style').addEventListener('change',function(){
-    if(fireworks){fireworks.setStyle(this.value);fireworks.setOpacity(1);}
+    if(fireworks){fireworks.setStyle(this.value);}
   });
   // Theme dropdown
   document.querySelector('#lucky-theme').addEventListener('change',function(){

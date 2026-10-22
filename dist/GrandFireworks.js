@@ -4976,7 +4976,8 @@
     /**
      * Randomizes the visual configuration for a fresh, unpredictable show.
      * Picks random palettes, performance presets, trail/bloom settings,
-     * and optionally a background gradient. Recolors existing particles.
+     * and optionally a background gradient. Leaves the layer opacity alone.
+     * Recolors existing particles.
      * @returns {Object} The generated configuration
      */
     feelingLucky() {
@@ -5006,7 +5007,6 @@
       const cfg = {
         colorTheme: currentTheme,
         visuals: {
-          opacity: unit(rand(0.15, 0.6)),
           trails: Math.random() < 0.85,
           trailFade: rand(0.06, 0.2),
           bloom: rand(0.7, 1.8),
@@ -5077,13 +5077,8 @@
             "linear-gradient(180deg, #101a4b, #040714)",
             "radial-gradient(circle at 50% 35%, #38175e, #080312 72%)",
           ]),
-          opacity: unit(rand(0.6, 1)),
         };
       this.setOptions(cfg);
-      if (this.root)
-        this.root.style.opacity = String(
-          clamp(Number(cfg.visuals.opacity ?? 1), 0, 1),
-        );
       // Recolor existing mid-air particles
       const palette = this._palette();
       if (palette && palette.length) {

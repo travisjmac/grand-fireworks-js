@@ -2788,6 +2788,23 @@ test('the builder style picker offers every engine style under its real name', (
     assert.ok(values.includes(style), `style picker is missing ${style}`);
 });
 
+test('feelingLucky leaves the layer opacity alone', () => {
+  const { GrandFireworks } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    visuals: { opacity: 0.8 },
+  });
+  const before = fireworks.root.style.opacity;
+  for (let i = 0; i < 20; i++) {
+    const cfg = fireworks.feelingLucky();
+    assert.equal(cfg.visuals.opacity, undefined, 'a lucky roll must not include a layer opacity');
+    assert.equal(cfg.background && cfg.background.opacity, undefined);
+  }
+  assert.equal(fireworks.options.visuals.opacity, 0.8);
+  assert.equal(fireworks.root.style.opacity, before);
+  fireworks.destroy();
+});
+
 test('Lucky example performs one randomization per click path', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'lucky.html'), 'utf8');
   const clickHandler = source.match(/#lucky-btn'[\s\S]*?addEventListener\('click',[\s\S]*?\n  \}\);/);

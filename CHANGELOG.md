@@ -10,6 +10,7 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ### Fixed
 
+- I'm Feeling Lucky and Random Config no longer fade the fireworks layer. A roll used to set the layer opacity to a random value between 0.15 and 0.6.
 - The homepage fullscreen **Exit** and **Show Page** buttons work again. Leaving fullscreen threw a `NotFoundError` and left the control panel stuck, because its saved restore position pointed at the firework type dialog that the page moves into `<body>` on load.
 
 ## [1.10.0] — October 5, 2026

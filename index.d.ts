@@ -641,7 +641,7 @@ export class GrandFireworks extends EventTarget {
   /** Sets master volume to 0 (muted) or restores the previous level. */
   setMuted(muted?: boolean): this;
 
-  /** Randomizes the visual configuration and applies it live. Returns the generated configuration. */
+  /** Randomizes the visual configuration and applies it live. Does not change layer opacity. Returns the generated configuration. */
   feelingLucky(): GrandFireworksOptions & { transition?: TransitionOptions };
 
   /** Deep-cloned snapshot of the current resolved options. */
