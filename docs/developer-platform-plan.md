@@ -1,6 +1,6 @@
 # Grand Fireworks JS Developer Platform Plan
 
-> **Superseded:** This plan is retained as historical implementation context. The Grand Fireworks JS repository is now maintenance-only. Future development of the broader animation engine and visual design studio belongs in the separate Papercloak Animation Studios repository.
+> **Superseded:** This plan is retained as historical implementation context. Grand Fireworks JS remains the fireworks engine. The broader animation studio belongs in the separate Papercloak Animation Studios repository.
 
 ## Purpose
 

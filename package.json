@@ -1,7 +1,7 @@
 {
   "name": "grand-fireworks-js",
-  "version": "1.10.0",
-  "description": "Photorealistic WebGL 2 fireworks engine with 15 shell types, multi-line text effects, adaptive performance, Canvas fallback, and a choreographed Super Grand Finale. Zero dependencies.",
+  "version": "1.11.0",
+  "description": "The best, most advanced, most powerful JavaScript fireworks ever made. Smooth as butter: WebGL 2, 15 shells, a 60fps high preset, 5,000 particles, text fireworks, and a Super Grand Finale. Zero dependencies.",
   "main": "./GrandFireworks.js",
   "types": "./index.d.ts",
   "browser": "./dist/GrandFireworks.min.js",

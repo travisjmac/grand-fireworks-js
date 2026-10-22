@@ -112,7 +112,7 @@
   </section>
   <button class="global-sound-toggle" id="global-sound-toggle" type="button">🔇 Sound off</button>
   <div class="reaper-flash" aria-hidden="true"></div>
-  <p class="credit">Grand Fireworks JS v1.5.0</p>
+  <p class="credit">Grand Fireworks JS v1.11.0</p>
   <div class="demo-controls" id="demo-controls" hidden aria-label="Demo controls">
     <strong>Demo controls</strong>
     <button id="hide-controls" type="button">Hide controls</button>
@@ -131,7 +131,7 @@
   <section class="show-complete" id="show-complete" hidden aria-label="Show complete"><div class="show-complete__card"><h2>Thanks for watching.</h2><p>The night is still glowing.</p><div class="show-complete__actions"><button id="continue-show" type="button">Keep watching</button><a href="../index.html">Project home</a><a href="feature-demos.html">More demos</a></div></div></section>
   <section class="scene-credits" id="scene-credits" hidden aria-label="Grand Fireworks credits"><div class="scene-credits__inner"><img class="scene-credits__logo" src="../assets/grand-fireworks-logo-v193ct.svg" alt="Grand Fireworks JS"><span class="scene-credits__by">By Travis MacDonald</span><span class="scene-credits__webgl">With WebGL, leave old sprites<br>and Canvas loops behind</span>15 custom shell types<br>Depth-staged launch horizon<br>World-space stereo sound<br>Close-field thunder booms<br>Text fireworks &amp; sequences<br>Mixed visual styles<br>Theme palettes<br>Super Grand Finale<br>World Ender chains<br>Adaptive performance<br>Canvas 2D fallback<br>Reduced-motion support<br>No dependencies<br><br>Public API<br>start · stop · pause · resume<br>clear · destroy · launch<br>launchText · launchTextSequence<br>cancelTextSequence<br>launchFinale · launchWorldEnder<br>finalize · setOptions · setOpacity<br>setZoom · setStyle · setColorTheme<br>enableSound · disableSound · setMuted<br>feelingLucky · getOptions · getStats</div></section>
   <audio id="moonlit-music" src="../assets/Clair_de_lune.mp3" preload="auto"></audio>
-  <script src="../GrandFireworks.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks.min.js"></script>
   <script>
     const fireworks = new GrandFireworks({
       container: '.fireworks-layer',

@@ -1,10 +1,10 @@
 # Grand Fireworks JS: AI Handoff
 
-## Project status: maintenance-only
+## Project status
 
-Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project intended to provide a broader visual animation engine and design studio for fireworks, rings, reveals, banners, presentation effects, and related compositions.
+Grand Fireworks JS is the fireworks engine. It stays stable, documented, and usable. **Papercloak Animation Studios** is a separate project for the broader visual animation platform: fireworks, rings, reveals, banners, presentation effects, and related compositions.
 
-Do not begin new developer-platform sprints or attempt to turn this repository into the Papercloak product. Preserve the current engine, package compatibility, documentation, examples, and demos. The destination repository link will be added when the Papercloak repository is published.
+Do not turn this repository into that studio. Keep the current engine, package compatibility, documentation, examples, and demos. The studio link will be added when its repository is published.
 
 Read this file before making changes. It is the technical and product context for a fresh AI or contributor. Treat it as a living handoff: update it whenever architecture, public API, important product decisions, demo ownership, release workflow, or planned next work materially changes.
 
@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Current release: **v1.10.0**
+- Repo version: **1.11.0**. The newest GitHub release tag is still **v1.10.0** until that tag is created. npm `latest` is still **1.6.5** until the package is published.
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -229,7 +229,13 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.10.0/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.11.0/dist/GrandFireworks.min.js"></script>
+```
+
+The homepage and example pages load `@latest`, which follows the newest GitHub release tag:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks.min.js"></script>
 ```
 
 For the moving development branch, use:
@@ -287,6 +293,6 @@ The renderer and physics stay in the core library. Do not delay a core release f
 9. `docs/product-roadmap.md` and `docs/interactive-flight-spec.md` only when planning future work.
 10. `docs/host-recipes.md` when wiring the engine into a page, a demo, or a game — it is the code-level companion to this handoff, covering the host render pass, point bursts and `reachTime`, text placement and exclusivity, and the horizon-follows-zoom pattern.
 
-## 12. Known documentation cleanup opportunity
+## 12. Demo delivery
 
-Some older standalone examples still contain historical version metadata such as `1.5.0`. They are not the primary showcase pages. Update them together in a dedicated documentation/version sweep rather than mixing that large mechanical change into an unrelated feature patch.
+The homepage and example pages load the jsDelivr `@latest` minified build and show version **1.11.0**. `@latest` stays on the previous release tag until `v1.11.0` is tagged and pushed. Historical changelog sections keep their original version titles.

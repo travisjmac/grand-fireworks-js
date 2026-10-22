@@ -2,14 +2,25 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
-## [Unreleased]
+## [1.11.0] — October 22, 2026
 
 ### Added
 
 - Source packages for React, Preact, Solid, Vue 3, Svelte, Angular, and a custom element, each with first-party types. They live in `packages/`, stay out of the core publish, and are not on npm yet. The README install section now includes the package table, browser logos, and coloured install commands.
+- The README and homepage note that the show runs amazingly even on older devices, and invite benchmarks on the issues tracker when a test hits a performance hiccup.
+- The README header now carries live npm version, Bundlephobia size, and monthly-download badges. Those badges follow the published npm package.
+- The README opens with what the library is, then install and usage. Release notes sit at the end, and GitHub renders the show-lifecycle Mermaid block as the chart. The status line calls it the fireworks engine. It does not call the project legacy.
+- Homepage and README search text calls it the best, most advanced, most powerful JavaScript fireworks ever made, and smooth as butter. The figures are the high preset: a 60fps target, 5,000 particles, 10 rockets, and 15 shell types.
+- A comparison with tsParticles says they are a particle platform with more than fireworks, and Grand Fireworks is the fireworks show.
+
+### Changed
+
+- The homepage and example pages load `https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks.min.js` so they follow the newest tagged release.
+- Version identifiers across the core package, wrappers, homepage, and examples are 1.11.0.
 
 ### Fixed
 
+- The React, Vue, and Svelte wrappers load the engine only after mount, and only when `window` and `document` exist. A server render in Next.js, Nuxt, or SvelteKit draws the container and leaves canvas setup to the browser.
 - I'm Feeling Lucky and Random Config no longer fade the fireworks layer. A roll used to set the layer opacity to a random value between 0.15 and 0.6.
 - The homepage fullscreen **Exit** and **Show Page** buttons work again. Leaving fullscreen threw a `NotFoundError` and left the control panel stuck, because its saved restore position pointed at the firework type dialog that the page moves into `<body>` on load.
 

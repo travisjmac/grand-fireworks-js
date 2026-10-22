@@ -1,6 +1,6 @@
 {
   "name": "@grand-fireworks/web",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Web component wrapper for grand-fireworks-js. The engine stays in the core package.",
   "type": "module",
   "main": "./index.js",
@@ -17,7 +17,7 @@
     "README.md"
   ],
   "peerDependencies": {
-    "grand-fireworks-js": "^1.10.0"
+    "grand-fireworks-js": "^1.11.0"
   },
   "license": "MIT",
   "repository": {

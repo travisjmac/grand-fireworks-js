@@ -1,7 +1,6 @@
 import { h } from 'preact'
 import { forwardRef } from 'preact/compat'
 import { useEffect, useImperativeHandle, useRef } from 'preact/hooks'
-import GrandFireworksEngine from 'grand-fireworks-js'
 
 function libraryOptions(options) {
   const next = { ...(options || {}) }
@@ -10,11 +9,24 @@ function libraryOptions(options) {
   return next
 }
 
+function browserDocument() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined'
+}
+
+function engineFrom(mod) {
+  const candidate = mod && mod.default ? mod.default : mod
+  return typeof candidate === 'function' ? candidate : candidate.default
+}
+
 const GrandFireworksView = forwardRef(function GrandFireworksView(props, ref) {
   const { options, autoStart = false, children, ...rest } = props
   const container = useRef(null)
   const fireworks = useRef(null)
+  const optionsRef = useRef(options)
+  const autoStartRef = useRef(autoStart)
   const skipOptions = useRef(true)
+  optionsRef.current = options
+  autoStartRef.current = autoStart
 
   useImperativeHandle(ref, () => ({
     get instance() {
@@ -23,15 +35,23 @@ const GrandFireworksView = forwardRef(function GrandFireworksView(props, ref) {
   }))
 
   useEffect(() => {
-    const instance = new GrandFireworksEngine({
-      ...libraryOptions(options),
-      container: container.current,
-      autoStart: false,
+    if (!browserDocument() || !container.current) return undefined
+    let disposed = false
+    let instance = null
+    import('grand-fireworks-js').then((mod) => {
+      if (disposed || !container.current) return
+      const Engine = engineFrom(mod)
+      instance = new Engine({
+        ...libraryOptions(optionsRef.current),
+        container: container.current,
+        autoStart: false,
+      })
+      fireworks.current = instance
+      if (autoStartRef.current) instance.start()
     })
-    fireworks.current = instance
-    if (autoStart) instance.start()
     return () => {
-      instance.destroy()
+      disposed = true
+      if (instance) instance.destroy()
       fireworks.current = null
     }
   }, [])

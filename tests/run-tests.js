@@ -843,7 +843,7 @@ test('the Fireworks Command page provides every element the game queries', () =>
 
   // Load order matters: the engine defines GrandFireworks, the scene defines
   // FireworksCommandScene, and only then can the game construct both.
-  const engineAt = html.indexOf('GrandFireworks.js'),
+  const engineAt = html.indexOf('GrandFireworks.min.js'),
     sceneAt = html.indexOf('scene-renderer.js'),
     gameAt = html.indexOf('game.js');
   assert.ok(engineAt >= 0 && sceneAt >= 0 && gameAt >= 0, 'all three scripts must be loaded');
@@ -2883,7 +2883,7 @@ test('framework packages ship first-party types and stay out of the core package
     const dir = path.join(__dirname, '..', 'packages', name);
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
     assert.equal(pkg.name, `@grand-fireworks/${name}`);
-    assert.equal(pkg.peerDependencies['grand-fireworks-js'], '^1.10.0');
+    assert.equal(pkg.peerDependencies['grand-fireworks-js'], '^1.11.0');
     assert.equal(pkg.types, './index.d.ts');
     assert.equal(pkg.dependencies, undefined);
     if (spec.peer) assert.ok(pkg.peerDependencies[spec.peer], `${name} is missing its framework peer`);
@@ -2891,6 +2891,15 @@ test('framework packages ship first-party types and stay out of the core package
     assert.match(source, /grand-fireworks-js/);
     assert.match(source, /destroy\(/);
     assert.match(source, /setOptions\(/);
+    const browserMount = { react: 'useEffect', preact: 'useEffect', vue: 'onMounted', svelte: 'onMount' };
+    if (browserMount[name]) {
+      assert.match(source, new RegExp(browserMount[name]));
+      assert.match(source, /typeof window/);
+      assert.match(source, /typeof document/);
+      assert.match(source, /import\('grand-fireworks-js'\)/);
+      assert.doesNotMatch(source, /from 'grand-fireworks-js'/);
+    }
+    if (name === 'react') assert.match(source, /'use client'/);
     const types = fs.readFileSync(path.join(dir, 'index.d.ts'), 'utf8');
     assert.match(types, /grand-fireworks-js/);
     assert.match(readme, new RegExp(`@grand-fireworks/${name}`));

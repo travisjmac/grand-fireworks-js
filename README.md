@@ -1,39 +1,26 @@
 # GrandFireworks
 
-> **Project status:** Grand Fireworks JS is now a stable legacy/showcase project. New product development has moved to **Papercloak Animation Studios**, a separate project for the broader visual animation platform. This repository remains available for its existing fireworks engine, documentation, examples, and demos. The Papercloak project link will be added here once its repository is published.
-
-Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.10.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js)
-
-## Version 1.10.0
-
-A dedicated Configuration & API Guide now includes editable initialisation settings, methods and properties, contextual help and one-click Workbench previews. The Workbench shares the editor and adds background colour/gradient/image controls. Dedicated Default Show and Happy Birthday Timed Show demos showcase the engine with a live cue timeline and visible source.
-
-Text rockets now arrive at their fitted message positions. Finales preserve queued effects, and explicit launches are no longer discarded at the automatic-show rocket limit.
-
-## Version 1.9.2
-
-The homepage control panel is rebuilt. It **keeps its controls when slimmed** instead of hiding them, gains an **Auto text** switch for the random messages, and adds a **firework type picker** — a Types button in the bar and in the panel opens a dialog of all fifteen shells with drawn previews and checkboxes, applied live. The launch band also now holds a fixed 90% of the view at every zoom so bursts are not clipped at the edges.
-
-## Version 1.9.1
-
-The homepage gains a **timed-show demo** beside Fireworks Command: its own contained instance, a clock counting the time since the show started, the cue that just fired, a Replay button, and a collapsible panel showing the source that ran. Nine cues fire shells and text at set times, then a finale, and the show loops. It only runs while it is on screen.
-
-## Version 1.9.0
-
-Text fireworks can be **placed and tilted**: `textFirework.horizontalPosition` sets where the block sits across the screen, and `textFirework.tilt` turns it, by a fixed angle or a fresh one from a `[min, max]` range on each launch. Text now **scales with the camera zoom**, and the Config Workbench has sliders for position and tilt. It also fixes `start()`/`stop()` under a host render pass, overlapping World Enders, options lost when a World Ender ended, and text off centre on very narrow screens.
-
-Version 1.8.0 let a host drive the engine. **`setRenderPass(callback)`** lends the engine's canvas to your own drawing code — your scene is composited after the canvas is cleared and before the fireworks are drawn, so it sits behind them — and hands frame pacing to you, because the engine stops its own loop. **`renderFrame(dt)`** advances the simulation and draws one frame, with `dt` capped at 50 ms and `renderFrame(0)` rendering without advancing. **`placeburst()`** detonates a shell at a point, or at an element's centre, with no rocket and no flight time, fitted to an on-screen `radius`. **`launchTo()`** flies a real rocket from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. Fireworks Command is rebuilt on that API, and rockets with `gravity: 0` no longer fall.
-
-Version 1.7.1 made text fireworks shrink to fit narrow screens instead of being squeezed tall and thin, fixed the Workbench's **Old School** style falling back to Medium, and added a **Show Fullscreen** shortcut plus links from the homepage controls to the Config Workbench and Feature Demo.
-
-Version 1.7.0 shipped first-party TypeScript declarations, fixed a set of engine bugs (Canvas 2D memory growth, `durationMode: 'immediate'`, mobile point sizes, iOS audio unlock, resize churn, and webfont timing in text fireworks), made the guided builder's config import accept pasted JavaScript as well as JSON, fixed unreadable dropdowns, and gave the homepage a compact, phone-friendly fullscreen control bar. See [CHANGELOG.md](CHANGELOG.md) for the complete release notes.
+The best, most advanced, most powerful JavaScript fireworks ever made. Smooth as butter.
 
 Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-style bloom, star cores, rocket exhaust, explosion flashes, secondary crackles, specialized shell geometry, grouped salvos, and a Canvas 2D fallback. The class also includes graceful stopping, an optional finale, fullscreen or contained placement, timed shows, performance presets, and synchronized multi-line hybrid text fireworks.
 
-Open `index.html` for complete documentation and links to working examples.
+The high preset aims at **60fps**, with **5,000** particles and **10** rockets in the air, across **15** shell types. Zero runtime dependencies.
 
-Maintainers and AI collaborators should begin with the detailed [project handoff](docs/AI_HANDOFF.md).
+Created by **Travis MacDonald** on July 15, 2026.  
+Version **1.11.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js) · [Live demos](https://travisjmac.github.io/grand-fireworks-js/) · [Changelog](CHANGELOG.md)
+
+[![npm version](https://img.shields.io/npm/v/grand-fireworks-js.svg?style=for-the-badge&color=cb3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/grand-fireworks-js)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/grand-fireworks-js?style=for-the-badge)](https://bundlephobia.com/result?p=grand-fireworks-js)
+[![npm downloads](https://img.shields.io/npm/dm/grand-fireworks-js?style=for-the-badge&color=blue)](https://www.npmjs.com/package/grand-fireworks-js)
+![TypeScript](https://img.shields.io/badge/TypeScript-types-3178c6?style=for-the-badge&logo=typescript&logoColor=white)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen?style=for-the-badge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+> **Project status:** Grand Fireworks JS is the fireworks engine. It is stable, documented, and ready to use. **Papercloak Animation Studios** is a separate project for the broader visual animation platform. That link will be added here once its repository is published.
+
+**Start here:** [Features](#features) · [tsParticles](#grand-fireworks-or-tsparticles) · [Install](#installation) · [CDN](#cdn) · [Usage](#usage) · [Examples](#live-documentation-and-examples) · [Configuration](#complete-configuration-reference) · [Release notes](#release-notes)
+
+Open [`index.html`](index.html) for the full guide beside a running show.
 
 ## Features
 
@@ -45,9 +32,47 @@ Maintainers and AI collaborators should begin with the detailed [project handoff
 - 🔤 Multi-line text fireworks, finales, and a World Ender
 - 🎮 Host-driven rendering for games and custom scenes
 
-## Browsers support
+## Grand Fireworks or tsParticles
+
+[tsParticles](https://particles.js.org/) is a particle platform. It does backgrounds, confetti, ribbons, presets, and a fireworks shortcut. It has more than fireworks. That is a different product.
+
+Grand Fireworks is the fireworks show. Fifteen shell types launch and burst. Text writes itself in the sky. A finale closes the night. The high preset aims at 60fps with 5,000 particles and 10 rockets, and the core package has zero runtime dependencies. When the job is fireworks, this is the most advanced and most powerful one ever made. Smooth as butter.
+
+| | Grand Fireworks JS | tsParticles |
+| --- | --- | --- |
+| The job | A fireworks show, from launch to burst to finale | A general particle engine, plus many other effects |
+| What else it does | Text fireworks, timed shows, and a game on the host API | Backgrounds, confetti, ribbons, presets, and published framework packages |
+| Shells | 15 pyrotechnic types. Rockets fly, then burst | Particles shaped into an effect, including a fireworks preset |
+| The picture | WebGL 2 trails, bloom, and star cores | A configurable particle system. Fireworks is one call, not the product |
+| The core | Zero runtime dependencies | A bundle you choose. The platform is the point |
+
+## Show lifecycle
+
+A show starts idle. `start()` runs it. `stop()`, or a duration running out, lets rockets already in the air finish. A finale plays before the fade when one is armed. A launch on an idle or stopped engine plays that one effect, then fades when it is done. `pause()` remembers the state it left. `destroy()` ends the instance.
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> running : start()
+    running --> paused : pause()
+    paused --> running : resume()
+    running --> finishing : stop() or the duration elapses
+    finishing --> finale : a finale is armed
+    finishing --> fading : the sky is clear
+    finale --> fading : the bursts finish
+    idle --> manual : launch() while idle
+    stopped --> manual : launch() while stopped
+    manual --> fading : the effects finish
+    fading --> stopped
+    running --> destroyed : destroy()
+    stopped --> destroyed : destroy()
+```
+
+## Browser support
 
 Current versions. The engine uses WebGL 2 when it is available and falls back to Canvas 2D.
+
+It runs amazingly even on older devices. If you hit a performance hiccup while testing, please post your benchmarks on the [issues tracker](https://github.com/travisjmac/grand-fireworks-js/issues).
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png)<br/>Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)<br/>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)<br/>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)<br/>Safari | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari-ios/safari-ios_48x48.png" alt="iOS Safari" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari-ios/safari-ios_48x48.png)<br/>iOS Safari | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png" alt="Opera" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png)<br/>Opera |
 | --- | --- | --- | --- | --- | --- |
@@ -81,7 +106,7 @@ pnpm add grand-fireworks-js
 
 | Package | Status | Description |
 | --- | --- | --- |
-| [grand-fireworks-js](#grand-fireworks-js) | [![core](https://img.shields.io/badge/core-1.10.0-orange)](https://github.com/travisjmac/grand-fireworks-js) | Vanilla JS |
+| [grand-fireworks-js](#grand-fireworks-js) | [![core](https://img.shields.io/badge/core-1.11.0-orange)](https://github.com/travisjmac/grand-fireworks-js) | Vanilla JS |
 | [@grand-fireworks/react](#grand-fireworksreact) | [![React](https://img.shields.io/badge/React-source-61DAFB?logo=react&logoColor=black)](packages/react) | React component |
 | [@grand-fireworks/preact](#grand-fireworkspreact) | [![Preact](https://img.shields.io/badge/Preact-source-673AB8?logo=preact&logoColor=white)](packages/preact) | Preact component |
 | [@grand-fireworks/solid](#grand-fireworkssolid) | [![Solid](https://img.shields.io/badge/Solid-source-2C4F7C?logo=solid&logoColor=white)](packages/solid) | Solid component |
@@ -94,16 +119,16 @@ The framework packages live in `packages/` and ship their own `.d.ts` files. The
 
 ## CDN
 
-For a no-build webpage, use the stable CDN filename:
+For a no-build webpage, load the latest tagged release. The homepage and the example pages use this URL, so they stay on the newest release:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@main/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@latest/dist/GrandFireworks.min.js"></script>
 ```
 
-To stay on one release, pin its tag:
+`@latest` follows the newest GitHub release tag. `@main` follows the development branch. To stay on one release, pin its tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.10.0/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.11.0/dist/GrandFireworks.min.js"></script>
 ```
 
 ### TypeScript
@@ -139,7 +164,9 @@ npm run typecheck
 
 ## Usage
 
-#### grand-fireworks-js
+The core package is the engine. Each framework package only mounts it.
+
+### grand-fireworks-js
 
 ```js
 import GrandFireworks from 'grand-fireworks-js'
@@ -148,7 +175,7 @@ const fireworks = new GrandFireworks({ baseStyle: 'cinematic' })
 fireworks.start()
 ```
 
-#### @grand-fireworks/react
+### @grand-fireworks/react
 
 <p><img alt="npm install @grand-fireworks/react" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Freact-61DAFB?style=for-the-badge&logo=react&logoColor=black"></p>
 
@@ -162,7 +189,7 @@ import { GrandFireworks } from '@grand-fireworks/react'
 <GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
 ```
 
-#### @grand-fireworks/preact
+### @grand-fireworks/preact
 
 <p><img alt="npm install @grand-fireworks/preact" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fpreact-673AB8?style=for-the-badge&logo=preact&logoColor=white"></p>
 
@@ -176,7 +203,7 @@ import { GrandFireworks } from '@grand-fireworks/preact'
 <GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
 ```
 
-#### @grand-fireworks/solid
+### @grand-fireworks/solid
 
 <p><img alt="npm install @grand-fireworks/solid" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fsolid-2C4F7C?style=for-the-badge&logo=solid&logoColor=white"></p>
 
@@ -190,7 +217,7 @@ import { GrandFireworks } from '@grand-fireworks/solid'
 <GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
 ```
 
-#### @grand-fireworks/vue
+### @grand-fireworks/vue
 
 <p><img alt="npm install @grand-fireworks/vue" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fvue-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white"></p>
 
@@ -202,7 +229,7 @@ npm install @grand-fireworks/vue
 <GrandFireworks :auto-start="true" :options="{ baseStyle: 'cinematic' }" />
 ```
 
-#### @grand-fireworks/svelte
+### @grand-fireworks/svelte
 
 <p><img alt="npm install @grand-fireworks/svelte" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fsvelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white"></p>
 
@@ -214,7 +241,7 @@ npm install @grand-fireworks/svelte
 <GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
 ```
 
-#### @grand-fireworks/angular
+### @grand-fireworks/angular
 
 <p><img alt="npm install @grand-fireworks/angular" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fangular-DD0031?style=for-the-badge&logo=angular&logoColor=white"></p>
 
@@ -226,7 +253,7 @@ npm install @grand-fireworks/angular
 <grand-fireworks [autoStart]="true" [options]="{ baseStyle: 'cinematic' }"></grand-fireworks>
 ```
 
-#### @grand-fireworks/web
+### @grand-fireworks/web
 
 <p><img alt="npm install @grand-fireworks/web" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fweb-0A84FF?style=for-the-badge&logo=webcomponentsdotorg&logoColor=white"></p>
 
@@ -240,7 +267,7 @@ npm install @grand-fireworks/web
 
 ## Live documentation and examples
 
-After GitHub Pages is enabled for the repository, the complete interactive documentation will be available at:
+The running guide and the demos are on GitHub Pages:
 
 **[Open the Grand Fireworks JS live documentation](https://travisjmac.github.io/grand-fireworks-js/)**
 
@@ -475,10 +502,6 @@ function applyZoom(zoom) {
 ```
 
 At `1 / zoom` the launch zone matches the visible width exactly, and the per-launch rocket count — `Math.min(show.launchHorizon, 1 / zoom)`, which exists to hold density steady as the field widens — is no longer capped below the area it has to fill. Call it from every control that moves the camera, including style presets, since a preset can carry its own `visuals.zoom`.
-
-Run the dependency-free regression suite with `npm test`, the declaration
-contract check with `npm run typecheck`, and regenerate distribution builds
-with `npm run build`.
 
 [Open the Detailed Config Guide](detailed-config-guide.html) for an indexed, expandable explanation of every setting.
 
@@ -738,3 +761,41 @@ console.log(fireworks.getOptions()); // actual resolved settings
 ### Shell names for show.enabledTypes
 
 `grand_peony`, `imperial_chrysanthemum`, `weeping_willow`, `royal_palm`, `diamond_ring`, `crossette_supreme`, `golden_brocade`, `dragon_fish`, `majestic_comet`, `cascading_horsetail`, `starburst`, `glitter_nova`, `crown_jewel`, `thunder_clap`, `galactic_spiral`. Use `'all'` to allow every regular shell.
+
+## Release notes
+
+The full history is in [CHANGELOG.md](CHANGELOG.md). Recent releases, in short:
+
+### Version 1.11.0
+
+React, Preact, Solid, Vue, Svelte, Angular, and web-component wrappers now live beside the core package, each with first-party types. The React, Vue, and Svelte wrappers wait until the page is in the browser before they touch canvas or WebGL, so a Next.js, Nuxt, or SvelteKit server render does not crash. I'm Feeling Lucky no longer fades the fireworks layer. The homepage and the example pages load the latest tagged CDN build.
+
+### Version 1.10.0
+
+A dedicated Configuration & API Guide now includes editable initialisation settings, methods and properties, contextual help, and one-click Workbench previews. The Workbench shares the editor and adds background colour/gradient/image controls. Dedicated Default Show and Happy Birthday Timed Show demos showcase the engine with a live cue timeline and visible source.
+
+Text rockets now arrive at their fitted message positions. Finales preserve queued effects, and explicit launches are no longer discarded at the automatic-show rocket limit.
+
+### Version 1.9.2
+
+The homepage control panel is rebuilt. It **keeps its controls when slimmed** instead of hiding them, gains an **Auto text** switch for the random messages, and adds a **firework type picker** — a Types button in the bar and in the panel opens a dialog of all fifteen shells with drawn previews and checkboxes, applied live. The launch band also now holds a fixed 90% of the view at every zoom so bursts are not clipped at the edges.
+
+### Version 1.9.1
+
+The homepage gains a **timed-show demo** beside Fireworks Command: its own contained instance, a clock counting the time since the show started, the cue that just fired, a Replay button, and a collapsible panel showing the source that ran. Nine cues fire shells and text at set times, then a finale, and the show loops. It only runs while it is on screen.
+
+### Version 1.9.0
+
+Text fireworks can be **placed and tilted**: `textFirework.horizontalPosition` sets where the block sits across the screen, and `textFirework.tilt` turns it, by a fixed angle or a fresh one from a `[min, max]` range on each launch. Text now **scales with the camera zoom**, and the Config Workbench has sliders for position and tilt. It also fixes `start()`/`stop()` under a host render pass, overlapping World Enders, options lost when a World Ender ended, and text off centre on very narrow screens.
+
+Version 1.8.0 let a host drive the engine. **`setRenderPass(callback)`** lends the engine's canvas to your own drawing code — your scene is composited after the canvas is cleared and before the fireworks are drawn, so it sits behind them — and hands frame pacing to you, because the engine stops its own loop. **`renderFrame(dt)`** advances the simulation and draws one frame, with `dt` capped at 50 ms and `renderFrame(0)` rendering without advancing. **`placeburst()`** detonates a shell at a point, or at an element's centre, with no rocket and no flight time, fitted to an on-screen `radius`. **`launchTo()`** flies a real rocket from an origin and travel time you supply, so a game's own projectile logic and its visuals stay in lockstep. Fireworks Command is rebuilt on that API, and rockets with `gravity: 0` no longer fall.
+
+Version 1.7.1 made text fireworks shrink to fit narrow screens instead of being squeezed tall and thin, fixed the Workbench's **Old School** style falling back to Medium, and added a **Show Fullscreen** shortcut plus links from the homepage controls to the Config Workbench and Feature Demo.
+
+Version 1.7.0 shipped first-party TypeScript declarations, fixed a set of engine bugs (Canvas 2D memory growth, `durationMode: 'immediate'`, mobile point sizes, iOS audio unlock, resize churn, and webfont timing in text fireworks), made the guided builder's config import accept pasted JavaScript as well as JSON, fixed unreadable dropdowns, and gave the homepage a compact, phone-friendly fullscreen control bar.
+
+## Develop
+
+Run the regression suite with `npm test`, the declaration check with `npm run typecheck`, and regenerate distribution builds with `npm run build`.
+
+Maintainers and AI collaborators should begin with the [project handoff](docs/AI_HANDOFF.md).

@@ -6,10 +6,10 @@
  * Website: http://travisandjoelyweareaperfect.fit/
  * Repository: https://github.com/travisjmac/grand-fireworks-js
  * Created: July 15, 2026
- * Version: 1.10.0
+ * Version: 1.11.0
  *
  * @author Travis MacDonald
- * @version 1.10.0
+ * @version 1.11.0
  * @since 2026-07-15
  * @see http://travisandjoelyweareaperfect.fit/
  * @see https://github.com/travisjmac/grand-fireworks-js
@@ -5145,7 +5145,7 @@
    *  (browser) and via module.exports (Node/CommonJS).
    * ======================================================================== */
 
-  GrandFireworks.VERSION = "1.10.0";
+  GrandFireworks.VERSION = "1.11.0";
   GrandFireworks.DEFAULTS = DEFAULTS;
   GrandFireworks.PRESETS = PRESETS;
   GrandFireworks.TYPES = TYPES;

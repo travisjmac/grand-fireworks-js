@@ -17,3 +17,5 @@ export function Show() {
 ```
 
 `ref.current.instance` is the engine. The component calls `destroy()` on unmount and `setOptions()` when `options` changes.
+
+The engine is loaded inside `useEffect`, after `window` and `document` exist. Next.js can render the component on the server. The file is marked `'use client'`.

@@ -1,6 +1,6 @@
 {
   "name": "@grand-fireworks/angular",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Angular lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
   "type": "module",
   "main": "./index.ts",
@@ -18,7 +18,7 @@
   ],
   "peerDependencies": {
     "@angular/core": ">=16",
-    "grand-fireworks-js": "^1.10.0"
+    "grand-fireworks-js": "^1.11.0"
   },
   "license": "MIT",
   "repository": {

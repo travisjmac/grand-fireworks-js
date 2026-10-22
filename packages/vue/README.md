@@ -19,3 +19,5 @@ import { GrandFireworks } from '@grand-fireworks/vue'
 ```
 
 A template ref's `instance` is the engine. The component calls `destroy()` on unmount and `setOptions()` when `options` changes.
+
+The engine is loaded inside `onMounted`, after `window` and `document` exist. Nuxt can render the component on the server.

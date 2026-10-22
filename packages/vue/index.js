@@ -1,11 +1,19 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import GrandFireworksEngine from 'grand-fireworks-js'
 
 function libraryOptions(options) {
   const next = { ...(options || {}) }
   delete next.container
   delete next.autoStart
   return next
+}
+
+function browserDocument() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined'
+}
+
+function engineFrom(mod) {
+  const candidate = mod && mod.default ? mod.default : mod
+  return typeof candidate === 'function' ? candidate : candidate.default
 }
 
 export const GrandFireworks = defineComponent({
@@ -17,6 +25,8 @@ export const GrandFireworks = defineComponent({
   setup(props, { expose, slots }) {
     const container = ref(null)
     const fireworks = ref(null)
+    const optionsRef = ref(props.options)
+    let disposed = false
 
     expose({
       get instance() {
@@ -24,24 +34,31 @@ export const GrandFireworks = defineComponent({
       },
     })
 
-    onMounted(() => {
-      const instance = new GrandFireworksEngine({
-        ...libraryOptions(props.options),
-        container: container.value,
-        autoStart: false,
-      })
-      fireworks.value = instance
-      if (props.autoStart) instance.start()
-    })
-
     watch(
       () => props.options,
       (options) => {
+        optionsRef.value = options
         if (fireworks.value) fireworks.value.setOptions(libraryOptions(options))
       },
     )
 
+    onMounted(() => {
+      if (!browserDocument() || !container.value) return
+      import('grand-fireworks-js').then((mod) => {
+        if (disposed || !container.value) return
+        const Engine = engineFrom(mod)
+        const instance = new Engine({
+          ...libraryOptions(optionsRef.value),
+          container: container.value,
+          autoStart: false,
+        })
+        fireworks.value = instance
+        if (props.autoStart) instance.start()
+      })
+    })
+
     onBeforeUnmount(() => {
+      disposed = true
       if (fireworks.value) fireworks.value.destroy()
       fireworks.value = null
     })

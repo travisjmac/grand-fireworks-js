@@ -1,6 +1,5 @@
 <script>
   import { onDestroy, onMount } from 'svelte'
-  import GrandFireworksEngine from 'grand-fireworks-js'
 
   export let options = {}
   export let autoStart = false
@@ -8,6 +7,7 @@
   let container
   let fireworks = null
   let applied = options
+  let disposed = false
 
   function libraryOptions(value) {
     const next = { ...(value || {}) }
@@ -16,13 +16,28 @@
     return next
   }
 
+  function browserDocument() {
+    return typeof window !== 'undefined' && typeof document !== 'undefined'
+  }
+
+  function engineFrom(mod) {
+    const candidate = mod && mod.default ? mod.default : mod
+    return typeof candidate === 'function' ? candidate : candidate.default
+  }
+
   onMount(() => {
-    fireworks = new GrandFireworksEngine({
-      ...libraryOptions(options),
-      container,
-      autoStart: false,
+    if (!browserDocument() || !container) return
+    import('grand-fireworks-js').then((mod) => {
+      if (disposed || !container) return
+      const Engine = engineFrom(mod)
+      fireworks = new Engine({
+        ...libraryOptions(options),
+        container,
+        autoStart: false,
+      })
+      applied = options
+      if (autoStart) fireworks.start()
     })
-    if (autoStart) fireworks.start()
   })
 
   $: if (fireworks && options !== applied) {
@@ -31,6 +46,7 @@
   }
 
   onDestroy(() => {
+    disposed = true
     if (fireworks) fireworks.destroy()
     fireworks = null
   })

@@ -125,9 +125,17 @@ h1 {
   margin: 0;
   color: var(--gold);
 }
+header h1.claim {
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  line-height: 1.25;
+  font-weight: 750;
+  max-width: 860px;
+  margin: 0 auto 12px;
+  color: #f7f8ff;
+}
 h2 {
   margin-top: 48px;
-  scroll-margin-top: 76px;
+  scroll-margin-top: 112px;
 }
 h3 {
   margin-top: 30px;

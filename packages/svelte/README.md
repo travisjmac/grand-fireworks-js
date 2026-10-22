@@ -17,3 +17,5 @@ This package is source in the repository and is not published to npm yet.
 ```
 
 Bind the component and call `instance()` for the engine. The component calls `destroy()` on destroy and `setOptions()` when `options` changes.
+
+The engine is loaded inside `onMount`, after `window` and `document` exist. SvelteKit can render the component on the server.
