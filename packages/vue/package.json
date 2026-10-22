@@ -1,0 +1,29 @@
+{
+  "name": "@grand-fireworks/vue",
+  "version": "1.10.0",
+  "description": "Vue 3 lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "grand-fireworks-js": "^1.10.0",
+    "vue": ">=3.2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/travisjmac/grand-fireworks-js.git",
+    "directory": "packages/vue"
+  }
+}

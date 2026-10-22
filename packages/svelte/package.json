@@ -1,0 +1,30 @@
+{
+  "name": "@grand-fireworks/svelte",
+  "version": "1.10.0",
+  "description": "Svelte lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
+  "type": "module",
+  "main": "./GrandFireworks.svelte",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "svelte": "./GrandFireworks.svelte",
+      "default": "./GrandFireworks.svelte"
+    }
+  },
+  "files": [
+    "GrandFireworks.svelte",
+    "index.d.ts",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "grand-fireworks-js": "^1.10.0",
+    "svelte": ">=3.50"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/travisjmac/grand-fireworks-js.git",
+    "directory": "packages/svelte"
+  }
+}

@@ -4,6 +4,10 @@ All notable changes to Grand Fireworks JS are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Source packages for React, Preact, Solid, Vue 3, Svelte, Angular, and a custom element, each with first-party types. They live in `packages/`, stay out of the core publish, and are not on npm yet. The README install section now includes the package table, browser logos, and coloured install commands.
+
 ### Fixed
 
 - The homepage fullscreen **Exit** and **Show Page** buttons work again. Leaving fullscreen threw a `NotFoundError` and left the control panel stuck, because its saved restore position pointed at the firework type dialog that the page moves into `<body>` on load.

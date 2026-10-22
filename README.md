@@ -35,11 +35,64 @@ Open `index.html` for complete documentation and links to working examples.
 
 Maintainers and AI collaborators should begin with the detailed [project handoff](docs/AI_HANDOFF.md).
 
-## Install
+## Features
 
-```bash
+- 🎆 Photorealistic shells, long-exposure trails, bloom, and star cores
+- ⚙️ Flexible [configuration](#show), styles, themes, and timed shows
+- 📦 Zero runtime dependencies in the core package
+- 📜 First-party [TypeScript](#typescript) declarations
+- 🖼️ WebGL 2 first, with a Canvas 2D fallback
+- 🔤 Multi-line text fireworks, finales, and a World Ender
+- 🎮 Host-driven rendering for games and custom scenes
+
+## Browsers support
+
+Current versions. The engine uses WebGL 2 when it is available and falls back to Canvas 2D.
+
+| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png)<br/>Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)<br/>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)<br/>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)<br/>Safari | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari-ios/safari-ios_48x48.png" alt="iOS Safari" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari-ios/safari-ios_48x48.png)<br/>iOS Safari | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png" alt="Opera" width="24px" height="24px" />](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png)<br/>Opera |
+| --- | --- | --- | --- | --- | --- |
+| ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+
+## Installation
+
+<p>
+  <img alt="npm install grand-fireworks-js" src="https://img.shields.io/badge/npm-install%20grand--fireworks--js-CB3837?style=for-the-badge&logo=npm&logoColor=white">
+</p>
+
+```sh
 npm install grand-fireworks-js
 ```
+
+<p>
+  <img alt="yarn add grand-fireworks-js" src="https://img.shields.io/badge/yarn-add%20grand--fireworks--js-2C8EBB?style=for-the-badge&logo=yarn&logoColor=white">
+</p>
+
+```sh
+yarn add grand-fireworks-js
+```
+
+<p>
+  <img alt="pnpm add grand-fireworks-js" src="https://img.shields.io/badge/pnpm-add%20grand--fireworks--js-F69220?style=for-the-badge&logo=pnpm&logoColor=white">
+</p>
+
+```sh
+pnpm add grand-fireworks-js
+```
+
+| Package | Status | Description |
+| --- | --- | --- |
+| [grand-fireworks-js](#grand-fireworks-js) | [![core](https://img.shields.io/badge/core-1.10.0-orange)](https://github.com/travisjmac/grand-fireworks-js) | Vanilla JS |
+| [@grand-fireworks/react](#grand-fireworksreact) | [![React](https://img.shields.io/badge/React-source-61DAFB?logo=react&logoColor=black)](packages/react) | React component |
+| [@grand-fireworks/preact](#grand-fireworkspreact) | [![Preact](https://img.shields.io/badge/Preact-source-673AB8?logo=preact&logoColor=white)](packages/preact) | Preact component |
+| [@grand-fireworks/solid](#grand-fireworkssolid) | [![Solid](https://img.shields.io/badge/Solid-source-2C4F7C?logo=solid&logoColor=white)](packages/solid) | Solid component |
+| [@grand-fireworks/vue](#grand-fireworksvue) | [![Vue](https://img.shields.io/badge/Vue-source-42B883?logo=vuedotjs&logoColor=white)](packages/vue) | Vue 3 component |
+| [@grand-fireworks/svelte](#grand-fireworkssvelte) | [![Svelte](https://img.shields.io/badge/Svelte-source-FF3E00?logo=svelte&logoColor=white)](packages/svelte) | Svelte component |
+| [@grand-fireworks/angular](#grand-fireworksangular) | [![Angular](https://img.shields.io/badge/Angular-source-DD0031?logo=angular&logoColor=white)](packages/angular) | Angular component |
+| [@grand-fireworks/web](#grand-fireworksweb) | [![web](https://img.shields.io/badge/custom%20element-source-0A84FF)](packages/web) | Web component |
+
+The framework packages live in `packages/` and ship their own `.d.ts` files. They are not on npm yet. Each one lists its framework as a peer dependency, so the core package stays dependency-free.
+
+## CDN
 
 For a no-build webpage, use the stable CDN filename:
 
@@ -82,6 +135,107 @@ Run the declaration contract check with:
 
 ```bash
 npm run typecheck
+```
+
+## Usage
+
+#### grand-fireworks-js
+
+```js
+import GrandFireworks from 'grand-fireworks-js'
+
+const fireworks = new GrandFireworks({ baseStyle: 'cinematic' })
+fireworks.start()
+```
+
+#### @grand-fireworks/react
+
+<p><img alt="npm install @grand-fireworks/react" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Freact-61DAFB?style=for-the-badge&logo=react&logoColor=black"></p>
+
+```sh
+npm install @grand-fireworks/react
+```
+
+```jsx
+import { GrandFireworks } from '@grand-fireworks/react'
+
+<GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
+```
+
+#### @grand-fireworks/preact
+
+<p><img alt="npm install @grand-fireworks/preact" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fpreact-673AB8?style=for-the-badge&logo=preact&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/preact
+```
+
+```jsx
+import { GrandFireworks } from '@grand-fireworks/preact'
+
+<GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
+```
+
+#### @grand-fireworks/solid
+
+<p><img alt="npm install @grand-fireworks/solid" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fsolid-2C4F7C?style=for-the-badge&logo=solid&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/solid
+```
+
+```jsx
+import { GrandFireworks } from '@grand-fireworks/solid'
+
+<GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
+```
+
+#### @grand-fireworks/vue
+
+<p><img alt="npm install @grand-fireworks/vue" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fvue-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/vue
+```
+
+```vue
+<GrandFireworks :auto-start="true" :options="{ baseStyle: 'cinematic' }" />
+```
+
+#### @grand-fireworks/svelte
+
+<p><img alt="npm install @grand-fireworks/svelte" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fsvelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/svelte
+```
+
+```svelte
+<GrandFireworks autoStart options={{ baseStyle: 'cinematic' }} />
+```
+
+#### @grand-fireworks/angular
+
+<p><img alt="npm install @grand-fireworks/angular" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fangular-DD0031?style=for-the-badge&logo=angular&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/angular
+```
+
+```html
+<grand-fireworks [autoStart]="true" [options]="{ baseStyle: 'cinematic' }"></grand-fireworks>
+```
+
+#### @grand-fireworks/web
+
+<p><img alt="npm install @grand-fireworks/web" src="https://img.shields.io/badge/npm-install%20%40grand--fireworks%2Fweb-0A84FF?style=for-the-badge&logo=webcomponentsdotorg&logoColor=white"></p>
+
+```sh
+npm install @grand-fireworks/web
+```
+
+```html
+<grand-fireworks auto-start></grand-fireworks>
 ```
 
 ## Live documentation and examples

@@ -238,33 +238,30 @@ For the moving development branch, use:
 <script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@main/dist/GrandFireworks.min.js"></script>
 ```
 
-## 9. Framework wrappers: planned, not part of the core release
+## 9. Framework wrappers: source packages, not part of the core release
 
-Do not add Vue or React as dependencies of this repository's core package.
+Do not add Vue, React, or any other framework as a dependency of this repository's core package.
 
-Future wrappers should be separate packages:
-
-```text
-@grand-fireworks/vue
-@grand-fireworks/react
-```
-
-Each wrapper should do only lifecycle integration:
-
-- create a `GrandFireworks` instance on mount;
-- apply option changes with `setOptions()`;
-- expose useful engine methods;
-- destroy the instance on unmount;
-- provide one focused example and documentation.
-
-Suggested APIs:
+Wrapper sources live in `packages/` and are not published to npm yet:
 
 ```text
-Vue:   <GrandFireworks>, useGrandFireworks()
-React: <GrandFireworks>, useGrandFireworks()
+packages/react     @grand-fireworks/react
+packages/preact    @grand-fireworks/preact
+packages/solid     @grand-fireworks/solid
+packages/vue       @grand-fireworks/vue
+packages/svelte    @grand-fireworks/svelte
+packages/angular   @grand-fireworks/angular
+packages/web       @grand-fireworks/web
 ```
 
-The renderer and physics stay in the core library. A basic wrapper is small; do not delay core releases for framework packaging.
+Each wrapper does only lifecycle integration:
+
+- create a `GrandFireworks` instance on mount, with `container` pointing at its own element;
+- apply later option changes with `setOptions()`;
+- expose the engine instance;
+- call `destroy()` on unmount.
+
+The renderer and physics stay in the core library. Do not delay a core release for framework packaging, and do not add these folders to the core package `files` list.
 
 ## 10. Working conventions
 

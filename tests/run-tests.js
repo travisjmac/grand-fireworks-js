@@ -2845,6 +2845,41 @@ test('TypeScript declarations describe the full public API and are published', (
   }
 });
 
+test('framework packages ship first-party types and stay out of the core package', () => {
+  const rootPkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  assert.equal(rootPkg.dependencies, undefined, 'the core package stays dependency-free');
+  assert.ok(
+    !rootPkg.files.includes('packages'),
+    'wrapper sources are not part of the core publish',
+  );
+  const expected = {
+    react: { peer: 'react', entry: 'index.js' },
+    preact: { peer: 'preact', entry: 'index.js' },
+    solid: { peer: 'solid-js', entry: 'index.jsx' },
+    vue: { peer: 'vue', entry: 'index.js' },
+    svelte: { peer: 'svelte', entry: 'GrandFireworks.svelte' },
+    angular: { peer: '@angular/core', entry: 'index.ts' },
+    web: { peer: null, entry: 'index.js' },
+  };
+  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+  for (const [name, spec] of Object.entries(expected)) {
+    const dir = path.join(__dirname, '..', 'packages', name);
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    assert.equal(pkg.name, `@grand-fireworks/${name}`);
+    assert.equal(pkg.peerDependencies['grand-fireworks-js'], '^1.10.0');
+    assert.equal(pkg.types, './index.d.ts');
+    assert.equal(pkg.dependencies, undefined);
+    if (spec.peer) assert.ok(pkg.peerDependencies[spec.peer], `${name} is missing its framework peer`);
+    const source = fs.readFileSync(path.join(dir, spec.entry), 'utf8');
+    assert.match(source, /grand-fireworks-js/);
+    assert.match(source, /destroy\(/);
+    assert.match(source, /setOptions\(/);
+    const types = fs.readFileSync(path.join(dir, 'index.d.ts'), 'utf8');
+    assert.match(types, /grand-fireworks-js/);
+    assert.match(readme, new RegExp(`@grand-fireworks/${name}`));
+  }
+});
+
 (async () => {
   let failed = 0;
   for (const { name, run } of tests) {
