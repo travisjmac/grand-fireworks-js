@@ -1593,7 +1593,28 @@
     _resumeFor(reason) {
       this.autoPauseReasons.delete(reason);
       this._resumeEngine();
+      if (reason === "hidden" && !this.autoPauseReasons.size && !this.userPaused)
+        this._continueHeldTextSequence();
       return this;
+    }
+    // True while the tab is in the background. The visibility listener adds
+    // "hidden" to the pause reasons; the document flag covers the moment
+    // before that listener runs.
+    _pageHidden() {
+      return (
+        this.autoPauseReasons.has("hidden") ||
+        Boolean(global.document && global.document.hidden)
+      );
+    }
+    // A text sequence holds its next step while the tab is hidden, then plays
+    // that one step on return instead of every step the hidden timer reached.
+    _continueHeldTextSequence() {
+      const sequence = this.textSequence;
+      if (!sequence || sequence.cancelled || !sequence.resume) return;
+      const resume = sequence.resume;
+      sequence.resume = null;
+      sequence.heldForHidden = false;
+      resume();
     }
     /**
      * Pauses the show. Use internal=true for auto-pause reasons
@@ -2307,6 +2328,10 @@
     async launchText(text, overrides = {}) {
       const cfg = merge(this.options.textFirework, overrides);
       if (!cfg.enabled || !text) return [];
+      // A hidden tab pauses the render loop, so effect time stays frozen. Text
+      // queued during that pause would all share one launch time and fire
+      // together when the tab returns. Refuse it until the page is visible.
+      if (this._pageHidden()) return [];
       // Rasterisation samples pixels immediately, so a webfont that has not
       // finished loading would be measured with fallback metrics and the text
       // particles would assemble into the wrong shape. Only wait while fonts are
@@ -2314,7 +2339,7 @@
       const fonts = global.document && global.document.fonts;
       if (fonts && fonts.status === "loading" && fonts.ready) {
         await fonts.ready;
-        if (this.state === "destroyed") return [];
+        if (this.state === "destroyed" || this._pageHidden()) return [];
       }
       this._activateManual("manual");
       let value = String(text).trim();
@@ -2488,6 +2513,13 @@
         };
         const next = () => {
           if (sequence.cancelled) return;
+          if (this._pageHidden()) {
+            sequence.heldForHidden = true;
+            sequence.resume = next;
+            return;
+          }
+          sequence.heldForHidden = false;
+          sequence.resume = null;
           if (sequence.completed >= items.length) {
             finish();
             return;
