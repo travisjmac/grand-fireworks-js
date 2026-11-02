@@ -305,7 +305,66 @@ h3 {
   font-size: 1rem;
 }
 .compare-strip {
-  margin-top: 18px;
+  margin-top: 28px;
+  scroll-margin-top: 112px;
+}
+.compare-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.compare-pills a {
+  margin-left: 6px;
+  color: #8fd4ff;
+  font-weight: 650;
+}
+.compare-scroll {
+  overflow-x: auto;
+}
+.compare-table table {
+  min-width: 520px;
+}
+.compare-table th:not([scope="row"]),
+.compare-table td {
+  text-align: center;
+  white-space: nowrap;
+}
+.compare-table th[scope="row"] {
+  text-align: left;
+  font-weight: 600;
+  white-space: normal;
+}
+.compare-table tr.group th {
+  padding-top: 18px;
+  color: var(--gold);
+  text-align: left;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+.compare-table td.yes {
+  color: #8dffb0;
+}
+.compare-table td.part {
+  color: #ffd27a;
+  white-space: normal;
+}
+.compare-table td.no {
+  color: #8b90a8;
+}
+.compare-legend {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+.compare-page {
+  width: min(1100px, calc(100% - 32px));
+  margin: 28px auto 64px;
+}
+.compare-page h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.2;
 }
 .compare-strip .table-wrap {
   margin-top: 12px;

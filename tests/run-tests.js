@@ -414,6 +414,58 @@ test('text that is too wide shrinks its font instead of being squeezed', () => {
   fireworks.destroy();
 });
 
+test('a hidden tab does not queue text that would all launch on return', async () => {
+  const { GrandFireworks, document } = createRuntime();
+  const fireworks = new GrandFireworks({ renderer: { preferred: 'canvas2d' } });
+  fireworks.start();
+  await fireworks.launchText('BEFORE');
+  const kept = fireworks.pendingRockets.filter(rocket => rocket.textPlan).length;
+  assert.ok(kept > 0, 'the visible launch should queue text');
+  document.hidden = true;
+  document.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(fireworks.state, 'paused');
+  await fireworks.launchText('LATER');
+  await fireworks.launchText('AGAIN');
+  assert.equal(
+    fireworks.pendingRockets.filter(rocket => rocket.textPlan).length,
+    kept,
+    'text launched while hidden must not join the queue',
+  );
+  document.hidden = false;
+  document.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(fireworks.state, 'running');
+  assert.equal(
+    fireworks.pendingRockets.filter(rocket => rocket.textPlan).length,
+    kept,
+    'returning must not release a backlog of text',
+  );
+  await fireworks.launchText('AFTER');
+  assert.ok(
+    fireworks.pendingRockets.filter(rocket => rocket.textPlan).length > kept,
+    'text must launch again once the tab is visible',
+  );
+  fireworks.destroy();
+});
+
+test('a hidden tab holds a text sequence instead of playing it through', async () => {
+  const { GrandFireworks, document } = createRuntime();
+  const fireworks = new GrandFireworks({
+    renderer: { preferred: 'canvas2d' },
+    textFirework: { synchronizeExplosions: true, revealDuration: 0, holdDuration: 0, dissolveDuration: 0, fallDuration: 0 },
+  });
+  const pending = fireworks.launchTextSequence(['ONE', 'TWO', 'THREE'], { interval: 20 });
+  document.hidden = true;
+  document.dispatchEvent(new Event('visibilitychange'));
+  await new Promise(resolve => setTimeout(resolve, 80));
+  assert.equal(fireworks.textSequence.completed, 1, 'steps due while hidden must wait');
+  document.hidden = false;
+  document.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(fireworks.textSequence.completed, 2, 'the held step plays once the tab returns');
+  fireworks.cancelTextSequence();
+  await pending;
+  fireworks.destroy();
+});
+
 test('keeps user pause separate from automatic pause reasons', () => {
   const { GrandFireworks, observers } = createRuntime({ reducedMotion: true });
   const fireworks = new GrandFireworks({ container: '#stage', mode: 'contained', renderer: { preferred: 'canvas2d' }, show: { openingSalvo: 6 } });
@@ -2523,6 +2575,9 @@ test('the homepage spaces text using one slower random interval', () => {
   );
   assert.ok(firing.length > 0, 'the firing loop must be locatable');
   assert.ok(!/setInterval\(/.test(firing), 'the firers must not fall back on a fixed interval');
+  assert.ok(/if \(document\.hidden\)/.test(firing), 'text must not launch while the tab is hidden');
+  assert.ok(/visibilitychange/.test(firing), 'leaving the tab must stop the text timer');
+  assert.ok(/clearTimeout\(textFireworkTimer\)/.test(firing), 'the pending text timer must be cleared');
 });
 
 test('the homepage walks a set series of areas for text, without stopping the show', () => {
@@ -2904,6 +2959,30 @@ test('framework packages ship first-party types and stay out of the core package
     assert.match(types, /grand-fireworks-js/);
     assert.match(readme, new RegExp(`@grand-fireworks/${name}`));
   }
+});
+
+test('the fireworks-js comparison lists every feature and checks only verified matches', () => {
+  const { load, rowsOf } = require('../scripts/render-comparison');
+  const data = load();
+  const rows = rowsOf(data);
+  const pages = ['compare.html', 'index.html'].map(name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8'));
+  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+  assert.ok(rows.length >= 90, `expected the full feature list, found ${rows.length}`);
+  for (const row of rows) {
+    assert.ok(['yes', 'no', 'part'].includes(row.them), row.feature);
+    if (row.them === 'part') assert.ok(row.detail, `${row.feature} needs a short qualifier`);
+    assert.doesNotMatch(row.feature, /sucky|years in production|bundle size|legacy/i);
+    const ours = `<th scope="row">${row.feature}</th><td class="yes">`;
+    for (const page of pages) {
+      assert.ok(page.includes(row.feature), `${row.feature} missing from a page`);
+      assert.ok(page.includes(ours), `${row.feature} must be marked supported for Grand Fireworks`);
+    }
+  }
+  for (const row of rows.filter(row => row.glance)) {
+    assert.ok(readme.includes(`| ${row.feature} | ✅ |`), row.feature);
+  }
+  assert.ok(readme.includes('✅ supported · ⚠️ partial · ❌ not supported'));
+  assert.ok(!readme.includes('## Grand Fireworks or tsParticles'));
 });
 
 (async () => {

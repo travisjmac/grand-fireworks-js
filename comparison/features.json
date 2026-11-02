@@ -1,0 +1,158 @@
+{
+  "verified": "October 2026",
+  "us": {
+    "name": "Grand Fireworks JS",
+    "version": "1.11.0",
+    "source": "https://github.com/travisjmac/grand-fireworks-js"
+  },
+  "them": {
+    "name": "fireworks-js",
+    "version": "2.10.8",
+    "source": "https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/fireworks.ts"
+  },
+  "sources": [
+    "https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/fireworks.ts",
+    "https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/types.ts",
+    "https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/sound.ts",
+    "https://github.com/crashmax-dev/fireworks-js/tree/v2.10.8#readme"
+  ],
+  "groups": [
+    {
+      "name": "Renderer",
+      "rows": [
+        { "feature": "WebGL 2 renderer", "them": "no", "glance": true },
+        { "feature": "Canvas 2D renderer", "them": "yes", "glance": true },
+        { "feature": "Automatic Canvas fallback when WebGL is unavailable", "them": "no" },
+        { "feature": "Point-sprite particles", "them": "no" },
+        { "feature": "Device-pixel-ratio cap", "them": "no" },
+        { "feature": "WebGL context-loss recovery", "them": "no" },
+        { "feature": "Long-exposure trails", "them": "yes", "glance": true },
+        { "feature": "Bloom", "them": "no" },
+        { "feature": "Star-shaped sparks", "them": "no" },
+        { "feature": "Rocket exhaust", "them": "no" },
+        { "feature": "Explosion flashes", "them": "no" },
+        { "feature": "Full-screen flash", "them": "no" }
+      ]
+    },
+    {
+      "name": "Shells",
+      "rows": [
+        { "feature": "Grand peony shell", "them": "no" },
+        { "feature": "Imperial chrysanthemum shell", "them": "no" },
+        { "feature": "Weeping willow shell", "them": "no" },
+        { "feature": "Royal palm shell", "them": "no" },
+        { "feature": "Diamond ring shell", "them": "no" },
+        { "feature": "Crossette supreme shell", "them": "no" },
+        { "feature": "Golden brocade shell", "them": "no" },
+        { "feature": "Dragon fish shell", "them": "no" },
+        { "feature": "Majestic comet shell", "them": "no" },
+        { "feature": "Cascading horsetail shell", "them": "no" },
+        { "feature": "Starburst shell", "them": "no" },
+        { "feature": "Glitter nova shell", "them": "no" },
+        { "feature": "Crown jewel shell", "them": "no" },
+        { "feature": "Thunder clap shell", "them": "no" },
+        { "feature": "Galactic spiral shell", "them": "no" }
+      ]
+    },
+    {
+      "name": "Show",
+      "rows": [
+        { "feature": "Automatic launching show", "them": "yes" },
+        { "feature": "Intensity control", "them": "yes" },
+        { "feature": "Opening salvo", "them": "no" },
+        { "feature": "Gravity", "them": "yes" },
+        { "feature": "Air drag", "them": "yes" },
+        { "feature": "Wind", "them": "no" },
+        { "feature": "Camera zoom", "them": "no" },
+        { "feature": "Layer opacity", "them": "yes" },
+        { "feature": "Color control", "them": "yes" },
+        { "feature": "Named color themes", "them": "no" },
+        { "feature": "Named visual styles", "them": "no" },
+        { "feature": "Mixed style", "them": "no" },
+        { "feature": "Random show", "them": "no" },
+        { "feature": "Global speed control", "them": "no" },
+        { "feature": "Grouped salvos", "them": "no" },
+        { "feature": "Secondary crackle", "them": "no" },
+        { "feature": "Ember color burn", "them": "no" },
+        { "feature": "Shimmer", "them": "no" },
+        { "feature": "Sparkle", "them": "no" },
+        { "feature": "Pointer launches a rocket", "them": "yes", "glance": true },
+        { "feature": "Burst at an exact point", "them": "no" },
+        { "feature": "Fly a rocket from one point to another", "them": "no" },
+        { "feature": "Draw inside an element you choose", "them": "yes" },
+        { "feature": "Transparent fullscreen overlay", "them": "no" },
+        { "feature": "Pause and resume", "them": "yes" },
+        { "feature": "Stop the show", "them": "yes" },
+        { "feature": "Wait until shells in the air finish", "them": "yes" },
+        { "feature": "Clear the sky", "them": "yes" },
+        { "feature": "Launch a shell on demand", "them": "yes" },
+        { "feature": "Change options while running", "them": "yes" },
+        { "feature": "Read the current options", "them": "yes" },
+        { "feature": "Runtime stats", "them": "no" }
+      ]
+    },
+    {
+      "name": "Text",
+      "rows": [
+        { "feature": "Text fireworks", "them": "no", "glance": true },
+        { "feature": "Multi-line text", "them": "no" },
+        { "feature": "Hybrid particle and crisp text", "them": "no" },
+        { "feature": "Text position and alignment", "them": "no" },
+        { "feature": "Text tilt", "them": "no" },
+        { "feature": "Text dissolve, hold, and fall", "them": "no" },
+        { "feature": "A sequence of text messages", "them": "no" }
+      ]
+    },
+    {
+      "name": "Finale",
+      "rows": [
+        { "feature": "Grand finale", "them": "no", "glance": true },
+        { "feature": "World Ender", "them": "no" },
+        { "feature": "Show duration", "them": "no" }
+      ]
+    },
+    {
+      "name": "Sound",
+      "rows": [
+        { "feature": "Sound effects", "them": "yes", "glance": true },
+        { "feature": "Turn sound on and off", "them": "yes" },
+        { "feature": "Volume control", "them": "yes" },
+        { "feature": "Procedural launch, whistle, boom, and crackle", "them": "no", "glance": true },
+        { "feature": "Ambient hiss", "them": "no" },
+        { "feature": "Stereo panning", "them": "no" }
+      ]
+    },
+    {
+      "name": "Performance",
+      "rows": [
+        { "feature": "Quality presets, including a 60fps target", "them": "no" },
+        { "feature": "Adaptive quality", "them": "no" },
+        { "feature": "Pause when the tab is hidden", "them": "no", "glance": true },
+        { "feature": "Pause when scrolled offscreen", "them": "no" },
+        { "feature": "Reduced-motion support", "them": "no" },
+        { "feature": "Particle cap", "them": "yes" },
+        { "feature": "Rocket cap", "them": "no" }
+      ]
+    },
+    {
+      "name": "Building with it",
+      "rows": [
+        { "feature": "TypeScript declarations", "them": "yes", "glance": true },
+        { "feature": "Zero runtime dependencies", "them": "yes", "glance": true },
+        { "feature": "Host-driven frame loop", "them": "no" },
+        { "feature": "React component", "them": "yes" },
+        { "feature": "Preact component", "them": "yes" },
+        { "feature": "Solid component", "them": "yes" },
+        { "feature": "Vue component", "them": "yes" },
+        { "feature": "Svelte component", "them": "yes" },
+        { "feature": "Angular component", "them": "yes" },
+        { "feature": "Custom element", "them": "yes" },
+        { "feature": "SSR-safe React, Vue, and Svelte mounts", "them": "part", "detail": "React use client", "glance": true },
+        { "feature": "Configuration reference", "them": "yes" },
+        { "feature": "Guided workbench", "them": "no", "glance": true },
+        { "feature": "Copy the running configuration", "them": "no" },
+        { "feature": "Live demo", "them": "yes" }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ Photorealistic WebGL-first fireworks with persistent long-exposure trails, HDR-s
 The high preset aims at **60fps**, with **5,000** particles and **10** rockets in the air, across **15** shell types. Zero runtime dependencies.
 
 Created by **Travis MacDonald** on July 15, 2026.  
-Version **1.11.0** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js) · [Live demos](https://travisjmac.github.io/grand-fireworks-js/) · [Changelog](CHANGELOG.md)
+Version **1.11.1** · [Creator website](http://travisandjoelyweareaperfect.fit/) · [GitHub repository](https://github.com/travisjmac/grand-fireworks-js) · [Live demos](https://travisjmac.github.io/grand-fireworks-js/) · [Changelog](CHANGELOG.md)
 
 [![npm version](https://img.shields.io/npm/v/grand-fireworks-js.svg?style=for-the-badge&color=cb3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/grand-fireworks-js)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/grand-fireworks-js?style=for-the-badge)](https://bundlephobia.com/result?p=grand-fireworks-js)
@@ -18,7 +18,7 @@ Version **1.11.0** · [Creator website](http://travisandjoelyweareaperfect.fit/)
 
 > **Project status:** Grand Fireworks JS is the fireworks engine. It is stable, documented, and ready to use. **Papercloak Animation Studios** is a separate project for the broader visual animation platform. That link will be added here once its repository is published.
 
-**Start here:** [Features](#features) · [tsParticles](#grand-fireworks-or-tsparticles) · [Install](#installation) · [CDN](#cdn) · [Usage](#usage) · [Examples](#live-documentation-and-examples) · [Configuration](#complete-configuration-reference) · [Release notes](#release-notes)
+**Start here:** [Features](#features) · [fireworks-js](#grand-fireworks-or-fireworks-js) · [Install](#installation) · [CDN](#cdn) · [Usage](#usage) · [Examples](#live-documentation-and-examples) · [Configuration](#complete-configuration-reference) · [Release notes](#release-notes)
 
 Open [`index.html`](index.html) for the full guide beside a running show.
 
@@ -32,19 +32,40 @@ Open [`index.html`](index.html) for the full guide beside a running show.
 - 🔤 Multi-line text fireworks, finales, and a World Ender
 - 🎮 Host-driven rendering for games and custom scenes
 
-## Grand Fireworks or tsParticles
+<!-- comparison:start -->
+## Grand Fireworks or fireworks-js
 
-[tsParticles](https://particles.js.org/) is a particle platform. It does backgrounds, confetti, ribbons, presets, and a fireworks shortcut. It has more than fireworks. That is a different product.
+Every row is a Grand Fireworks feature. A mark in the fireworks-js column means [fireworks-js](https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/fireworks.ts) 2.10.8 has that feature too.
 
-Grand Fireworks is the fireworks show. Fifteen shell types launch and burst. Text writes itself in the sky. A finale closes the night. The high preset aims at 60fps with 5,000 particles and 10 rockets, and the core package has zero runtime dependencies. When the job is fireworks, this is the most advanced and most powerful one ever made. Smooth as butter.
+| Feature | Grand Fireworks JS | fireworks-js |
+| --- | :---: | :---: |
+| **Renderer** | | |
+| WebGL 2 renderer | ✅ | ❌ |
+| Canvas 2D renderer | ✅ | ✅ |
+| Long-exposure trails | ✅ | ✅ |
+| **Show** | | |
+| Pointer launches a rocket | ✅ | ✅ |
+| **Text** | | |
+| Text fireworks | ✅ | ❌ |
+| **Finale** | | |
+| Grand finale | ✅ | ❌ |
+| **Sound** | | |
+| Sound effects | ✅ | ✅ |
+| Procedural launch, whistle, boom, and crackle | ✅ | ❌ |
+| **Performance** | | |
+| Pause when the tab is hidden | ✅ | ❌ |
+| **Building with it** | | |
+| TypeScript declarations | ✅ | ✅ |
+| Zero runtime dependencies | ✅ | ✅ |
+| SSR-safe React, Vue, and Svelte mounts | ✅ | ⚠️ React use client |
+| Guided workbench | ✅ | ❌ |
 
-| | Grand Fireworks JS | tsParticles |
-| --- | --- | --- |
-| The job | A fireworks show, from launch to burst to finale | A general particle engine, plus many other effects |
-| What else it does | Text fireworks, timed shows, and a game on the host API | Backgrounds, confetti, ribbons, presets, and published framework packages |
-| Shells | 15 pyrotechnic types. Rockets fly, then burst | Particles shaped into an effect, including a fireworks preset |
-| The picture | WebGL 2 trails, bloom, and star cores | A configurable particle system. Fireworks is one call, not the product |
-| The core | Zero runtime dependencies | A bundle you choose. The platform is the point |
+✅ supported · ⚠️ partial · ❌ not supported
+
+Verified October 2026 against fireworks-js 2.10.8 and Grand Fireworks JS 1.11.0. Sources: [fireworks.ts](https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/fireworks.ts), [types.ts](https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/types.ts), [sound.ts](https://github.com/crashmax-dev/fireworks-js/blob/v2.10.8/packages/fireworks-js/src/sound.ts), [README](https://github.com/crashmax-dev/fireworks-js/tree/v2.10.8#readme).
+
+The full feature list is on the [comparison page](compare.html).
+<!-- comparison:end -->
 
 ## Show lifecycle
 
