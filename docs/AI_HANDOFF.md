@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Repo version: **1.11.0**. The newest GitHub release tag is still **v1.10.0** until that tag is created. npm `latest` is still **1.6.5** until the package is published.
+- Repo and GitHub/CDN release: **1.11.1**. npm publication requires authentication; the November 2 release check returned E401.
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
@@ -229,7 +229,7 @@ dist/GrandFireworks.min.js.gz
 This avoids broken `@main` / `@latest` CDN URLs after a future build. Version pinning belongs in a Git tag or npm version, for example:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.11.0/dist/GrandFireworks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/travisjmac/grand-fireworks-js@v1.11.1/dist/GrandFireworks.min.js"></script>
 ```
 
 The homepage and example pages load `@latest`, which follows the newest GitHub release tag:
@@ -295,4 +295,4 @@ The renderer and physics stay in the core library. Do not delay a core release f
 
 ## 12. Demo delivery
 
-The homepage and example pages load the jsDelivr `@latest` minified build and show version **1.11.0**. `@latest` stays on the previous release tag until `v1.11.0` is tagged and pushed. Historical changelog sections keep their original version titles.
+The homepage and example pages load the jsDelivr `@latest` minified build and show version **1.11.1**. The release tag is `v1.11.1`. Historical changelog sections keep their original version titles.

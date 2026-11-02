@@ -2,6 +2,18 @@
 
 All notable changes to Grand Fireworks JS are documented here.
 
+## [1.11.1] — November 2, 2026
+
+### Added
+
+- New mascot PNG logo on the homepage, configuration guide and Moonlit Horizon credits.
+
+- A feature-by-feature comparison with fireworks-js 2.10.8. Every row is a Grand Fireworks feature, and the other column is marked only when that release has the same feature. The full list is on the homepage and on `compare.html`. The README carries the short version.
+
+### Fixed
+
+- A hidden tab no longer queues text fireworks. The show already paused, but the text timer kept scheduling messages against a frozen clock, and they all launched together when the tab returned.
+
 ## [1.11.0] — October 22, 2026
 
 ### Added
