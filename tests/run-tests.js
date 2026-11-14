@@ -2947,6 +2947,12 @@ test('framework packages ship first-party types and stay out of the core package
       assert.match(fs.readFileSync(path.join(dir, pkg.main), 'utf8'), /ɵɵngDeclareComponent/);
       assert.match(fs.readFileSync(path.join(dir, pkg.types), 'utf8'), /ɵɵComponentDeclaration/);
     }
+    if (name === 'solid') {
+      assert.equal(pkg.exports['.'].browser, './dist/client.js');
+      assert.equal(pkg.exports['.'].node, './dist/server.js');
+      assert.ok(fs.existsSync(path.join(dir, pkg.exports['.'].browser)));
+      assert.ok(fs.existsSync(path.join(dir, pkg.exports['.'].node)));
+    }
     assert.equal(pkg.dependencies, undefined);
     if (spec.peer) assert.ok(pkg.peerDependencies[spec.peer], `${name} is missing its framework peer`);
     const source = fs.readFileSync(path.join(dir, spec.entry), 'utf8');

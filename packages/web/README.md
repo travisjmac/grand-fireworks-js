@@ -6,7 +6,7 @@ Custom element wrapper for [`grand-fireworks-js`](https://github.com/travisjmac/
 npm install grand-fireworks-js @grand-fireworks/web
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```html
 <script type="module">

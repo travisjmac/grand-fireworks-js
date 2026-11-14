@@ -6,7 +6,7 @@ Solid lifecycle wrapper for [`grand-fireworks-js`](https://github.com/travisjmac
 npm install grand-fireworks-js @grand-fireworks/solid
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```jsx
 import { GrandFireworks } from '@grand-fireworks/solid'
@@ -17,3 +17,5 @@ export function Show() {
 ```
 
 Pass `ref` to receive the engine. The component calls `destroy()` on cleanup and `setOptions()` when `options` changes.
+
+The package includes compiled browser and server builds. Browser bundlers resolve dist/client.js and Node resolves dist/server.js; Solid-aware tooling can use the solid export condition for the original JSX. Maintainers can rebuild both outputs with npm run build:solid from the repository root.

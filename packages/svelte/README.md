@@ -6,7 +6,7 @@ Svelte lifecycle wrapper for [`grand-fireworks-js`](https://github.com/travisjma
 npm install grand-fireworks-js @grand-fireworks/svelte
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```svelte
 <script>

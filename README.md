@@ -136,7 +136,7 @@ pnpm add grand-fireworks-js
 | [@grand-fireworks/angular](#grand-fireworksangular) | [![Angular](https://img.shields.io/badge/Angular-source-DD0031?logo=angular&logoColor=white)](packages/angular) | Angular component |
 | [@grand-fireworks/web](#grand-fireworksweb) | [![web](https://img.shields.io/badge/custom%20element-source-0A84FF)](packages/web) | Web component |
 
-The framework packages live in `packages/` and ship their own `.d.ts` files. They are not on npm yet. Each one lists its framework as a peer dependency, so the core package stays dependency-free.
+The framework packages live in `packages/` and ship their own `.d.ts` files. The adapters use the @grand-fireworks npm organization. Each one lists its framework as a peer dependency, so the core package stays dependency-free.
 
 ## CDN
 

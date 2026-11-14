@@ -6,7 +6,7 @@ Vue 3 lifecycle wrapper for [`grand-fireworks-js`](https://github.com/travisjmac
 npm install grand-fireworks-js @grand-fireworks/vue
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```vue
 <script setup>

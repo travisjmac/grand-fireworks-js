@@ -6,7 +6,7 @@ Preact lifecycle wrapper for [`grand-fireworks-js`](https://github.com/travisjma
 npm install grand-fireworks-js @grand-fireworks/preact
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```jsx
 import { GrandFireworks } from '@grand-fireworks/preact'

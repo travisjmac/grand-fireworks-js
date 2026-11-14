@@ -58,7 +58,8 @@
     "test": "node tests/run-tests.js",
     "typecheck": "tsc -p types/fixtures/tsconfig.json",
     "prepublishOnly": "npm test && npm run build",
-    "build:angular": "node scripts/build-angular.js"
+    "build:angular": "node scripts/build-angular.js",
+    "build:solid": "node scripts/build-solid.js"
   },
   "devDependencies": {
     "terser": "^5.49.0",

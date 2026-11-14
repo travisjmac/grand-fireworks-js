@@ -6,7 +6,7 @@ React lifecycle wrapper for [`grand-fireworks-js`](https://github.com/travisjmac
 npm install grand-fireworks-js @grand-fireworks/react
 ```
 
-This package is source in the repository and is not published to npm yet.
+Source and TypeScript declarations are maintained in this repository.
 
 ```jsx
 import { GrandFireworks } from '@grand-fireworks/react'

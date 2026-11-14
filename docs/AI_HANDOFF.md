@@ -16,7 +16,7 @@ The project is deliberately fun and visually ambitious, but it must stay usable 
 
 ## 2. Current release and repository state
 
-- Repo and GitHub/CDN release: **1.11.1**. npm publication requires authentication; the November 2 release check returned E401.
+- Repo and GitHub/CDN release: **1.11.1**. Core npm 1.11.1 was published November 14. Framework adapters use the @grand-fireworks organization; release verification must check registry visibility, not just CLI success.
 - Core source: `GrandFireworks.js`
 - Generated builds: `dist/GrandFireworks.js`, `dist/GrandFireworks.min.js`, and `dist/GrandFireworks.min.js.gz`
 - Documentation homepage: `index.html`
