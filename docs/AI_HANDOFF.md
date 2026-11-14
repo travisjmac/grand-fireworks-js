@@ -248,7 +248,7 @@ For the moving development branch, use:
 
 Do not add Vue, React, or any other framework as a dependency of this repository's core package.
 
-Wrapper sources live in `packages/` and are not published to npm yet:
+Wrapper sources live in `packages/` and publish under the `@grand-fireworks` npm organization:
 
 ```text
 packages/react     @grand-fireworks/react
