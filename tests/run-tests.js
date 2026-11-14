@@ -2938,8 +2938,15 @@ test('framework packages ship first-party types and stay out of the core package
     const dir = path.join(__dirname, '..', 'packages', name);
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
     assert.equal(pkg.name, `@grand-fireworks/${name}`);
-    assert.equal(pkg.peerDependencies['grand-fireworks-js'], '^1.11.0');
-    assert.equal(pkg.types, './index.d.ts');
+    assert.equal(pkg.peerDependencies['grand-fireworks-js'], '^' + require('../package.json').version);
+    assert.equal(pkg.types, name === 'angular' ? './dist/index.d.ts' : './index.d.ts');
+    assert.equal(pkg.publishConfig.access, 'public');
+    assert.ok(fs.existsSync(path.join(dir, 'LICENSE')));
+    if (name === 'angular') {
+      assert.equal(pkg.main, './dist/index.js');
+      assert.match(fs.readFileSync(path.join(dir, pkg.main), 'utf8'), /ɵɵngDeclareComponent/);
+      assert.match(fs.readFileSync(path.join(dir, pkg.types), 'utf8'), /ɵɵComponentDeclaration/);
+    }
     assert.equal(pkg.dependencies, undefined);
     if (spec.peer) assert.ok(pkg.peerDependencies[spec.peer], `${name} is missing its framework peer`);
     const source = fs.readFileSync(path.join(dir, spec.entry), 'utf8');

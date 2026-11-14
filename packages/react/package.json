@@ -1,6 +1,6 @@
 {
   "name": "@grand-fireworks/react",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "React lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
   "type": "module",
   "main": "./index.js",
@@ -14,10 +14,11 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "peerDependencies": {
-    "grand-fireworks-js": "^1.11.0",
+    "grand-fireworks-js": "^1.11.1",
     "react": ">=17"
   },
   "license": "MIT",
@@ -25,5 +26,9 @@
     "type": "git",
     "url": "git+https://github.com/travisjmac/grand-fireworks-js.git",
     "directory": "packages/react"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
 }

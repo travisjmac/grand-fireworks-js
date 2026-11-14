@@ -1,29 +1,34 @@
 {
   "name": "@grand-fireworks/angular",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Angular lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
   "type": "module",
-  "main": "./index.ts",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [
+    "dist",
     "index.ts",
-    "index.d.ts",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "peerDependencies": {
     "@angular/core": ">=16",
-    "grand-fireworks-js": "^1.11.0"
+    "grand-fireworks-js": "^1.11.1"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/travisjmac/grand-fireworks-js.git",
     "directory": "packages/angular"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@grand-fireworks/solid",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Solid lifecycle wrapper for grand-fireworks-js. The engine stays in the core package.",
   "type": "module",
   "main": "./index.jsx",
@@ -14,10 +14,11 @@
   "files": [
     "index.jsx",
     "index.d.ts",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "peerDependencies": {
-    "grand-fireworks-js": "^1.11.0",
+    "grand-fireworks-js": "^1.11.1",
     "solid-js": ">=1.6"
   },
   "license": "MIT",
@@ -25,5 +26,9 @@
     "type": "git",
     "url": "git+https://github.com/travisjmac/grand-fireworks-js.git",
     "directory": "packages/solid"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
 }
